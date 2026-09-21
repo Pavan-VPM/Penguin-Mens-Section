@@ -43,7 +43,7 @@ const Hero = () => {
                     100% { transform: translateX(-50%); }
                 }
                 .animate-scroll {
-                    animation: scroll 40s linear infinite;
+                    animation: scroll 16s linear infinite;
                 }
                 .animate-scroll:hover {
                     animation-play-state: paused;
