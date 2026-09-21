@@ -40,6 +40,7 @@ const WhyFails = () => {
                                     loop
                                     muted
                                     playsInline
+                                    preload="auto"
                                     className="w-full h-full object-cover aspect-[10/11]"
                                 />
                             </div>

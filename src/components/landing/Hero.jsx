@@ -3,21 +3,33 @@ import { ArrowRight } from 'lucide-react';
 import trustBadge from '../../assets/images/trust-badge.png';
 
 import vid1 from '../../assets/videos/PYI-video 1.mp4';
+import vid1Poster from '../../assets/videos/PYI-video 1.jpg';
 import vid7 from '../../assets/videos/PYI-video 7.mp4';
+import vid7Poster from '../../assets/videos/PYI-video 7.jpg';
 import vid8 from '../../assets/videos/PYI-video 8.mp4';
+import vid8Poster from '../../assets/videos/PYI-video 8.jpg';
 import vid10 from '../../assets/videos/PYI-video 10.mp4';
+import vid10Poster from '../../assets/videos/PYI-video 10.jpg';
 import vid11 from '../../assets/videos/PYI-video 11.mp4';
+import vid11Poster from '../../assets/videos/PYI-video 11.jpg';
 import vid12 from '../../assets/videos/PYI-video 12.mp4';
-import vid11_1 from '../../assets/videos/PYI-video 11 (1).mp4';
-import vid12_1 from '../../assets/videos/PYI-video 12 (1).mp4';
+import vid12Poster from '../../assets/videos/PYI-video 12.jpg';
 import vid9 from '../../assets/videos/PYI-video 9.mp4';
-//import vid9_1 from '../../assets/videos/PYI-video 9 (1).mp4';
+import vid9Poster from '../../assets/videos/PYI-video 9.jpg';
 
 const Hero = () => {
-    // Video Assets
-    const videoAssets = [vid1, vid7, vid8, vid10, vid11, vid12, vid9];
+    // Video Assets with instant-load thumbnail posters
+    const videoAssets = [
+        { src: vid1, poster: vid1Poster },
+        { src: vid7, poster: vid7Poster },
+        { src: vid8, poster: vid8Poster },
+        { src: vid10, poster: vid10Poster },
+        { src: vid11, poster: vid11Poster },
+        { src: vid12, poster: vid12Poster },
+        { src: vid9, poster: vid9Poster }
+    ];
 
-    // Duplicate videos for smooth infinite loop
+    // 2x duplication is mathematically sufficient for smooth infinite marquee without memory overload
     const videos = [...videoAssets, ...videoAssets];
 
     return (
@@ -129,7 +141,7 @@ const Hero = () => {
                 <div className="relative w-full h-full z-10 flex justify-center items-end pb-12 overflow-hidden">
                     {/* Cards Container - Marquee */}
                     <div className="relative z-20 flex animate-scroll w-max">
-                        {[...videos, ...videos, ...videos, ...videos].map((src, i) => { // 8x videoAssets total for seamless loop
+                        {videos.map((item, i) => {
                             return (
                                 <div
                                     key={i}
@@ -145,11 +157,13 @@ const Hero = () => {
                                     className="hover:scale-105 transition-transform duration-300 cursor-pointer bg-black"
                                 >
                                     <video
-                                        src={src}
+                                        src={item.src}
+                                        poster={item.poster}
                                         autoPlay
                                         loop
                                         muted
                                         playsInline
+                                        preload="auto"
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
