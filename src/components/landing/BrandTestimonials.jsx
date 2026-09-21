@@ -7,23 +7,23 @@ import kritikaImage from '../../assets/testimonials/kritika.png';
 const testimonials = [
     {
         id: 1,
-        name: "Priya Sharma",
-        role: "Digital Marketing Lead",
-        content: "We cut our influencer marketing costs by 35% and doubled our reach. The escrow system eliminated all payment headaches.",
+        name: "Arjun Mehta",
+        role: "Software Engineer, Bangalore",
+        content: "Finally a brand that gets men's fashion right. The fabric quality is outstanding and the fit was perfect on the first try.",
         image: priyaImage,
     },
     {
         id: 3,
-        name: "Kritika Khurana",
-        role: "Growth Manager",
-        content: "I used to wait 90 days for payments. With Syncly? Money hits my account the day brands approve. Game changer.",
+        name: "Kiran Sharma",
+        role: "Marketing Manager, Mumbai",
+        content: "I ordered three shirts and got them in two days. The quality exceeded my expectations — these are wardrobe staples now.",
         image: kritikaImage
     },
     {
         id: 2,
         name: "Rahul Verma",
-        role: "Founder",
-        content: "Finally, an ROI dashboard that actually shows what's working. No more shooting in the dark with influencer budgets.",
+        role: "Entrepreneur, Delhi",
+        content: "Penguin's suits are elite. I wore one to a client meeting and got compliments all day. Worth every rupee.",
         image: priyaImage,
     }
 ];
@@ -46,10 +46,10 @@ const BrandTestimonials = () => {
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-5xl font-bold text-black mb-4 font-sans headline-text">
-                        What Brands Say
+                        What Our Customers Say
                     </h2>
                     <p className="text-lg text-gray-800">
-                        We reduced influencer spend by 35% and gained full control.
+                        10,000+ happy men dressed sharper with Penguin.
                     </p>
                 </div>
 

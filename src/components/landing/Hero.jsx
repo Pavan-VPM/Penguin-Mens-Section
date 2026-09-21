@@ -44,45 +44,45 @@ const Hero = () => {
                 <div className="inline-flex items-center gap-2">
                     <img src={trustBadge} alt="Trusted" className="w-6 h-6 object-contain" />
                     <div className="text-[15px] font-urbanist text-[#090909]">
-                        <span className="font-bold">Trusted by 500+ | </span>
-                        <span className="font-normal">₹ 2.5 cr+ in secure payments</span>
+                        <span className="font-bold">10,000+ Happy Customers | </span>
+                        <span className="font-normal">Premium Men's Fashion Since 2018</span>
                     </div>
                 </div>
             </div>
 
             {/* Main Headline */}
             <h1 className="relative z-20 text-[40px] leading-[48px] md:text-[50px] md:leading-[60px] font-freeman font-normal text-black break-words max-w-5xl mb-2">
-                Influencer Chosen for results.<br />
-                Measured by performance
+                Dress Sharp. Live Bold.<br />
+                Penguin Men's Section
             </h1>
 
             {/* Subheadline */}
             <p className="relative z-20 text-[15px] font-urbanist font-normal text-black max-w-3xl mb-4">
-                Work directly with verified creators who influence real buyer - not fake <br />engagement
+                Curated men's fashion — from casual fits to power suits.<br />Style that speaks before you do.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 relative z-20 mt-8 md:mt-12 translate-y-[50px] md:translate-y-[300px]">
-                {/* Find Influencers */}
+                {/* Shop Now */}
                 <div className="relative group cursor-pointer">
                     {/* Dashed Outline */}
                     <div className="absolute -inset-2 border border-dashed border-black/50 rounded-full pointer-events-none" />
 
 
                     <div className="relative flex items-center justify-between gap-4 px-6 py-3 bg-[#090909] rounded-full text-[#F7F3EA] font-urbanist font-medium text-base min-w-[170px] shadow-[3px_2px_7px_rgba(102,0,255,0.10)] translate-y-0">
-                        <span>Find Influencers</span>
+                        <span>Shop New Arrivals</span>
                         <ArrowRight className="w-5 h-5 text-white" />
                     </div>
                 </div>
 
-                {/* Join As Influencer */}
+                {/* View Collections */}
                 <div className="relative group cursor-pointer">
                     {/* Dashed Outline */}
                     <div className="absolute -inset-2 border border-dashed border-black/50 rounded-full pointer-events-none" />
 
 
                     <div className="relative flex items-center justify-between gap-4 px-6 py-3 bg-transparent border border-black rounded-full text-black font-urbanist font-medium text-base min-w-[170px] hover:bg-black/5 transition-colors translate-y-0">
-                        <span>Join As Influencer</span>
+                        <span>View Collections</span>
                         <ArrowRight className="w-5 h-5 text-black" />
                     </div>
                 </div>
@@ -90,11 +90,11 @@ const Hero = () => {
 
             {/* Floating Elements - Adjusted positions for responsiveness */}
 
-            {/* No payment risk - Left side */}
+            {/* Free Delivery - Left side */}
             <div className="absolute left-[5%] xl:left-[10%] top-[15%] hidden lg:block animate-float-delayed z-20">
                 <div className="relative">
                     <div className="bg-brand-purple text-white px-6 py-3 rounded-full font-inter font-normal text-lg relative z-10 shadow-lg rotate-[-0deg]">
-                        No payment risk
+                        Free Delivery
                     </div>
                     {/* Purple Cursor SVG */}
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute -bottom-7 -right-4 w-8 h-8 rotate-180 z-20 text-brand-purple fill-current">
@@ -103,11 +103,11 @@ const Hero = () => {
                 </div>
             </div>
 
-            {/* No agencies - Right side */}
+            {/* Easy Returns - Right side */}
             <div className="absolute right-[5%] xl:right-[12%] top-[75%] hidden lg:block animate-float z-20">
                 <div className="relative">
                     <div className="bg-brand-red text-white px-6 py-3 rounded-full font-poppins font-normal text-lg relative z-10 shadow-lg rotate-[0deg] origin-left">
-                        No agencies
+                        Easy Returns
                     </div>
                     {/* Red Cursor SVG */}
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute -top-5 -left-6 w-8 h-8 -rotate-12 z-20 text-brand-red fill-current">

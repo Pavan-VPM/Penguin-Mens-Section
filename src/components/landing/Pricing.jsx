@@ -3,121 +3,121 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Zap } from 'lucide-react';
 
 const Pricing = () => {
-    const [audience, setAudience] = useState('influencers'); // 'influencers' or 'brands'
+    const [audience, setAudience] = useState('casual'); // 'casual' or 'premium'
 
     const plans = {
-        influencers: [
+        casual: [
             {
-                name: "Free",
-                price: "₹0",
+                name: "Basic",
+                price: "Free",
+                customPrice: true,
                 features: [
-                    "Basic profile listing",
-                    "Visible in search results",
-                    "Apply to campaigns",
-                    "Standard response time (48hrs)",
-                    "Basic analytics",
-                    "Self-service only"
+                    "Access to new arrivals",
+                    "Standard delivery (5-7 days)",
+                    "Free returns on full price items",
+                    "Email order updates",
+                    "Basic size guide",
+                    "Standard support"
                 ],
                 button: "Start Free",
                 primary: false
             },
             {
-                name: "Pro",
-                price: "₹499",
+                name: "Club",
+                price: "₹299",
                 features: [
-                    "Everything in Free",
-                    "Priority in search results",
-                    "Featured badge on profile",
-                    "AI-powered campaign matches",
-                    "Priority response time (24hrs)",
-                    "Advanced analytics dashboard",
-                    "Email support"
+                    "Everything in Basic",
+                    "Priority access to sales",
+                    "Free express delivery",
+                    "Member-only discounts (10%)",
+                    "Early access to new collections",
+                    "Priority customer support",
+                    "Style newsletter"
                 ],
-                button: "Go Pro",
+                button: "Join Club",
                 primary: false
             },
             {
-                name: "Premium",
-                price: "₹999",
+                name: "Elite",
+                price: "₹599",
                 features: [
-                    "Everything in Pro",
-                    "Top placement in category",
-                    "Verified influencer badge",
-                    "AI campaign recommendations",
-                    "Guaranteed response time (12hrs)",
-                    "Campaign negotiation assistance",
-                    "Dedicated account manager",
-                    "Portfolio optimization tips"
+                    "Everything in Club",
+                    "Exclusive member collections",
+                    "20% discount all year",
+                    "Free alterations",
+                    "Personal style consultation",
+                    "VIP customer support",
+                    "Birthday rewards",
+                    "Invite-only events"
                 ],
-                button: "Get Premium",
+                button: "Go Elite",
                 primary: false
             }
         ],
-        brands: [
+        premium: [
             {
                 name: "Starter",
-                price: "₹199",
+                price: "₹999",
                 features: [
-                    "10 influencer contacts/month",
-                    "Basic influencer search & filters",
-                    "Campaign creation tools",
-                    "Basic analytics",
-                    "AI-suggested influencers (limited)",
-                    "Email support",
-                    "Self-service campaign management"
+                    "5 premium pieces/month",
+                    "Curated style box",
+                    "Free delivery & returns",
+                    "Basic styling tips",
+                    "Standard support",
+                    "Easy size swaps",
+                    "Cancel anytime"
                 ],
                 button: "Get Started",
                 primary: false
             },
             {
-                name: "Growth",
-                price: "₹499",
+                name: "Wardrobe",
+                price: "₹1,999",
                 features: [
-                    "50 influencer contacts/month",
+                    "10 premium pieces/month",
                     "Everything in Starter",
-                    "Advanced search filters",
-                    "AI-powered campaign optimization",
-                    "Performance tracking dashboard",
-                    "Human review of campaign briefs",
-                    "Priority email support",
-                    "Campaign templates"
+                    "Personal stylist access",
+                    "Priority new drops",
+                    "Unlimited size exchanges",
+                    "Exclusive collab pieces",
+                    "Priority support",
+                    "Monthly style report"
                 ],
-                button: "Start Growth",
+                button: "Build Wardrobe",
                 primary: true,
                 badge: "Most Popular"
             },
             {
-                name: "Scale",
-                price: "₹999",
+                name: "Signature",
+                price: "₹3,999",
                 features: [
-                    "Unlimited influencer contacts",
-                    "Everything in Growth",
-                    "Dedicated campaign manager (human assistance)",
-                    "AI + Human campaign strategy",
-                    "Custom contract templates",
-                    "Multi-campaign management",
-                    "Performance benchmarking",
-                    "Phone + Email support",
-                    "Quarterly strategy calls"
+                    "Unlimited premium pieces",
+                    "Everything in Wardrobe",
+                    "Dedicated personal stylist",
+                    "Custom tailoring options",
+                    "Exclusive brand collabs",
+                    "Quarterly wardrobe audit",
+                    "Concierge support",
+                    "VIP event invites"
                 ],
-                button: "Scale Up",
+                button: "Go Signature",
                 primary: false
             },
             {
-                name: "Enterprise",
+                name: "Corporate",
                 price: "Custom",
                 customPrice: true,
                 features: [
-                    "Everything in Scale",
-                    "Full-service campaign management",
-                    "White-glove service",
-                    "API access",
-                    "Custom integrations",
-                    "Dedicated account team",
-                    "Legal support",
-                    "Custom reporting"
+                    "Everything in Signature",
+                    "Team uniform solutions",
+                    "Bulk order discounts",
+                    "Branded packaging",
+                    "API integrations",
+                    "Dedicated account manager",
+                    "Custom branding",
+                    "Quarterly strategy review"
                 ],
-                button: "Contact Sales",
+                button: "Contact Us",
                 primary: false
             }
         ]
@@ -129,40 +129,40 @@ const Pricing = () => {
 
                 {/* Header */}
                 <h2 className="text-4xl md:text-6xl font-normal font-['Freeman'] mb-4 text-[#8A38F5] text-center">
-                    Choose Your Plan
+                    Choose Your Style Plan
                 </h2>
                 <p className="text-black text-lg mb-10 text-center font-['Urbanist']">
-                    Choose what works for you. No hidden fees, ever.
+                    Pick what works for your wardrobe. No hidden fees, ever.
                 </p>
 
                 {/* Toggle */}
                 <div className="w-[513px] h-20 px-[4.81px] py-1 bg-white rounded-[31.64px] shadow-[inset_0px_1.601873517036438px_5.606557369232178px_0px_rgba(138,56,245,0.50)] inline-flex justify-start items-center mb-8">
                     <button
-                        onClick={() => setAudience('influencers')}
-                        className={`w-64 h-20 px-8 py-6 rounded-[31.64px] flex justify-center items-center gap-1 transition-all duration-300 ${audience === 'influencers' ? 'bg-[#8A38F5]' : ''}`}
+                        onClick={() => setAudience('casual')}
+                        className={`w-64 h-20 px-8 py-6 rounded-[31.64px] flex justify-center items-center gap-1 transition-all duration-300 ${audience === 'casual' ? 'bg-[#8A38F5]' : ''}`}
                     >
-                        <div className={`text-center justify-center text-3xl font-normal font-['Freeman'] ${audience === 'influencers' ? 'text-white' : 'text-[#8A38F5]'}`}>For Influencers</div>
+                        <div className={`text-center justify-center text-3xl font-normal font-['Freeman'] ${audience === 'casual' ? 'text-white' : 'text-[#8A38F5]'}`}>Casual Wear</div>
                     </button>
                     <button
-                        onClick={() => setAudience('brands')}
-                        className={`w-64 h-20 px-8 py-6 rounded-[31.64px] flex justify-center items-center gap-1 transition-all duration-300 ${audience === 'brands' ? 'bg-[#8A38F5]' : ''}`}
+                        onClick={() => setAudience('premium')}
+                        className={`w-64 h-20 px-8 py-6 rounded-[31.64px] flex justify-center items-center gap-1 transition-all duration-300 ${audience === 'premium' ? 'bg-[#8A38F5]' : ''}`}
                     >
-                        <div className={`text-center justify-center text-3xl font-normal font-['Freeman'] ${audience === 'brands' ? 'text-white' : 'text-[#8A38F5]'}`}>For Brands</div>
+                        <div className={`text-center justify-center text-3xl font-normal font-['Freeman'] ${audience === 'premium' ? 'text-white' : 'text-[#8A38F5]'}`}>Premium Plan</div>
                     </button>
                 </div>
 
-                {/* Platform Fee Banner */}
-                {audience === 'brands' && (
+                {/* Premium Plan Banner */}
+                {audience === 'premium' && (
                     <div className="w-full max-w-2xl bg-gradient-to-r from-[#9C5CFF] to-[#7C3AED] rounded-[20px] p-4 text-center mb-16 shadow-lg">
-                        <h3 className="text-white text-xl font-bold font-['Urbanist'] mb-1">10% Platform Fee</h3>
+                        <h3 className="text-white text-xl font-bold font-['Urbanist'] mb-1">Premium Concierge</h3>
                         <p className="text-white/90 text-sm font-['Urbanist']">
-                            Flat fee on campaign budget (e.g., ₹50,000 campaign = 5,000 fee). Includes full campaign management, and escrow protection.
+                            Our premium plan includes a dedicated personal stylist and unlimited style consultations.
                         </p>
                     </div>
                 )}
 
                 {/* Pricing Cards */}
-                <div className={`grid grid-cols-1 md:grid-cols-2 ${audience === 'brands' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6 w-full`}>
+                <div className={`grid grid-cols-1 md:grid-cols-2 ${audience === 'premium' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6 w-full`}>
                     <AnimatePresence mode='wait'>
                         {plans[audience].map((plan, index) => (
                             <motion.div

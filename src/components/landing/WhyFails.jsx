@@ -14,16 +14,16 @@ const WhyFails = () => {
                     {/* Left Content */}
                     <div className="text-left text-white space-y-6 md:space-y-10 z-10 relative">
                         <h2 className="text-[32px] md:text-[50px] leading-[1.1] md:leading-[60px] font-freeman font-normal break-words">
-                            Why Most Influencer<br />
-                            Marketing Fails!
+                            Why Most Men's Fashion<br />
+                            Brands Let You Down!
                         </h2>
                         <p className="text-[20px] md:text-[19.72px] font-roboto font-normal leading-normal text-white max-w-3xl">
-                            Influencer marketing rarely fails because of <br />creativity. It fails because the system is inefficient. <br />There is a simpler, more honest way. And it costs <br />significantly less.
+                            Men deserve better than fast fashion that falls apart. <br />Poor fits, mediocre fabric, and overpriced basics — <br />there's a sharper, more honest way to dress.
                         </p>
 
                         <div className="pt-2">
                             <button className="inline-flex items-center gap-3 bg-white text-[#6600FF] px-8 py-4 rounded-full font-urbanist font-medium text-lg hover:bg-white/90 transition-colors shadow-lg">
-                                <span>Find Infuencers</span>
+                                <span>Browse Collections</span>
                                 <ArrowRight className="w-6 h-6" />
                             </button>
                         </div>
@@ -52,8 +52,8 @@ const WhyFails = () => {
             <div className="relative w-full px-4 -mt-12 md:-mt-32 z-10 mb-10">
                 <div className="max-w-[1300px] mx-auto bg-white rounded-[60px] py-12 px-4 text-center shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)]">
                     <h3 className="text-[30px] md:text-[40px] font-freeman text-black mb-10 max-w-4xl mx-auto leading-tight">
-                        There is a simpler, more honest way. And<br />
-                        it costs significantly less.
+                        There is a better way. Premium quality,<br />
+                        at prices that make sense.
                     </h3>
 
                     {/* Cards Grid */}
@@ -64,10 +64,10 @@ const WhyFails = () => {
                                 <img src={verifiedCheck01} alt="Icon" className="w-[60%] h-[60%] object-contain" />
                             </div>
                             <h4 className="text-[24px] md:text-[28px] font-freeman text-white mb-4 leading-tight">
-                                Bloated Agency<br />Commissions
+                                Poor Fabric<br />Quality
                             </h4>
                             <p className="text-white/90 font-urbanist text-lg leading-relaxed">
-                                30–40% of your budget disappears before the campaign begins.
+                                Cheap materials that shrink, fade, or fall apart after a few washes.
                             </p>
                         </div>
 
@@ -77,10 +77,10 @@ const WhyFails = () => {
                                 <Clock className="w-10 h-10 text-[#6600FF]" />
                             </div>
                             <h4 className="text-[24px] md:text-[28px] font-freeman text-white mb-4 leading-tight">
-                                Delayed Payments &<br />Endless Follow-ups
+                                Wrong Fit &<br />Sizing Chaos
                             </h4>
                             <p className="text-white/90 font-urbanist text-lg leading-relaxed">
-                                Creators wait. Brands chase. Momentum is lost.
+                                Inconsistent sizing that leaves you guessing every single time.
                             </p>
                         </div>
 
@@ -90,16 +90,16 @@ const WhyFails = () => {
                                 <img src={verifiedCheck02} alt="Icon" className="w-[60%] h-[60%] object-contain" />
                             </div>
                             <h4 className="text-[24px] md:text-[28px] font-freeman text-white mb-4 leading-tight">
-                                Impressive Numbers.<br />Poor Results.
+                                Overpriced.<br />Underdelivered.
                             </h4>
                             <p className="text-white/90 font-urbanist text-lg leading-relaxed">
-                                Likes without impact. Reach without revenue.
+                                Paying premium prices for average quality and zero style.
                             </p>
                         </div>
                     </div>
 
                     <h3 className="text-[28px] md:text-[36px] font-freeman text-black text-center relative z-10">
-                        There's a better way. And it costs 50% less.
+                        Penguin does it better. And it costs less than you think.
                     </h3>
 
                     {/* Floating Action Button Removed */}

@@ -4,18 +4,18 @@ import logo from '../../assets/images/logo copy.png';
 
 const Header = ({ bgClass = "bg-brand-yellow", loginBtnClass = "bg-[#FCE958]" }) => {
     const navLinks = [
-        { name: 'Browse Influencer', path: '/browse' },
-        { name: 'Top categories', path: '/top-categories' },
+        { name: 'New Arrivals', path: '/browse' },
+        { name: 'Collections', path: '/top-categories' },
         { name: 'How It Works', path: '/how-it-works' },
-        { name: 'Why Pick Your Influencers', path: '/why-pick-your-influencer' },
+        { name: 'Why Penguin', path: '/why-pick-your-influencer' },
     ];
 
     return (
         <header className={`grid grid-cols-[auto_1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center py-8 px-4 md:px-12 w-full max-w-[1920px] mx-auto z-50 relative ${bgClass}`}>
             {/* Left Logo */}
             <div className="flex justify-start">
-                <Link to="/" className="flex items-center gap-2">
-                    <img src={logo} alt="Pick Your Influencer" className="h-10 md:h-12 w-auto object-contain" />
+                <Link to="/" className="flex items-center">
+                    <img src="/logo.png" alt="Penguin" className="h-14 md:h-20 w-auto object-contain" />
                 </Link>
             </div>
 
@@ -40,7 +40,7 @@ const Header = ({ bgClass = "bg-brand-yellow", loginBtnClass = "bg-[#FCE958]" })
                     Log in
                 </Link>
                 <Link to="/signup/brand" className="px-3 py-2 md:px-8 md:py-3 rounded-full bg-[#090909] text-white font-urbanist font-medium text-sm md:text-[18px] hover:bg-gray-800 transition-colors">
-                    Sign Up
+                    Shop Now
                 </Link>
             </div>
         </header>

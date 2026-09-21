@@ -22,7 +22,7 @@ const FourSteps = () => {
                     {/* Right Side: Title */}
                     <div className="flex lg:justify-end">
                         <div className="w-full lg:w-[582px] lg:pt-28 text-black text-5xl md:text-4xl font-normal font-['Freeman'] leading-tight md:leading-[93.25px] lg:text-left">
-                            From Idea to Impact — In Four Steps
+                            From Browse to Wardrobe — In Four Steps
                         </div>
                     </div>
                 </div>
@@ -30,14 +30,14 @@ const FourSteps = () => {
                 {/* Steps Section */}
                 {/* Steps Section - Horizontal Scroll */}
                 <div className="flex overflow-x-auto gap-8 pb-12 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 lg:mx-0 lg:px-0">
-                    {/* Card 1: Discover */}
+                    {/* Card 1: Browse */}
                     <div className="w-[400px] h-[280px] relative bg-purple-500 rounded-[32px] snap-center shrink-0">
                         <div className="absolute left-[30px] top-0 justify-start text-black text-7xl font-normal font-['Sofia'] leading-[120px]">1</div>
                         <div className="px-3 py-2 left-[30px] top-[130px] absolute rounded-full outline outline-[1px] outline-white inline-flex justify-center items-center gap-2">
-                            <div className="justify-start text-white text-lg font-bold font-['Urbanist']">Discover</div>
+                            <div className="justify-start text-white text-lg font-bold font-['Urbanist']">Browse</div>
                         </div>
                         <div className="w-[280px] left-[30px] top-[190px] absolute justify-start text-white text-lg font-semibold font-['Urbanist'] leading-snug">
-                            Search creators by niche, audience, and performance
+                            Explore curated collections by style, occasion & season
                         </div>
                         <div className="absolute left-[180px] top-[20px] w-[200px] h-[160px] overflow-hidden">
                             <svg width="200" height="160" viewBox="0 0 279 219" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -46,20 +46,20 @@ const FourSteps = () => {
                                     <pattern id="pattern0_1577_2098_small" patternContentUnits="objectBoundingBox" width="1" height="1">
                                         <use xlinkHref="#image0_1577_2098_small" transform="matrix(0.0013587 0 0 0.00167376 0 -0.42992)" />
                                     </pattern>
-                                    <image id="image0_1577_2098_small" width="736" height="1288" preserveAspectRatio="none" href="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2864&auto=format&fit=crop" />
+                                    <image id="image0_1577_2098_small" width="736" height="1288" preserveAspectRatio="none" href="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?q=80&w=1080&auto=format&fit=crop" />
                                 </defs>
                             </svg>
                         </div>
                     </div>
 
-                    {/* Card 2: Connect */}
+                    {/* Card 2: Pick Your Size */}
                     <div data-layer="Frame 1000002616" className="w-[400px] h-[280px] relative bg-yellow-300 rounded-[32px] snap-center shrink-0">
                         <div data-layer="2" className="absolute left-[30px] top-[130px] justify-start text-black text-7xl font-normal font-['Sofia'] leading-[120px]">2</div>
                         <div data-layer="Frame 1000002614" className="px-3 py-2 left-[30px] top-[30px] absolute rounded-full outline outline-[1px] outline-black inline-flex justify-center items-center gap-2">
-                            <div data-layer="Connect" className="justify-start text-black text-lg font-bold font-['Urbanist']">Connect</div>
+                            <div data-layer="Pick Your Size" className="justify-start text-black text-lg font-bold font-['Urbanist']">Pick Your Size</div>
                         </div>
-                        <div data-layer="Speak directly" className="w-[260px] left-[30px] top-[90px] absolute justify-start text-black text-lg font-semibold font-['Urbanist'] leading-snug">
-                            Speak directly. Agree clearly. Move quickly.
+                        <div data-layer="Find your fit" className="w-[260px] left-[30px] top-[90px] absolute justify-start text-black text-lg font-semibold font-['Urbanist'] leading-snug">
+                            Use our smart size guide. Get the perfect fit every time.
                         </div>
                         <div data-svg-wrapper data-layer="Vector 9" className="absolute left-[160px] top-[50px] w-[215px] h-[172px]">
                             <svg width="215" height="172" viewBox="0 0 300 240" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -68,20 +68,20 @@ const FourSteps = () => {
                                     <pattern id="pattern0_1577_2104_small" patternContentUnits="objectBoundingBox" width="1" height="1">
                                         <use xlinkHref="#image0_1577_2104_small" transform="matrix(0.000976399 0 0 0.00111588 0.000863617 0.0773554)" />
                                     </pattern>
-                                    <image id="image0_1577_2104_small" width="1080" height="1349" preserveAspectRatio="none" href="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1080&auto=format&fit=crop" />
+                                    <image id="image0_1577_2104_small" width="1080" height="1349" preserveAspectRatio="none" href="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1080&auto=format&fit=crop" />
                                 </defs>
                             </svg>
                         </div>
                     </div>
 
-                    {/* Card 3: Secure */}
+                    {/* Card 3: Checkout Safely */}
                     <div data-layer="Frame 1000002622" className="w-[400px] h-[280px] relative bg-red-500 rounded-[32px] snap-center shrink-0">
                         <div data-layer="3" className="absolute left-[30px] top-0 justify-start text-black text-7xl font-normal font-['Sofia'] leading-[120px]">3</div>
                         <div data-layer="Frame 1000002614" className="px-3 py-2 left-[30px] top-[130px] absolute rounded-full outline outline-[1px] outline-white inline-flex justify-center items-center gap-2">
-                            <div data-layer="Secure" className="justify-start text-white text-lg font-bold font-['Urbanist']">Secure</div>
+                            <div data-layer="Checkout" className="justify-start text-white text-lg font-bold font-['Urbanist']">Checkout Safely</div>
                         </div>
-                        <div data-layer="Deposit campaign funds" className="w-[280px] left-[30px] top-[190px] absolute justify-start text-white text-lg font-semibold font-['Urbanist'] leading-snug">
-                            Deposit campaign funds into escrow. Your investment stays protected.
+                        <div data-layer="Secure payment" className="w-[280px] left-[30px] top-[190px] absolute justify-start text-white text-lg font-semibold font-['Urbanist'] leading-snug">
+                            Secure payment. Instant order confirmation. Done.
                         </div>
                         <div data-svg-wrapper data-layer="Vector 8" className="absolute left-[180px] top-[20px] w-[200px] h-[185px]">
                             <svg width="200" height="185" viewBox="0 0 279 257" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -96,14 +96,14 @@ const FourSteps = () => {
                         </div>
                     </div>
 
-                    {/* Card 4: Launch & Measure */}
+                    {/* Card 4: Wear & Love */}
                     <div data-layer="Frame 1000002621" className="w-[400px] h-[280px] relative bg-yellow-300 rounded-[32px] snap-center shrink-0">
                         <div data-layer="4" className="absolute left-[30px] top-[130px] justify-start text-black text-7xl font-normal font-['Sofia'] leading-[120px]">4</div>
                         <div data-layer="Frame 1000002614" className="px-3 py-2 left-[30px] top-[30px] absolute rounded-full outline outline-[1px] outline-black inline-flex justify-center items-center gap-2">
-                            <div data-layer="Launch & Measure" className="justify-start text-black text-lg font-bold font-['Urbanist']">Launch & Measure</div>
+                            <div data-layer="Wear & Love" className="justify-start text-black text-lg font-bold font-['Urbanist']">Wear & Love</div>
                         </div>
-                        <div data-layer="Go live—track results" className="w-[260px] left-[30px] top-[90px] absolute justify-start text-black text-lg font-semibold font-['Urbanist'] leading-snug">
-                            Go live—track results. Approve delivery. Release payment.
+                        <div data-layer="Delivered fast" className="w-[260px] left-[30px] top-[90px] absolute justify-start text-black text-lg font-semibold font-['Urbanist'] leading-snug">
+                            Delivered fast. Love it or return it. No questions asked.
                         </div>
                         <div data-svg-wrapper data-layer="Vector 9" className="absolute left-[160px] top-[50px] w-[215px] h-[150px]">
                             <svg width="215" height="150" viewBox="0 0 300 205" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -112,7 +112,7 @@ const FourSteps = () => {
                                     <pattern id="pattern0_839_6447_small" patternContentUnits="objectBoundingBox" width="1" height="1">
                                         <use xlinkHref="#image0_839_6447_small" transform="matrix(0.0013587 0 0 0.00184394 0 0.0285749)" />
                                     </pattern>
-                                    <image id="image0_839_6447_small" width="736" height="1051" preserveAspectRatio="none" href="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1080&auto=format&fit=crop" />
+                                    <image id="image0_839_6447_small" width="736" height="1051" preserveAspectRatio="none" href="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1080&auto=format&fit=crop" />
                                 </defs>
                             </svg>
                         </div>

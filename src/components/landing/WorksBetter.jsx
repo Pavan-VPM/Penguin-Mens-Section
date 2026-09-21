@@ -18,12 +18,12 @@ const ArrowSvg = ({ className, color }) => (
 const slides = [
     {
         theme: "purple",
-        badge: "Only Verified Influencers",
+        badge: "Only Premium Fabrics",
         icon: verifiedIcon,
-        title: "How PickyYourInfluencer",
-        title2: "Works Better",
-        subtitle: "(No bots. No inflated engagement)",
-        description: "Every creator is vetted for authenticity, audience quality, and consistency.",
+        title: "How Penguin Men's",
+        title2: "Section Works Better",
+        subtitle: "(No synthetics. No compromise)",
+        description: "Every piece is crafted from carefully sourced, quality-tested materials.",
         image: visualImage,
         colors: {
             bg: "#843ED2",
@@ -36,13 +36,13 @@ const slides = [
     },
     {
         theme: "white",
-        badge: "Performance You Can Measure",
+        badge: "Style You Can Measure",
         icon: pulseIcon,
-        title: "How PickyYourInfluencer",
-        title2: "Works Better",
-        subtitle: "(Track reach, clicks, and conversions in real time)",
-        description: "Marketing decisions based on evidence — not optimism.",
-        image: neonManImage, // Blue light man
+        title: "How Penguin Men's",
+        title2: "Section Works Better",
+        subtitle: "(Real fits. Real confidence.)",
+        description: "Dressing decisions based on style — not trends.",
+        image: neonManImage,
         colors: {
             bg: "#FFFFFF",
             accent: "#F7815B",
@@ -56,11 +56,11 @@ const slides = [
         theme: "purple",
         badge: "Payments You Can Trust",
         icon: verifiedIcon,
-        title: "How PickyYourInfluencer",
-        title2: "Works Better",
-        subtitle: "(No bots. No inflated engagement)",
-        description: "Released only when the work is delivered and approved.",
-        image: trustImage, // Updated image
+        title: "How Penguin Men's",
+        title2: "Section Works Better",
+        subtitle: "(Secure checkout. Hassle-free returns)",
+        description: "Shop with confidence — easy returns and secure payment guaranteed.",
+        image: trustImage,
         colors: {
             bg: "#843ED2",
             accent: "#BBFF88",
@@ -72,13 +72,13 @@ const slides = [
     },
     {
         theme: "white",
-        badge: "One Clear Fee",
+        badge: "One Clear Price",
         icon: tagIcon,
-        title: "How PickyYourInfluencer",
-        title2: "Works Better",
-        subtitle: "(Track reach, clicks, and conversions in real time)",
-        description: "Marketing decisions based on evidence — not optimism.",
-        image: clearFeeImage, // Updated image
+        title: "How Penguin Men's",
+        title2: "Section Works Better",
+        subtitle: "(No hidden charges. Ever.)",
+        description: "What you see is what you pay. Fair pricing, always.",
+        image: clearFeeImage,
         colors: {
             bg: "#FFFFFF",
             accent: "#F7815B",
@@ -232,7 +232,7 @@ const WorksBetter = () => {
                                 ></div>
 
                                 <button className="bg-[#090909] text-[#F7F3EA] px-8 py-4 rounded-full font-urbanist text-[18px] font-medium break-words shadow-md flex items-center gap-4 hover:bg-black/80 transition-all relative z-10">
-                                    Start Your Campaign
+                                    Shop This Collection
                                     <img src={arrowIcon} alt="arrow" className="w-6 h-6 -rotate-90" />
                                 </button>
                             </div>

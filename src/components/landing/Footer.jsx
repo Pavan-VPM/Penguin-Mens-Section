@@ -15,11 +15,11 @@ const Footer = () => {
                     {/* Brand Column */}
                     <div className="space-y-8">
                         {/* Logo */}
-                        <div className="flex items-center gap-2">
-                            <img src={logo} alt="Pick Your Influencer" className="h-28 w-auto" />
+                        <div className="flex items-center">
+                            <img src="/logo.png" alt="Penguin" className="h-16 md:h-24 w-auto object-contain" />
                         </div>
                         <p className="text-[#090909] font-urbanist text-[22px] leading-relaxed max-w-sm">
-                            Connecting brands with influencers. Directly.
+                            Premium men's fashion. Delivered to your door.
                         </p>
                         <div className="flex items-center gap-2">
                             {/* Social Icons matching design circles */}
@@ -38,25 +38,25 @@ const Footer = () => {
                         </div>
                     </div>
 
-                    {/* For Brands */}
+                    {/* Shop */}
                     <div className="space-y-6">
-                        <h4 className="font-freeman text-[18px] uppercase tracking-widest text-black">For Brands</h4>
+                        <h4 className="font-freeman text-[18px] uppercase tracking-widest text-black">Shop</h4>
                         <ul className="space-y-6 font-urbanist text-[16px] md:text-[20px] text-black">
-                            <li><a href="#" className="hover:underline">Browse Influencers</a></li>
-                            <li><a href="#" className="hover:underline">Create Campaign</a></li>
-                            <li><a href="#" className="hover:underline">Pricing</a></li>
+                            <li><a href="#" className="hover:underline">New Arrivals</a></li>
+                            <li><a href="#" className="hover:underline">Best Sellers</a></li>
+                            <li><a href="#" className="hover:underline">Collections</a></li>
                             <li><Link to="/how-it-works" className="hover:underline">How It Works</Link></li>
                         </ul>
                     </div>
 
-                    {/* For Influencers */}
+                    {/* Customer Care */}
                     <div className="space-y-6">
-                        <h4 className="font-freeman text-[18px] uppercase tracking-widest text-black">For Influencers</h4>
+                        <h4 className="font-freeman text-[18px] uppercase tracking-widest text-black">Customer Care</h4>
                         <ul className="space-y-6 font-urbanist text-[16px] md:text-[20px] text-black">
-                            <li><a href="#" className="hover:underline">Join Free</a></li>
-                            <li><a href="#" className="hover:underline">Find Campaigns</a></li>
-                            <li><a href="#" className="hover:underline">Get Verified</a></li>
-                            <li><a href="#" className="hover:underline">Success Stories</a></li>
+                            <li><a href="#" className="hover:underline">Size Guide</a></li>
+                            <li><a href="#" className="hover:underline">Track Order</a></li>
+                            <li><a href="#" className="hover:underline">Returns & Exchanges</a></li>
+                            <li><a href="#" className="hover:underline">FAQs</a></li>
                         </ul>
                     </div>
 
@@ -64,7 +64,7 @@ const Footer = () => {
                     <div className="space-y-6">
                         <h4 className="font-freeman text-[18px] uppercase tracking-widest text-black">Company</h4>
                         <ul className="space-y-6 font-urbanist text-[16px] md:text-[20px] text-black">
-                            <li><a href="#" className="hover:underline">About Us</a></li>
+                            <li><a href="#" className="hover:underline">About Penguin</a></li>
                             <li><a href="#" className="hover:underline">Contact</a></li>
                             <li><a href="#" className="hover:underline">Terms & Conditions</a></li>
                             <li><a href="#" className="hover:underline">Privacy Policy</a></li>
@@ -95,7 +95,7 @@ const Footer = () => {
                     paddingLeft: '0',
                     paddingRight: '0'
                 }}>
-                    {['I', 'N', 'F', 'L', 'U', 'E', 'N', 'C', 'E', 'R'].map((char, index) => (
+                    {['P', 'E', 'N', 'G', 'U', 'I', 'N'].map((char, index) => (
                         <span key={index}>{char}</span>
                     ))}
                 </div>
@@ -104,9 +104,9 @@ const Footer = () => {
             {/* Bottom Bar Container */}
             <div className="max-w-[1920px] mx-auto px-8 md:px-16 w-full relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-center text-[16px] md:text-[20px] font-urbanist text-black pt-4 gap-4 pb-8">
-                    <div>Pick Your Influencer</div>
-                    <div>© 2026 Pickyourinfluencer</div>
-                    <div>A better system for influencer marketing.</div>
+                    <div>Penguin Men's Section</div>
+                    <div>© 2026 Penguin</div>
+                    <div>Premium men's fashion. Always.</div>
                 </div>
             </div>
         </footer>
