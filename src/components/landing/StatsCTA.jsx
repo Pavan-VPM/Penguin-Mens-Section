@@ -9,20 +9,20 @@ const StatsCTA = () => {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12 text-white">
                         <div className="flex flex-col items-center">
-                            <span className="text-4xl md:text-5xl font-bold mb-2">500+</span>
-                            <span className="text-purple-200 text-sm">Brands Trust Pickyourinfluencer</span>
+                            <span className="text-4xl md:text-5xl font-bold mb-2">50,000+</span>
+                            <span className="text-purple-200 text-sm">Gentlemen Styled</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <span className="text-4xl md:text-5xl font-bold mb-2">2,500+</span>
-                            <span className="text-purple-200 text-sm">Verified Influencers</span>
+                            <span className="text-4xl md:text-5xl font-bold mb-2">100%</span>
+                            <span className="text-purple-200 text-sm">Pure Natural Fabrics</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <span className="text-4xl md:text-5xl font-bold mb-2">₹2.5 Cr+</span>
-                            <span className="text-purple-200 text-sm">Secured in Escrow</span>
+                            <span className="text-4xl md:text-5xl font-bold mb-2">4.9 / 5</span>
+                            <span className="text-purple-200 text-sm">Customer Rating</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <span className="text-4xl md:text-5xl font-bold mb-2">92%</span>
-                            <span className="text-purple-200 text-sm">Campaign Success Rate</span>
+                            <span className="text-4xl md:text-5xl font-bold mb-2">30-Day</span>
+                            <span className="text-purple-200 text-sm">Perfect Fit Guarantee</span>
                         </div>
                     </div>
                 </div>
@@ -38,23 +38,23 @@ const StatsCTA = () => {
                     {/* Content */}
                     <div className="relative z-10 flex flex-col items-center">
                         <h2 className="text-3xl md:text-5xl font-bold text-black mb-6 max-w-3xl leading-tight">
-                            Ready to Work with Real Influencers?
+                            Ready to Upgrade Your Wardrobe?
                         </h2>
                         <p className="text-gray-800 text-lg mb-10 max-w-xl">
-                            Join 500+ brands who stopped overpaying middlemen.
+                            Join 50,000+ men who stopped settling for ill-fitting off-the-rack clothing.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4">
                             <button className="border-2 border-black text-black px-8 py-3 rounded-full font-medium hover:bg-black/5 transition-colors">
-                                Browse Influencers First
+                                Browse New Arrivals
                             </button>
                             <button className="bg-black text-white px-8 py-3 rounded-full font-medium hover:bg-gray-900 transition-colors shadow-lg">
-                                Create Free Account
+                                Book a Tailor Consultation
                             </button>
                         </div>
 
                         <p className="text-xs text-gray-600 mt-6">
-                            No credit card required. Set up in 2 minutes.
+                            Free shipping & hassle-free returns across all orders.
                         </p>
                     </div>
 

@@ -8,8 +8,8 @@ const SimplerWay = () => {
 
                 {/* Header */}
                 <h2 className="text-3xl md:text-4xl font-bold text-black mb-12 max-w-4xl mx-auto leading-tight">
-                    There is a simpler, more honest way. And <br className="hidden md:block" />
-                    it costs significantly less.
+                    There is a simpler, smarter way to dress. <br className="hidden md:block" />
+                    And it costs significantly less.
                 </h2>
 
                 {/* Cards Grid */}
@@ -20,10 +20,10 @@ const SimplerWay = () => {
                             <Euro size={32} strokeWidth={2.5} />
                         </div>
                         <h3 className="text-2xl font-bold mb-4 leading-tight">
-                            Bloated Agency Commissions
+                            Absurd Retail Markups
                         </h3>
                         <p className="text-purple-100 text-sm md:text-base leading-relaxed">
-                            30-40% of your budget disappears before the campaign begins.
+                            Traditional luxury brands mark up garments by 800% simply for a logo badge.
                         </p>
                     </div>
 
@@ -33,10 +33,10 @@ const SimplerWay = () => {
                             <Clock size={32} strokeWidth={2.5} />
                         </div>
                         <h3 className="text-2xl font-bold mb-4 leading-tight">
-                            Delayed Payments & Endless Follow-ups
+                            Ill-Fitting Off-The-Rack
                         </h3>
                         <p className="text-purple-100 text-sm md:text-base leading-relaxed">
-                            Creators wait. Brands chase. Momentum is lost.
+                            Standardized S/M/L cuts that sag at the shoulders or bunch unflatteringly at the waist.
                         </p>
                     </div>
 
@@ -46,10 +46,10 @@ const SimplerWay = () => {
                             <MessageCircleQuestion size={32} strokeWidth={2.5} />
                         </div>
                         <h3 className="text-2xl font-bold mb-4 leading-tight">
-                            Impressive Numbers. Poor Results.
+                            Fast Fashion Fading
                         </h3>
                         <p className="text-purple-100 text-sm md:text-base leading-relaxed">
-                            Likes without impact. Reach without revenue.
+                            Cheap synthetic blends that pill, tear, and lose shape after just two washes.
                         </p>
                     </div>
                 </div>
@@ -57,7 +57,7 @@ const SimplerWay = () => {
                 {/* Footer Section */}
                 <div className="relative">
                     <h2 className="text-3xl md:text-4xl font-bold text-black mb-8">
-                        There's a better way. And it costs 50% less.
+                        Artisanal Tailoring. Premium Italian Fabrics. 50% Less Than Luxury Retail.
                     </h2>
 
                     {/* Decorative 'A' Badge */}

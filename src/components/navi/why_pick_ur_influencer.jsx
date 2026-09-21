@@ -22,29 +22,29 @@ const WhyPickYourInfluencer = () => {
     const cards = [
         {
             id: 0,
-            title: "Verified Influencers",
-            description: "Verified influencers. Every profile is vetted for real engagement and authentic audiences. No bots, no fake followers.",
+            title: "Pure Italian Fabrics",
+            description: "Pure Italian Fabrics. Sourced from the finest mills worldwide. 100% Egyptian cotton, mulberry silk, and breathable linen.",
             image: verifiedImg,
             icon: Check
         },
         {
             id: 1,
-            title: "Real Analytics",
-            description: "Real analytics. Track engagement, reach, and conversions in real-time. Make decisions based on actual data, not promises.",
+            title: "Precision Tailoring",
+            description: "Precision Tailoring. Engineered for an immaculate silhouette. Every cut and seam is crafted to flatter your build perfectly.",
             image: analyticsImg,
             icon: BarChart3
         },
         {
             id: 2,
-            title: "Direct Contact",
-            description: "Direct contact. No middlemen. Connect directly with influencers, negotiate terms, and build genuine partnerships.",
+            title: "Personal Stylist",
+            description: "Personal Stylist. Dedicated fashion consultants to curate your wardrobe for weddings, business summits, or weekend getaways.",
             image: contactImg,
             icon: MessageCircleMore
         },
         {
             id: 3,
-            title: "Campaign Success",
-            description: "Campaign success. Escrow-protected payments mean influencers deliver before getting paid. Your budget stays safe.",
+            title: "Hassle-Free Delivery",
+            description: "Hassle-Free Delivery. Express doorstep delivery with luxury garment packaging, free size alterations, and 30-day effortless returns.",
             image: successImg,
             icon: Rocket
         }
@@ -53,116 +53,115 @@ const WhyPickYourInfluencer = () => {
     const plans = {
         influencers: [
             {
-                name: "Free",
+                name: "Wardrobe Basic",
                 price: "₹0",
                 features: [
-                    "Basic profile listing",
-                    "Visible in search results",
-                    "Apply to campaigns",
-                    "Standard response time (48hrs)",
-                    "Basic analytics",
-                    "Self-service only"
+                    "Full catalog access",
+                    "Standard 3-5 day delivery",
+                    "Complimentary seasonal style guide",
+                    "30-day return policy",
+                    "Standard customer care",
+                    "Online sizing recommendation"
                 ],
-                button: "Start Free",
+                button: "Shop Now",
                 primary: false
             },
             {
-                name: "Pro",
+                name: "Style Pro",
                 price: "₹499",
                 features: [
-                    "Everything in Free",
-                    "Priority in search results",
-                    "Featured badge on profile",
-                    "AI-powered campaign matches",
-                    "Priority response time (24hrs)",
-                    "Advanced analytics dashboard",
-                    "Email support"
+                    "Everything in Basic",
+                    "15% off all new collections",
+                    "Free express 24-hr delivery",
+                    "Early access to limited drops",
+                    "Dedicated personal stylist chat",
+                    "Free custom alterations (2/month)",
+                    "Priority concierge support"
                 ],
-                button: "Go Pro",
+                button: "Join Style Pro",
                 primary: false
             },
             {
-                name: "Premium",
+                name: "Gentleman Elite",
                 price: "₹999",
                 features: [
-                    "Everything in Pro",
-                    "Top placement in category",
-                    "Verified influencer badge",
-                    "AI campaign recommendations",
-                    "Guaranteed response time (12hrs)",
-                    "Campaign negotiation assistance",
-                    "Dedicated account manager",
-                    "Portfolio optimization tips"
+                    "Everything in Style Pro",
+                    "25% off all collections",
+                    "Complimentary bespoke tailoring",
+                    "Exclusive VIP private showroom access",
+                    "Quarterly curated stylist lookbook",
+                    "Unlimited free doorstep alterations",
+                    "Dedicated personal wardrobe manager",
+                    "Invites to luxury runway showcases"
                 ],
-                button: "Get Premium",
+                button: "Join Gentleman Elite",
                 primary: false
             }
         ],
         brands: [
             {
-                name: "Starter",
-                price: "₹199",
+                name: "Corporate Executive",
+                price: "₹1,499",
                 features: [
-                    "10 influencer contacts/month",
-                    "Basic influencer search & filters",
-                    "Campaign creation tools",
-                    "Basic analytics",
-                    "AI-suggested influencers (limited)",
-                    "Email support",
-                    "Self-service campaign management"
+                    "Curated weekly business outfits",
+                    "2 tailored dress shirts / month",
+                    "Free doorstep fitting session",
+                    "Complimentary steam & dry-cleaning perks",
+                    "Priority corporate event styling",
+                    "Express 24-hour turnaround",
+                    "Executive wardrobe consultation"
                 ],
-                button: "Get Started",
+                button: "Select Executive",
                 primary: false
             },
             {
-                name: "Growth",
-                price: "₹499",
+                name: "Bespoke Black Label",
+                price: "₹3,999",
                 features: [
-                    "50 influencer contacts/month",
-                    "Everything in Starter",
-                    "Advanced search filters",
-                    "AI-powered campaign optimization",
-                    "Performance tracking dashboard",
-                    "Human review of campaign briefs",
-                    "Priority email support",
-                    "Campaign templates"
+                    "Full bespoke suit tailoring quarterly",
+                    "4 premium Italian fabric shirts",
+                    "Private fitting at home or office",
+                    "Exclusive Italian & British wool swatches",
+                    "Personal master tailor visits",
+                    "Priority international express shipping",
+                    "Unlimited alterations & repairs",
+                    "24/7 VIP Concierge line"
                 ],
-                button: "Start Growth",
+                button: "Join Black Label",
                 primary: true,
                 badge: "Most Popular"
             },
             {
-                name: "Scale",
-                price: "₹999",
+                name: "Wedding & Gala Club",
+                price: "₹7,999",
                 features: [
-                    "Unlimited influencer contacts",
-                    "Everything in Growth",
-                    "Dedicated campaign manager (human assistance)",
-                    "AI + Human campaign strategy",
-                    "Custom contract templates",
-                    "Multi-campaign management",
-                    "Performance benchmarking",
-                    "Phone + Email support",
-                    "Quarterly strategy calls"
+                    "Complete groomsmen / gala wardrobe",
+                    "Custom handcrafted tuxedo / sherwani",
+                    "Silk accessories & cufflinks set included",
+                    "Dedicated master stylist for the event",
+                    "Pre-event trial & emergency adjustments",
+                    "Luxury gift packaging & garment bags",
+                    "Private showroom fitting for family",
+                    "Lifetime wardrobe preservation"
                 ],
-                button: "Scale Up",
+                button: "Book Gala Styling",
                 primary: false
             },
             {
-                name: "Enterprise",
+                name: "Sovereign Bespoke",
                 price: "Custom",
                 customPrice: true,
                 features: [
-                    "Everything in Scale",
-                    "Full-service campaign management",
-                    "White-glove service",
-                    "API access",
-                    "Custom integrations",
-                    "Dedicated account team",
-                    "Legal support",
-                    "Custom reporting"
+                    "Handmade savile-row style craftsmanship",
+                    "Ultra-rare vicuña, cashmere, & silk fabrics",
+                    "Private stylist flying to your city",
+                    "Custom monogramming & gold-plated buttons",
+                    "Direct line to Head Designer",
+                    "Private jet luggage packing service",
+                    "Lifetime alterations & maintenance",
+                    "Bespoke leather accessories package"
                 ],
-                button: "Contact Sales",
+                button: "Inquire Concierge",
                 primary: false
             }
         ]
@@ -173,15 +172,15 @@ const WhyPickYourInfluencer = () => {
             {/* --- Hero Section --- */}
             <section className="w-full flex flex-col items-center justify-center pt-20 pb-16 text-center px-4 bg-white">
                 <h1 className="font-freeman text-[50px] md:text-[80px] leading-[1.1] md:leading-[1.2] text-black mb-6 max-w-5xl">
-                    Grow your brand with influencer marketing.
+                    Crafted for Distinction. Tailored for Men.
                 </h1>
                 <p className="font-urbanist text-[18px] md:text-[20px] text-black mb-10 max-w-2xl">
-                    Find verified influencers, secure your payments, and track real results—all in one place.
+                    Experience handcrafted bespoke suits, luxury casuals, and timeless shirts curated for the modern gentleman.
                 </p>
 
                 {/* Pill Button */}
                 <button className="flex items-center gap-2 pl-5 pr-3 py-3 bg-[#090909] rounded-full shadow-[3px_2px_7px_rgba(102,0,255,0.10)] hover:bg-black/90 transition-colors group">
-                    <span className="text-white font-roboto font-medium text-[18px]">Find Influencers</span>
+                    <span className="text-white font-roboto font-medium text-[18px]">Explore Collections</span>
                     <div className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-colors">
                         <ArrowDown className="w-4 h-4 text-white" />
                     </div>
@@ -273,10 +272,10 @@ const WhyPickYourInfluencer = () => {
 
                     {/* Header */}
                     <h2 className="text-4xl md:text-6xl font-normal font-freeman mb-4 text-[#8A38F5] text-center">
-                        Choose Your Plan
+                        Membership & Styling Plans
                     </h2>
                     <p className="text-black text-lg mb-10 text-center font-urbanist">
-                        Choose what works for you. No hidden fees, ever.
+                        Choose your style tier. Enjoy exclusive discounts, tailoring concierge, and seasonal drops.
                     </p>
 
                     {/* Toggle */}
@@ -285,22 +284,22 @@ const WhyPickYourInfluencer = () => {
                             onClick={() => setAudience('influencers')}
                             className={`w-64 h-20 px-8 py-6 rounded-[31.64px] flex justify-center items-center gap-1 transition-all duration-300 ${audience === 'influencers' ? 'bg-[#8A38F5]' : ''}`}
                         >
-                            <div className={`text-center justify-center text-3xl font-normal font-freeman ${audience === 'influencers' ? 'text-white' : 'text-[#8A38F5]'}`}>For Influencers</div>
+                            <div className={`text-center justify-center text-3xl font-normal font-freeman ${audience === 'influencers' ? 'text-white' : 'text-[#8A38F5]'}`}>Casual Wear</div>
                         </button>
                         <button
                             onClick={() => setAudience('brands')}
                             className={`w-64 h-20 px-8 py-6 rounded-[31.64px] flex justify-center items-center gap-1 transition-all duration-300 ${audience === 'brands' ? 'bg-[#8A38F5]' : ''}`}
                         >
-                            <div className={`text-center justify-center text-3xl font-normal font-freeman ${audience === 'brands' ? 'text-white' : 'text-[#8A38F5]'}`}>For Brands</div>
+                            <div className={`text-center justify-center text-3xl font-normal font-freeman ${audience === 'brands' ? 'text-white' : 'text-[#8A38F5]'}`}>Executive Label</div>
                         </button>
                     </div>
 
                     {/* Platform Fee Banner */}
                     {audience === 'brands' && (
                         <div className="w-full max-w-2xl bg-gradient-to-r from-[#9C5CFF] to-[#7C3AED] rounded-[20px] p-4 text-center mb-16 shadow-lg">
-                            <h3 className="text-white text-xl font-bold font-urbanist mb-1">10% Platform Fee</h3>
+                            <h3 className="text-white text-xl font-bold font-urbanist mb-1">VIP Tailoring Concierge Included</h3>
                             <p className="text-white/90 text-sm font-urbanist">
-                                Flat fee on campaign budget (e.g., ₹50,000 campaign = 5,000 fee). Includes full campaign management, and escrow protection.
+                                Complimentary home fittings, custom fabric swatches, and lifetime alterations with every Executive membership.
                             </p>
                         </div>
                     )}

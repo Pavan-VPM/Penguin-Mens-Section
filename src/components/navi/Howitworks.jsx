@@ -11,7 +11,7 @@ const Howitworks = () => {
             id: 1,
             number: '1',
             title: 'Browse & Discover',
-            description: 'Search by category, engagement rate, audience size, or past performance. Filter through verified influencers until you find the perfect match.',
+            description: 'Explore our curated collections of sharp suits, tailored shirts, luxury casuals, and premium menswear essentials.',
             image: step1Img,
             gradient: 'bg-gradient-to-b from-[#A159FF] to-[#8A38F5]', // Purple gradient
             textColor: 'text-white',
@@ -23,8 +23,8 @@ const Howitworks = () => {
         {
             id: 2,
             number: '2',
-            title: 'Review Profiles',
-            description: 'Dive deep into detailed profiles with real-time analytics, engagement rates, audience demographics, and past campaign performance.',
+            title: 'Select Fit & Fabrics',
+            description: 'Choose from 100% Egyptian cotton, pure Italian wool, and linen. Customize your fit with easy online sizing or book a tailor visit.',
             image: step2Img,
             gradient: 'bg-[#FBE957]', // Yellow solid
             textColor: 'text-black',
@@ -36,12 +36,10 @@ const Howitworks = () => {
         {
             id: 3,
             number: '3',
-            title: 'Connect & Collaborate',
-            description: 'Send a proposal. Discuss deliverables. Agree on terms. Your payment goes into escrow protection—safe until they deliver.',
+            title: 'Artisanal Crafting',
+            description: 'Master tailors precision-cut and stitch your garments with reinforced seams, luxury linings, and premium horn buttons.',
             image: step3Img,
-            gradient: 'bg-[#E75454CC]', // Reddish transparent? using solid approximation or rgba
-            // The snippet says rgba(231, 84, 84, 0.80). Let's use a solid close to it or custom class.
-            // Using a standard brand-red or similar.
+            gradient: 'bg-[#E75454CC]',
             containerStyle: { backgroundColor: 'rgba(231, 84, 84, 0.80)' },
             textColor: 'text-white',
             numberColor: 'text-[#5814CD]',
@@ -52,8 +50,8 @@ const Howitworks = () => {
         {
             id: 4,
             number: '4',
-            title: 'Review Profiles', // Using title from snippet even if duplicate
-            description: 'Execute your influencer marketing campaigns with confidence and track your success with our integrated analytics tools.',
+            title: 'Doorstep Try-On & Fit Guarantee',
+            description: 'Delivered in luxury garment bags. Try it at home with our 100% Perfect Fit Guarantee—free alterations and effortless 30-day returns.',
             image: step4Img,
             gradient: 'bg-[#FBE957]', // Yellow solid
             textColor: 'text-black',
@@ -70,10 +68,10 @@ const Howitworks = () => {
             {/* Header */}
             <div className="text-center mb-10 md:mb-14 relative z-10">
                 <h2 className="text-[36px] md:text-[72px] font-freeman text-black mb-4 md:mb-6 leading-tight">
-                    How Pick Your Influencer works.
+                    How Penguin Men's Section Works.
                 </h2>
                 <p className="font-urbanist text-[20px] text-black">
-                    Four simple steps to find, connect, and collaborate with the right influencers.
+                    Four simple steps to elevate your wardrobe with handcrafted perfection.
                 </p>
             </div>
 

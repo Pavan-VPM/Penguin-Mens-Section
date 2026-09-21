@@ -27,8 +27,8 @@ import travelImage from '../../assets/images/travel_image.png';
 const TopCategories = () => {
     const categories = [
         {
-            name: "Beauty",
-            description: "Makeup, skincare, cosmetics, and wellness.",
+            name: "Suits & Tuxedos",
+            description: "Bespoke 2 & 3-piece suits, Italian wool blazers, and evening black-tie tuxedos.",
             bgColor: "bg-[#895AF6]",
             textColor: "text-white",
             image: beautyInfluencerImg,
@@ -36,8 +36,8 @@ const TopCategories = () => {
             buttonStyle: "bg-[#090909] text-white"
         },
         {
-            name: "Business",
-            description: "Finance, marketing, entrepreneurship, and careers.",
+            name: "Formal Shirts",
+            description: "100% Egyptian Giza cotton cutaway, mandarin, and French-cuff dress shirts.",
             bgColor: "bg-[#E8EFD6]",
             textColor: "text-black",
             image: businessInfluencerImg,
@@ -46,8 +46,8 @@ const TopCategories = () => {
             buttonStyle: "bg-[#090909] text-white"
         },
         {
-            name: "Entertainment",
-            description: "Movies, music, pop culture, and celebrity news.",
+            name: "Casual Wear",
+            description: "Premium oversized graphic tees, heavyweight hoodies, and jackets.",
             bgColor: "bg-[#171717]",
             textColor: "text-white",
             icon: entertainmentIcon,
@@ -55,8 +55,8 @@ const TopCategories = () => {
             special: "bubbles"
         },
         {
-            name: "Fashion",
-            description: "Style, apparel, trends, and haute couture.",
+            name: "Luxury Linens",
+            description: "Pure French linen resort shirts, breathable trousers, and summer sets.",
             bgColor: "bg-[#5814CD]",
             textColor: "text-white",
             icon: fashionIcon,
@@ -64,16 +64,16 @@ const TopCategories = () => {
             special: "fashion-card"
         },
         {
-            name: "Fitness",
-            description: "Workouts, nutrition, health, and athletic performance.",
+            name: "Active & Gym",
+            description: "4-way stretch performance joggers, moisture-wicking tees, and compression layers.",
             bgColor: "bg-[#B8EA55]",
             textColor: "text-[#171717]",
             icon: fitnessIcon,
             special: "fitness-icon"
         },
         {
-            name: "Food",
-            description: "Cuisine, recipes, restaurants, and culinary arts.",
+            name: "Ethnic & Royal",
+            description: "Heritage silk kurtas, bandhgala jackets, sherwanis, and festive ensembles.",
             bgColor: "bg-[#E9E9E9]",
             textColor: "text-[#171717]",
             icon: foodIcon,
@@ -81,8 +81,8 @@ const TopCategories = () => {
             special: "food-arch"
         },
         {
-            name: "Gaming",
-            description: "Esports, streaming, consoles, and PC gaming.",
+            name: "Denim & Jeans",
+            description: "Japanese raw selvedge denim, stretch slim jeans, and denim trucker jackets.",
             bgColor: "bg-[#FF8500]",
             textColor: "text-white",
             image: gamingImage,
@@ -90,24 +90,24 @@ const TopCategories = () => {
             special: "gaming-mask"
         },
         {
-            name: "Lifestyle",
-            description: "Daily life, vlogging, home decor, and hobbies.",
+            name: "Winter Knitwear",
+            description: "100% Mongolian cashmere sweaters, wool trench coats, and leather jackets.",
             bgColor: "bg-[#F0EEE1]",
             textColor: "text-[#171717]",
             icon: lifestyleIcon,
             special: "lifestyle-arc"
         },
         {
-            name: "Tech",
-            description: "Gadgets, software, startups, and innovations.",
+            name: "Footwear",
+            description: "Handmade Goodyear welted leather Oxfords, suede loafers, and Chelsea boots.",
             bgColor: "bg-[#F7FD91]",
             textColor: "text-[#171717]",
             icon: techIcon,
             special: "tech-icon"
         },
         {
-            name: "Travel",
-            description: "Gadgets, software, startups, and innovations.",
+            name: "Accessories",
+            description: "Mulberry silk ties, pocket squares, cuff links, and full-grain leather belts.",
             bgColor: "bg-[#2563EB]",
             textColor: "text-white",
             icon: travelIcon,
@@ -124,10 +124,10 @@ const TopCategories = () => {
             {/* Hero Section */}
             <div className="w-full text-center mt-12 md:mt-24 px-4 mb-16">
                 <h1 className="font-freeman text-[50px] md:text-[80px] leading-tight text-black mb-4">
-                    Explore by category.
+                    Explore Our Collections.
                 </h1>
                 <p className="font-urbanist text-[18px] md:text-[20px] text-black">
-                    Find influencers in the niches that matter most to your brand.
+                    From boardroom power suiting to relaxed resort wear, curated for every moment.
                 </p>
             </div>
 
@@ -224,7 +224,7 @@ const TopCategories = () => {
                                 ${cat.special === 'business-card' || cat.special === 'bubbles' || cat.special === 'fashion-card' ? 'absolute bottom-10 left-1/2 -translate-x-1/2' : 'relative'}
                                 ${cat.buttonStyle ? cat.buttonStyle : (cat.textColor === 'text-white' ? 'bg-white text-black' : 'bg-[#090909] text-white')}`}
                             >
-                                {['Food', 'Gaming', 'Lifestyle'].includes(cat.name) ? 'Start your campaign' : 'Browse Influencer'}
+                                Explore Collection
                             </button>
 
                             {/* Other Cards Images (Generic Fallback - e.g. Travel) */}
