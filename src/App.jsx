@@ -1,29 +1,79 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage/LandingPage';
-import HowItWorksPage from './pages/HowItWorksPage/HowItWorksPage';
-import WhyPickYourInfluencerPage from './pages/WhyPickYourInfluencerPage/WhyPickYourInfluencerPage';
-import TopCategories from './components/navi/top_categories';
-import Browse from './components/navi/browse';
-// import SignUpInfluencer from './components/auth/SignUpInfluencer/SignUpInfluencer';
-// import SignUpBrand from './components/auth/SignUpBrand/SignUpBrand';
-// import Login from './components/auth/Login/Login';
+import React, { useEffect } from 'react'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
+import { CartProvider } from './context/CartContext'
+import Header from './components/Header'
+import Footer from './components/Footer'
+import BottomNav from './components/BottomNav'
+import HomePage from './pages/Home'
+import WinterDropPage from './pages/WinterDrop'
+import CollectionPage from './pages/Collection'
+import ProductDetailPage from './pages/ProductDetail'
+import CartPage from './pages/Cart'
+import CheckoutPage from './pages/Checkout'
+import WishlistPage from './pages/Wishlist'
+import AccountPage from './pages/Account'
+import SearchPage from './pages/Search'
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/how-it-works" element={<HowItWorksPage />} />
-        <Route path="/why-pick-your-influencer" element={<WhyPickYourInfluencerPage />} />
-        <Route path="/browse" element={<Browse />} />
-        <Route path="/top-categories" element={<TopCategories />} />
-        {/* <Route path="/signup/influencer" element={<SignUpInfluencer />} />
-        <Route path="/signup/brand" element={<SignUpBrand />} />
-        <Route path="/login" element={<Login />} /> */}
-      </Routes>
-    </Router>
-  );
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
 }
 
-export default App;
+export default function App() {
+  const location = useLocation()
+  const isCheckout = location.pathname === '/checkout'
 
+  return (
+    <CartProvider>
+      <ScrollToTop />
+      <div className="app-shell" style={{
+        minHeight: '100vh',
+        backgroundColor: 'var(--surface)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        position: 'relative',
+        width: '100%',
+        overflowX: 'hidden'
+      }}>
+        {/* Full responsive luxury container */}
+        <div className="app-inner-shell" style={{
+          width: '100%',
+          minHeight: '100vh',
+          backgroundColor: 'var(--surface)',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative'
+        }}>
+          {/* Global Header */}
+          <Header />
+
+          {/* Main Route Content */}
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/winter-drop" element={<WinterDropPage />} />
+              <Route path="/collection/shirts" element={<CollectionPage />} />
+              <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/account" element={<AccountPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+
+          {/* Global Minimal Luxury Footer */}
+          {!isCheckout && <Footer />}
+
+          {/* Bottom Navigation (automatically hidden on desktop via CSS) */}
+          {!isCheckout && <BottomNav />}
+        </div>
+      </div>
+    </CartProvider>
+  )
+}
