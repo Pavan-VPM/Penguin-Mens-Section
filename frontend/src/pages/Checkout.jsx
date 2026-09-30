@@ -25,7 +25,7 @@ export default function CheckoutPage() {
   if (orderPlaced) {
     return (
       <div className="content-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', padding: '3rem 1rem', textAlign: 'center' }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(0,210,255,0.15)', border: '2px solid var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 0 32px rgba(0,210,255,0.3)' }}>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--glow-primary)', border: '2px solid var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 0 32px var(--glow-primary)' }}>
           <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'var(--primary-container)' }}>check</span>
         </div>
         <h1 className="text-headline-lg text-on-surface" style={{ textTransform: 'uppercase', marginBottom: 8 }}>Order Confirmed</h1>
@@ -50,17 +50,17 @@ export default function CheckoutPage() {
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: 140 }}>
       <div className="content-container">
         {/* Step Progress Bar */}
-        <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', margin: '1rem 0 1.5rem', position: 'relative', border: '1px solid rgba(187,201,207,0.06)' }}>
+        <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', margin: '1rem 0 1.5rem', position: 'relative', border: '1px solid var(--ticker-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', maxWidth: 600, margin: '0 auto' }}>
             <div style={{ position: 'absolute', left: 24, right: 24, top: 16, height: 2, background: 'var(--surface-variant)', zIndex: 0 }} />
-            <div style={{ position: 'absolute', left: 24, right: 24, top: 16, height: 2, background: 'var(--primary-container)', zIndex: 0, boxShadow: '0 0 8px rgba(0,210,255,0.6)' }} />
+            <div style={{ position: 'absolute', left: 24, right: 24, top: 16, height: 2, background: 'var(--primary-container)', zIndex: 0, boxShadow: '0 0 8px var(--glow-primary)' }} />
             {STEPS.map((step, i) => (
               <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, position: 'relative', zIndex: 1 }}>
                 <div style={{
                   width: 32, height: 32, borderRadius: '50%',
                   background: i === activeStep ? 'var(--primary-container)' : 'var(--surface-container-highest)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: i === activeStep ? '0 0 16px rgba(0,210,255,0.8)' : i < activeStep ? '0 0 12px rgba(0,210,255,0.3)' : 'none',
+                  boxShadow: i === activeStep ? '0 0 16px var(--glow-primary)' : i < activeStep ? '0 0 12px var(--glow-primary)' : 'none',
                   color: i === activeStep ? 'var(--on-primary-fixed)' : 'var(--primary-container)',
                 }}>
                   {i < activeStep
@@ -81,7 +81,7 @@ export default function CheckoutPage() {
           {/* Left Column: Address, Courier, Payment Methods */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Delivery Address */}
-            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', border: '1px solid rgba(187,201,207,0.06)' }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', border: '1px solid var(--ticker-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span className="text-label-caps" style={{ background: 'var(--surface-container-highest)', padding: '3px 10px', borderRadius: 999, color: 'var(--primary)' }}>Default Shipping</span>
                 <button style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--surface-container)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: 'var(--primary)', fontSize: 11 }}>
@@ -103,7 +103,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Courier */}
-            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, border: '1px solid rgba(187,201,207,0.06)' }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, border: '1px solid var(--ticker-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 20, color: 'var(--primary-container)' }}>bolt</span>
@@ -142,8 +142,8 @@ export default function CheckoutPage() {
                   style={{
                     background: paymentMethod === m.key ? 'var(--surface-container)' : 'var(--surface-container-low)',
                     borderRadius: 12, padding: '1rem 1.25rem', cursor: 'pointer',
-                    border: paymentMethod === m.key ? '1px solid var(--primary-container)' : '1px solid rgba(187,201,207,0.06)',
-                    boxShadow: paymentMethod === m.key ? '0 0 16px rgba(0,210,255,0.15)' : 'none',
+                    border: paymentMethod === m.key ? '1px solid var(--primary-container)' : '1px solid var(--ticker-border)',
+                    boxShadow: paymentMethod === m.key ? '0 0 16px var(--glow-primary)' : 'none',
                     transition: 'all 0.15s',
                   }}
                 >
@@ -155,7 +155,7 @@ export default function CheckoutPage() {
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span className="text-label-md text-on-surface" style={{ fontWeight: 600 }}>{m.label}</span>
-                          {m.badge && <span className="text-label-caps text-primary" style={{ background: 'rgba(0,210,255,0.1)', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{m.badge}</span>}
+                          {m.badge && <span className="text-label-caps text-primary" style={{ background: 'var(--glow-primary)', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{m.badge}</span>}
                         </div>
                         <p className="text-body-sm text-on-surface-variant" style={{ marginTop: 2 }}>{m.sub}</p>
                       </div>
@@ -175,7 +175,7 @@ export default function CheckoutPage() {
           {/* Right Column: Order Review & Financial Summary (Sticky on Desktop) */}
           <div style={{ position: 'sticky', top: 96, display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Bag Summary Card */}
-            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', border: '1px solid rgba(187,201,207,0.06)' }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', border: '1px solid var(--ticker-border)' }}>
               <button onClick={() => setBagOpen(!bagOpen)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-surface)', marginBottom: bagOpen ? 12 : 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="text-headline-md" style={{ textTransform: 'uppercase' }}>Bag Summary</span>
@@ -204,7 +204,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Financial Summary */}
-            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', border: '1px solid rgba(187,201,207,0.06)' }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', border: '1px solid var(--ticker-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <h3 className="text-headline-md text-on-surface" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>Financial Summary</h3>
                 <span className="text-label-caps text-on-surface-variant">INR NET</span>
@@ -255,7 +255,7 @@ export default function CheckoutPage() {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
-                  boxShadow: '0 0 24px rgba(0,210,255,0.4)',
+                  boxShadow: '0 0 24px var(--glow-primary)',
                   transition: 'opacity 0.15s'
                 }}
               >
@@ -274,19 +274,19 @@ export default function CheckoutPage() {
         left: 0,
         right: 0,
         zIndex: 40,
-        background: 'rgba(18,19,22,0.94)',
+        background: 'var(--glass-dark-nav)',
         backdropFilter: 'blur(20px)',
         padding: '1rem',
-        boxShadow: '0 -8px 24px rgba(0,0,0,0.4)',
+        boxShadow: 'var(--card-hover-shadow)',
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
-        borderTop: '1px solid rgba(187,201,207,0.08)'
+        borderTop: '1px solid var(--brand-card-border)'
       }}>
         <div style={{ maxWidth: 500, margin: '0 auto', width: '100%' }}>
           <button
             onClick={handleConfirmOrder}
-            style={{ width: '100%', height: 50, background: 'var(--primary-container)', color: 'var(--on-primary-fixed)', border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', boxShadow: '0 0 20px rgba(0,210,255,0.3)', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+            style={{ width: '100%', height: 50, background: 'var(--primary-container)', color: 'var(--on-primary-fixed)', border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', boxShadow: '0 0 20px var(--glow-primary)', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock</span>

@@ -41,7 +41,7 @@ export default function CollectionPage() {
         <div style={{ display: 'flex', gap: 8, paddingBottom: 24, overflowX: 'auto' }} className="no-scrollbar">
           <button
             onClick={() => setShowFilter(!showFilter)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 999, border: '1px solid rgba(187,201,207,0.2)', background: 'var(--surface-container)', color: 'var(--on-surface)', cursor: 'pointer', flexShrink: 0, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 999, border: '1px solid var(--outline-variant)', background: 'var(--surface-container)', color: 'var(--on-surface)', cursor: 'pointer', flexShrink: 0, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>tune</span>
             Filter
@@ -73,13 +73,13 @@ export default function CollectionPage() {
                 background: 'var(--surface-container-low)',
                 overflow: 'hidden',
                 cursor: 'pointer',
-                border: '1px solid rgba(187,201,207,0.05)',
+                border: '1px solid var(--card-border)',
                 transition: 'transform 0.2s, box-shadow 0.2s'
               }}
               onClick={() => navigate('/product/structured-poplin-overshirt')}
               onMouseEnter={e => {
                 e.currentTarget.style.transform = 'translateY(-3px)'
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35)'
+                e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)'
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.transform = 'translateY(0)'
@@ -102,7 +102,7 @@ export default function CollectionPage() {
                 <button
                   aria-label="Wishlist"
                   onClick={e => { e.stopPropagation(); toggleWishlist(p.id) }}
-                  style={{ position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: '50%', background: 'rgba(18,19,22,0.7)', backdropFilter: 'blur(8px)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWishlisted(p.id) ? 'var(--primary-container)' : 'var(--on-surface)' }}
+                  style={{ position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: '50%', background: 'var(--glass-wishlist-btn)', backdropFilter: 'blur(8px)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWishlisted(p.id) ? 'var(--primary-container)' : 'var(--on-surface)' }}
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: isWishlisted(p.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
                 </button>

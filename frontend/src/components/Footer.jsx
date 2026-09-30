@@ -1,9 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import brandLogo from '../assets/logo 2.png'
+import { useTheme } from '../context/ThemeContext'
+import brandLogoDark from '../assets/logo 2.png'
+import brandLogoLight from '../assets/logo-light.png'
 
 export default function Footer() {
   const navigate = useNavigate()
+  const { theme } = useTheme()
+  const brandLogo = theme === 'light' ? brandLogoLight : brandLogoDark
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
 
@@ -19,7 +23,7 @@ export default function Footer() {
   return (
     <footer style={{
       background: 'var(--surface-container-lowest)',
-      borderTop: '1px solid rgba(187,201,207,0.08)',
+      borderTop: '1px solid var(--ticker-border)',
       marginTop: 'auto',
       padding: '4rem 0 2rem',
       width: '100%'
@@ -68,7 +72,7 @@ export default function Footer() {
                   flex: 1,
                   height: 44,
                   background: 'var(--surface-container)',
-                  border: '1px solid rgba(187,201,207,0.15)',
+                  border: '1px solid var(--outline-variant)',
                   borderRadius: 8,
                   padding: '0 14px',
                   color: 'var(--on-surface)',
@@ -91,7 +95,7 @@ export default function Footer() {
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   whiteSpace: 'nowrap',
-                  boxShadow: '0 0 16px rgba(0,210,255,0.25)'
+                  boxShadow: '0 0 16px var(--glow-primary)'
                 }}
               >
                 Join
@@ -110,7 +114,7 @@ export default function Footer() {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
           gap: '2rem',
-          borderTop: '1px solid rgba(187,201,207,0.06)',
+          borderTop: '1px solid var(--ticker-border)',
           paddingTop: '2.5rem'
         }}>
           {/* Column 1: Collections */}
@@ -182,7 +186,7 @@ export default function Footer() {
           {/* Column 4: Store Region */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <span className="text-label-caps text-on-surface" style={{ fontWeight: 700, letterSpacing: '0.1em' }}>Store Region</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface-container)', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(187,201,207,0.1)', width: 'fit-content' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface-container)', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--card-border)', width: 'fit-content' }}>
               <span className="material-symbols-outlined text-primary-container" style={{ fontSize: 18 }}>language</span>
               <span className="text-label-md text-on-surface" style={{ fontSize: 12, fontWeight: 600 }}>India // INR (₹)</span>
             </div>
@@ -199,7 +203,7 @@ export default function Footer() {
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 16,
-          borderTop: '1px solid rgba(187,201,207,0.06)',
+          borderTop: '1px solid var(--ticker-border)',
           paddingTop: '1.5rem',
           fontSize: 11,
           color: 'var(--outline)'

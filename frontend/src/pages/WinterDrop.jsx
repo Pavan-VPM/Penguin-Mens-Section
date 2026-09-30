@@ -68,8 +68,8 @@ export default function WinterDropPage() {
         background: 'var(--surface-container-lowest)'
       }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: HERO_BG, backgroundSize: 'cover', backgroundPosition: 'center 20%', transform: 'scale(1.02)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--surface) 0%, rgba(18,19,22,0.4) 50%, transparent 100%)' }} />
-        <div style={{ position: 'absolute', inset: '0 0 auto', height: 96, background: 'linear-gradient(to bottom, rgba(18,19,22,0.8), transparent)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--surface) 0%, var(--overlay-mid) 50%, transparent 100%)' }} />
+        <div style={{ position: 'absolute', inset: '0 0 auto', height: 96, background: 'linear-gradient(to bottom, var(--glass-dark-heavy), transparent)' }} />
 
         <div className="content-container" style={{
           position: 'relative',
@@ -80,7 +80,7 @@ export default function WinterDropPage() {
           paddingBottom: '3rem',
           gap: 12
         }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(31,31,35,0.85)', backdropFilter: 'blur(12px)', padding: '5px 12px', borderRadius: 999, alignSelf: 'flex-start' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--glass-dark-heavy)', backdropFilter: 'blur(12px)', padding: '5px 12px', borderRadius: 999, alignSelf: 'flex-start', border: '1px solid var(--card-border)' }}>
             <span className="animate-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-container)' }} />
             <span className="text-label-caps text-primary">FW25 ARCHIVE // LIMITED EDITION</span>
           </div>
@@ -96,7 +96,7 @@ export default function WinterDropPage() {
           {/* Countdown Grid */}
           <div style={{ display: 'flex', gap: 10, maxWidth: 360, marginTop: 4 }}>
             {[['Days', pad(countdown.days)], ['Hours', pad(countdown.hours)], ['Mins', pad(countdown.mins)], ['Secs', pad(countdown.secs)]].map(([label, val], i) => (
-              <div key={label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 4px', borderRadius: 8, background: 'rgba(41,42,45,0.85)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div key={label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 4px', borderRadius: 8, background: 'var(--surface-container-high)', backdropFilter: 'blur(8px)', border: '1px solid var(--card-border)' }}>
                 <span className="text-headline-md text-on-surface" style={{ fontVariantNumeric: 'tabular-nums', lineHeight: 1, color: i === 3 ? 'var(--primary-container)' : 'var(--on-surface)', fontWeight: 700 }}>{val}</span>
                 <span className="text-label-caps text-on-surface-variant" style={{ fontSize: 9, marginTop: 4 }}>{label}</span>
               </div>
@@ -116,7 +116,7 @@ export default function WinterDropPage() {
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 gap: 8,
-                boxShadow: '0 0 24px rgba(0,210,255,0.3)'
+                boxShadow: 'var(--card-hover-shadow)'
               }}
             >
               <span>Explore The Capsule</span>
@@ -131,7 +131,7 @@ export default function WinterDropPage() {
       </section>
 
       {/* Manifesto Strip */}
-      <section style={{ padding: '2.5rem 0', background: 'var(--surface)', borderBottom: '1px solid rgba(187,201,207,0.06)' }}>
+      <section style={{ padding: '2.5rem 0', background: 'var(--surface)', borderBottom: '1px solid var(--ticker-border)' }}>
         <div className="content-container">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -175,7 +175,7 @@ export default function WinterDropPage() {
                   background: 'var(--surface-container)',
                   overflow: 'hidden',
                   cursor: 'pointer',
-                  border: '1px solid rgba(187,201,207,0.06)',
+                  border: '1px solid var(--ticker-border)',
                   transition: 'transform 0.2s, box-shadow 0.2s'
                 }}
                 onClick={() => navigate('/product/structured-poplin-overshirt')}
@@ -206,7 +206,7 @@ export default function WinterDropPage() {
                       width: 32,
                       height: 32,
                       borderRadius: '50%',
-                      background: 'rgba(18,19,22,0.7)',
+                      background: 'var(--glass-wishlist-btn)',
                       backdropFilter: 'blur(8px)',
                       border: 'none',
                       cursor: 'pointer',
@@ -219,8 +219,8 @@ export default function WinterDropPage() {
                     <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: isWishlisted(p.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
                   </button>
                   {p.stock && (
-                    <div style={{ position: 'absolute', bottom: 8, left: 8, padding: '2px 8px', borderRadius: 4, background: p.stock.includes('Low') ? 'var(--error-container)' : 'rgba(52,53,56,0.9)', backdropFilter: 'blur(4px)' }}>
-                      <span className="text-label-caps" style={{ fontSize: 10, color: p.stock.includes('Low') ? 'var(--on-error-container)' : '#7bd0ff' }}>{p.stock}</span>
+                    <div style={{ position: 'absolute', bottom: 8, left: 8, padding: '2px 8px', borderRadius: 4, background: p.stock.includes('Low') ? 'var(--error-container)' : 'var(--glass-dark-heavy)', backdropFilter: 'blur(4px)', border: '1px solid var(--card-border)' }}>
+                      <span className="text-label-caps" style={{ fontSize: 10, color: p.stock.includes('Low') ? 'var(--on-error-container)' : 'var(--primary)' }}>{p.stock}</span>
                     </div>
                   )}
                 </div>

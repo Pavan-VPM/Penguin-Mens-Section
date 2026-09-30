@@ -53,7 +53,7 @@ export default function CartPage() {
           {/* Left Column: Items & Shipping */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Shipping Banner */}
-            <div style={{ background: 'var(--surface-container)', borderRadius: 12, padding: '1rem', border: '1px solid rgba(187,201,207,0.06)' }}>
+            <div style={{ background: 'var(--surface-container)', borderRadius: 12, padding: '1rem', border: '1px solid var(--ticker-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 20, color: 'var(--primary-container)' }}>bolt</span>
@@ -70,10 +70,10 @@ export default function CartPage() {
             {/* Cart Items List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {items.map(item => (
-                <article key={`${item.id}-${item.size}`} style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', display: 'flex', gap: '1.25rem', position: 'relative', border: '1px solid rgba(187,201,207,0.05)' }}>
+                <article key={`${item.id}-${item.size}`} style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', display: 'flex', gap: '1.25rem', position: 'relative', border: '1px solid var(--card-border)' }}>
                   <div style={{ width: 100, height: 130, borderRadius: 8, overflow: 'hidden', background: 'var(--surface-container-high)', flexShrink: 0, position: 'relative' }}>
                     <img src={item.img} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <span className="text-label-caps" style={{ position: 'absolute', top: 6, left: 6, padding: '2px 6px', borderRadius: 4, background: 'rgba(13,14,17,0.85)', color: 'var(--primary-container)', fontSize: 9, backdropFilter: 'blur(8px)' }}>{item.badge}</span>
+                    <span className="text-label-caps" style={{ position: 'absolute', top: 6, left: 6, padding: '2px 6px', borderRadius: 4, background: 'var(--product-card-badge-bg)', color: 'var(--primary)', border: '1px solid var(--card-border)', fontSize: 9, backdropFilter: 'blur(8px)' }}>{item.badge}</span>
                   </div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
                     <div>
@@ -111,7 +111,7 @@ export default function CartPage() {
                 { icon: 'verified', title: 'Authentic Goods', desc: 'Direct atelier provenance verification' },
                 { icon: 'sync', title: 'Complimentary Returns', desc: '30 days worldwide doorstep pickup' },
               ].map(({ icon, title, desc }) => (
-                <div key={title} style={{ background: 'var(--surface-container)', borderRadius: 10, padding: 14, display: 'flex', alignItems: 'flex-start', gap: 12, border: '1px solid rgba(255,255,255,0.03)' }}>
+                <div key={title} style={{ background: 'var(--surface-container)', borderRadius: 10, padding: 14, display: 'flex', alignItems: 'flex-start', gap: 12, border: '1px solid var(--card-border)' }}>
                   <span className="material-symbols-outlined text-primary-container" style={{ fontSize: 22 }}>{icon}</span>
                   <div>
                     <h3 className="text-label-caps text-on-surface">{title}</h3>
@@ -125,7 +125,7 @@ export default function CartPage() {
           {/* Right Column: Order Summary (Sticky on Desktop) */}
           <div style={{ position: 'sticky', top: 96, display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Promo Code Input */}
-            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1rem', border: '1px solid rgba(187,201,207,0.06)' }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1rem', border: '1px solid var(--ticker-border)' }}>
               <span className="text-label-caps text-on-surface-variant" style={{ display: 'block', marginBottom: 8 }}>Privilege Code</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
@@ -133,7 +133,7 @@ export default function CartPage() {
                   placeholder="ARCHIVE25"
                   value={promoCode}
                   onChange={e => setPromoCode(e.target.value)}
-                  style={{ flex: 1, height: 42, background: 'var(--surface-container)', border: '1px solid rgba(187,201,207,0.15)', borderRadius: 8, padding: '0 12px', color: 'var(--on-surface)', fontSize: 12, outline: 'none' }}
+                  style={{ flex: 1, height: 42, background: 'var(--surface-container)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '0 12px', color: 'var(--on-surface)', fontSize: 12, outline: 'none' }}
                 />
                 <button
                   onClick={() => setPromoApplied(true)}
@@ -151,7 +151,7 @@ export default function CartPage() {
             </div>
 
             {/* Financial Summary */}
-            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', border: '1px solid rgba(187,201,207,0.06)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ background: 'var(--surface-container-low)', borderRadius: 12, padding: '1.25rem', border: '1px solid var(--ticker-border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <h3 className="text-label-caps text-on-surface-variant" style={{ letterSpacing: '0.1em' }}>Order Summary</h3>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span className="text-body-sm text-on-surface-variant">Subtotal</span>
@@ -201,7 +201,7 @@ export default function CartPage() {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
-                  boxShadow: '0 0 20px rgba(0,210,255,0.3)',
+                  boxShadow: 'var(--card-hover-shadow)',
                   transition: 'opacity 0.15s'
                 }}
               >
@@ -228,16 +228,16 @@ export default function CartPage() {
         left: 0,
         right: 0,
         zIndex: 40,
-        background: 'rgba(18,19,22,0.94)',
+        background: 'var(--glass-dark-nav)',
         backdropFilter: 'blur(20px)',
         padding: '12px 1rem',
         boxShadow: '0 -8px 24px rgba(0,0,0,0.4)',
-        borderTop: '1px solid rgba(187,201,207,0.08)'
+        borderTop: '1px solid var(--brand-card-border)'
       }}>
         <div style={{ maxWidth: 500, margin: '0 auto' }}>
           <button
             onClick={() => navigate('/checkout')}
-            style={{ width: '100%', height: 52, background: 'var(--primary-container)', color: 'var(--on-primary-fixed)', border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.25rem', boxShadow: '0 0 16px rgba(0,210,255,0.25)', transition: 'all 0.15s' }}
+            style={{ width: '100%', height: 52, background: 'var(--primary-container)', color: 'var(--on-primary-fixed)', border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.25rem', boxShadow: '0 0 16px var(--glow-primary)', transition: 'all 0.15s' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>lock</span>

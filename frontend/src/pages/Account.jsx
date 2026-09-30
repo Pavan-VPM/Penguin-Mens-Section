@@ -44,7 +44,7 @@ export default function AccountPage() {
           marginTop: 12,
           position: 'relative',
           overflow: 'hidden',
-          border: '1px solid rgba(187,201,207,0.08)'
+          border: '1px solid var(--card-border)'
         }}>
           <div style={{
             position: 'absolute',
@@ -53,7 +53,7 @@ export default function AccountPage() {
             width: 160,
             height: 160,
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(0,210,255,0.15), transparent 70%)',
+            background: 'radial-gradient(circle, var(--glow-primary), transparent 70%)',
             pointerEvents: 'none'
           }} />
 
@@ -69,7 +69,7 @@ export default function AccountPage() {
               color: 'var(--on-primary-fixed)',
               fontWeight: 800,
               fontSize: 22,
-              boxShadow: '0 4px 20px rgba(0,210,255,0.3)'
+              boxShadow: '0 4px 20px var(--glow-primary)'
             }}>
               LV
             </div>
@@ -81,7 +81,7 @@ export default function AccountPage() {
               <p className="text-body-sm text-on-surface-variant">lucas.vance@studio.arch</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
                 <span className="text-label-caps" style={{
-                  background: 'rgba(0,210,255,0.12)',
+                  background: 'var(--glow-primary)',
                   color: 'var(--primary-container)',
                   padding: '3px 10px',
                   borderRadius: 4,
@@ -127,7 +127,7 @@ export default function AccountPage() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 6,
-                border: '1px solid rgba(187,201,207,0.06)',
+                border: '1px solid var(--card-border)',
                 cursor: 'pointer',
                 color: 'var(--on-surface)',
                 transition: 'background 0.15s'
@@ -179,7 +179,7 @@ export default function AccountPage() {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 12,
-                  border: '1px solid rgba(187,201,207,0.06)'
+                  border: '1px solid var(--card-border)'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -191,7 +191,7 @@ export default function AccountPage() {
                     fontWeight: 700,
                     letterSpacing: '0.06em',
                     textTransform: 'uppercase',
-                    background: order.status === 'In Transit' ? 'rgba(0,210,255,0.15)' : 'var(--surface-container-high)',
+                    background: order.status === 'In Transit' ? 'var(--glow-primary)' : 'var(--surface-container-high)',
                     color: order.status === 'In Transit' ? 'var(--primary-container)' : 'var(--on-surface-variant)'
                   }}>
                     {order.status}
@@ -244,7 +244,7 @@ export default function AccountPage() {
         {/* Tab: Addresses */}
         {activeTab === 'addresses' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ background: 'var(--surface-container)', borderRadius: 12, padding: '1.25rem', border: '1px solid rgba(187,201,207,0.06)' }}>
+            <div style={{ background: 'var(--surface-container)', borderRadius: 12, padding: '1.25rem', border: '1px solid var(--card-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <span className="text-label-caps text-primary">Default Delivery</span>
                 <span className="material-symbols-outlined text-primary-container" style={{ fontSize: 20 }}>check_circle</span>
@@ -283,9 +283,9 @@ export default function AccountPage() {
 
         {/* Tab: Concierge */}
         {activeTab === 'concierge' && (
-          <div style={{ background: 'var(--surface-container)', borderRadius: 12, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: 14, border: '1px solid rgba(187,201,207,0.06)' }}>
+          <div style={{ background: 'var(--surface-container)', borderRadius: 12, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: 14, border: '1px solid var(--card-border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,210,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--glow-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span className="material-symbols-outlined text-primary-container" style={{ fontSize: 24 }}>support_agent</span>
               </div>
               <div>

@@ -29,7 +29,7 @@ export default function HomePage() {
       {/* Ticker */}
       <div style={{
         background: 'var(--surface-container-lowest)',
-        borderBottom: '1px solid rgba(187,201,207,0.06)'
+        borderBottom: '1px solid var(--ticker-border)'
       }}>
         <div className="content-container" style={{
           paddingTop: 8,
@@ -66,8 +66,8 @@ export default function HomePage() {
             alt="Penguins FW25"
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top 20%', filter: 'brightness(0.9) contrast(1.05)' }}
           />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--surface) 0%, rgba(18,19,22,0.4) 45%, transparent 100%)' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(18,19,22,0.75) 0%, rgba(18,19,22,0.2) 60%, transparent 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'var(--hero-gradient-v)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'var(--hero-gradient-h)' }} />
           
           <div className="content-container" style={{
             position: 'absolute',
@@ -79,7 +79,7 @@ export default function HomePage() {
             flexDirection: 'column',
             gap: 10
           }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(18,19,22,0.65)', backdropFilter: 'blur(12px)', padding: '5px 12px', borderRadius: 999, alignSelf: 'flex-start' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--glass-dark)', backdropFilter: 'blur(12px)', padding: '5px 12px', borderRadius: 999, alignSelf: 'flex-start' }}>
               <span className="animate-ping" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-container)' }} />
               <span className="text-label-caps text-primary">Drop 01 // Autumn Winter 2025</span>
             </div>
@@ -105,7 +105,7 @@ export default function HomePage() {
                   fontWeight: 700,
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
-                  boxShadow: '0 0 24px rgba(0,210,255,0.25)'
+                  boxShadow: '0 0 24px var(--glow-primary)'
                 }}
               >
                 <span>Explore Collection</span>
@@ -117,9 +117,9 @@ export default function HomePage() {
                   height: 48,
                   padding: '0 20px',
                   borderRadius: 8,
-                  background: 'rgba(18,19,22,0.65)',
+                  background: 'var(--glass-dark)',
                   backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  border: '1px solid var(--card-border)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -142,14 +142,14 @@ export default function HomePage() {
       <div className="content-container" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Category Tabs */}
         <div style={{
-          background: 'rgba(18,19,22,0.92)',
+          background: 'var(--category-bar-bg)',
           backdropFilter: 'blur(12px)',
           position: 'sticky',
           top: 64,
           zIndex: 30,
           padding: '12px 0',
           margin: '0 -1rem',
-          borderBottom: '1px solid rgba(187,201,207,0.06)'
+          borderBottom: '1px solid var(--ticker-border)'
         }}>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 1rem' }} className="no-scrollbar">
             {CATEGORIES.map(cat => (
@@ -169,7 +169,7 @@ export default function HomePage() {
                   transition: 'all 0.15s',
                   background: activeCategory === cat ? 'var(--primary-container)' : 'var(--surface-container)',
                   color: activeCategory === cat ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
-                  boxShadow: activeCategory === cat ? '0 0 12px rgba(0,210,255,0.2)' : 'none',
+                  boxShadow: activeCategory === cat ? 'var(--card-hover-shadow)' : 'none',
                 }}
               >
                 {cat}
@@ -210,12 +210,12 @@ export default function HomePage() {
                 padding: 10,
                 cursor: 'pointer',
                 transition: 'transform 0.2s, box-shadow 0.2s',
-                border: '1px solid rgba(187,201,207,0.04)'
+                border: '1px solid var(--card-border)'
               }}
               onClick={() => navigate('/product/structured-poplin-overshirt')}
               onMouseEnter={e => {
                 e.currentTarget.style.transform = 'translateY(-3px)'
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)'
+                e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)'
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.transform = 'translateY(0)'
@@ -232,7 +232,7 @@ export default function HomePage() {
                 />
                 {p.badge && (
                   <div style={{ position: 'absolute', top: 10, left: 10 }}>
-                    <span className="text-label-caps" style={{ background: 'rgba(18,19,22,0.85)', backdropFilter: 'blur(8px)', padding: '3px 8px', borderRadius: 4, color: p.badgeColor }}>
+                    <span className="text-label-caps product-badge-label" style={{ background: 'var(--product-card-badge-bg)', backdropFilter: 'blur(8px)', padding: '3px 8px', borderRadius: 4, color: p.badgeColor, border: '1px solid var(--card-border)' }}>
                       {p.badge}
                     </span>
                   </div>
@@ -247,7 +247,7 @@ export default function HomePage() {
                     width: 34,
                     height: 34,
                     borderRadius: '50%',
-                    background: 'rgba(18,19,22,0.7)',
+                    background: 'var(--glass-wishlist-btn)',
                     backdropFilter: 'blur(8px)',
                     border: 'none',
                     cursor: 'pointer',
@@ -302,7 +302,7 @@ export default function HomePage() {
           padding: '2rem',
           background: 'var(--surface-container-lowest)',
           borderRadius: 16,
-          border: '1px solid rgba(187,201,207,0.08)'
+          border: '1px solid var(--brand-card-border)'
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -320,7 +320,7 @@ export default function HomePage() {
                 { title: 'Modular Architecture', desc: 'Cut with calculated proportions allowing seamless layering across all seasonal drops.' },
                 { title: 'Carbon Neutral Courier', desc: 'Direct atelier dispatch with guaranteed 24-hour tracked DHL Express delivery.' },
               ].map(f => (
-                <div key={f.title} style={{ padding: '14px', background: 'var(--surface-container-low)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.03)' }}>
+                <div key={f.title} style={{ padding: '14px', background: 'var(--surface-container-low)', borderRadius: 10, border: '1px solid var(--feature-tile-border)' }}>
                   <h4 className="text-title-sm text-on-surface" style={{ fontSize: 13, fontWeight: 700 }}>{f.title}</h4>
                   <p className="text-body-sm text-on-surface-variant" style={{ marginTop: 4, lineHeight: 1.4, fontSize: 12 }}>{f.desc}</p>
                 </div>

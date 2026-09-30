@@ -123,12 +123,12 @@ export default function WishlistPage() {
                   overflow: 'hidden',
                   padding: 10,
                   position: 'relative',
-                  border: '1px solid rgba(187,201,207,0.05)',
+                  border: '1px solid var(--card-border)',
                   transition: 'transform 0.2s, box-shadow 0.2s'
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-3px)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35)'
+                  e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)'
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = 'translateY(0)'
@@ -157,7 +157,7 @@ export default function WishlistPage() {
                       width: 32,
                       height: 32,
                       borderRadius: '50%',
-                      background: 'rgba(18,19,22,0.8)',
+                      background: 'var(--glass-dark-heavy)',
                       backdropFilter: 'blur(8px)',
                       border: 'none',
                       cursor: 'pointer',

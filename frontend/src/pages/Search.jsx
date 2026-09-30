@@ -92,16 +92,16 @@ export default function SearchPage() {
               height: 54,
               borderRadius: 12,
               background: 'var(--surface-container)',
-              border: '1px solid rgba(187,201,207,0.15)',
+              border: '1px solid var(--outline-variant)',
               color: 'var(--on-surface)',
               padding: '0 46px 0 50px',
               fontSize: 15,
               outline: 'none',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
               transition: 'border-color 0.15s'
             }}
             onFocus={e => e.target.style.borderColor = 'var(--primary-container)'}
-            onBlur={e => e.target.style.borderColor = 'rgba(187,201,207,0.15)'}
+            onBlur={e => e.target.style.borderColor = 'var(--outline-variant)'}
           />
           <span
             className="material-symbols-outlined"
@@ -213,13 +213,13 @@ export default function SearchPage() {
                   overflow: 'hidden',
                   padding: 10,
                   cursor: 'pointer',
-                  border: '1px solid rgba(187,201,207,0.05)',
+                  border: '1px solid var(--card-border)',
                   transition: 'transform 0.2s, box-shadow 0.2s'
                 }}
                 onClick={() => navigate('/product/structured-poplin-overshirt')}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-3px)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35)'
+                  e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)'
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = 'translateY(0)'
@@ -245,7 +245,7 @@ export default function SearchPage() {
                       width: 32,
                       height: 32,
                       borderRadius: '50%',
-                      background: 'rgba(18,19,22,0.7)',
+                      background: 'var(--glass-wishlist-btn)',
                       backdropFilter: 'blur(8px)',
                       border: 'none',
                       cursor: 'pointer',

@@ -38,10 +38,173 @@
   --inverse-on-surface: #2f3034;
   --surface-variant: #343538;
   --surface-tint: #47d6ff;
+  /* ─── Glass / overlay surfaces (used in inline styles) ─── */
+  --glass-dark: rgba(18, 19, 22, 0.65);
+  --glass-dark-heavy: rgba(18, 19, 22, 0.85);
+  --glass-dark-nav: rgba(18, 19, 22, 0.92);
+  --glass-wishlist-btn: rgba(18, 19, 22, 0.70);
+  --hero-gradient-v: linear-gradient(to top, #121316 0%, rgba(18,19,22,0.4) 45%, transparent 100%);
+  --hero-gradient-h: linear-gradient(to right, rgba(18,19,22,0.75) 0%, rgba(18,19,22,0.2) 60%, transparent 100%);
+  --card-border: rgba(187, 201, 207, 0.04);
+  --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --product-card-badge-bg: rgba(18, 19, 22, 0.85);
+  --ticker-border: rgba(187, 201, 207, 0.06);
+  --category-bar-bg: rgba(18, 19, 22, 0.92);
+  --brand-card-border: rgba(187, 201, 207, 0.08);
+  --feature-tile-border: rgba(255, 255, 255, 0.03);
+  --glow-primary: rgba(0, 210, 255, 0.25);
+  --overlay-mid: rgba(18, 19, 22, 0.4);
+}
+
+/* ─── Light Theme (Minimal Luxury Monochrome) ─────────────────────────── */
+[data-theme="light"] {
+  --surface: #ffffff;
+  --surface-dim: #f6f6f8;
+  --surface-bright: #ffffff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f8f8fa;
+  --surface-container: #f0f0f3;
+  --surface-container-high: #e5e5ea;
+  --surface-container-highest: #dadae0;
+  --on-surface: #0e0e11;
+  --on-surface-variant: #6c6f78;
+  --outline: #8e919b;
+  --outline-variant: #e6e6ec;
+  --primary: #0e0e11;
+  --on-primary: #ffffff;
+  --primary-container: #0e0e11;
+  --on-primary-container: #ffffff;
+  --primary-fixed: #0e0e11;
+  --primary-fixed-dim: #222328;
+  --on-primary-fixed: #ffffff;
+  --on-primary-fixed-variant: #e6e6ec;
+  --secondary: #52555e;
+  --on-secondary: #ffffff;
+  --secondary-container: #ebebed;
+  --on-secondary-container: #0e0e11;
+  --tertiary: #1a1b20;
+  --tertiary-container: #0e0e11;
+  --on-tertiary: #ffffff;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --on-error-container: #410002;
+  --background: #ffffff;
+  --on-background: #0e0e11;
+  --inverse-surface: #0e0e11;
+  --inverse-on-surface: #ffffff;
+  --surface-variant: #e5e5ea;
+  --surface-tint: #0e0e11;
+  /* ─── Glass / overlay surfaces ─── */
+  --glass-dark: rgba(255, 255, 255, 0.85);
+  --glass-dark-heavy: rgba(255, 255, 255, 0.94);
+  --glass-dark-nav: rgba(255, 255, 255, 0.92);
+  --glass-wishlist-btn: rgba(255, 255, 255, 0.92);
+  --hero-gradient-v: linear-gradient(to top, #ffffff 0%, rgba(255, 255, 255, 0.75) 40%, rgba(255, 255, 255, 0.2) 75%, transparent 100%);
+  --hero-gradient-h: linear-gradient(to right, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.45) 50%, transparent 100%);
+  --card-border: rgba(0, 0, 0, 0.06);
+  --card-hover-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+  --product-card-badge-bg: #0e0e11;
+  --ticker-border: rgba(0, 0, 0, 0.06);
+  --category-bar-bg: rgba(255, 255, 255, 0.94);
+  --brand-card-border: rgba(0, 0, 0, 0.06);
+  --feature-tile-border: rgba(0, 0, 0, 0.04);
+  --glow-primary: rgba(0, 0, 0, 0.06);
+  --overlay-mid: rgba(255, 255, 255, 0.45);
+}
+
+/* Light theme — badge label styling */
+[data-theme="light"] .product-badge-label {
+  color: #ffffff !important;
+  background: #0e0e11 !important;
+  border: none !important;
+}
+
+/* Light theme header */
+[data-theme="light"] .app-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .bottom-nav {
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Theme Toggle ─────────────────────────────────────────────────────── */
+.theme-toggle {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1.5px solid var(--outline-variant);
+  background: var(--surface-container-high);
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s;
+  flex-shrink: 0;
+  outline: none;
+  padding: 0;
+}
+
+[data-theme="light"] .theme-toggle {
+  background: var(--surface-container);
+  border-color: rgba(0,0,0,0.12);
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary-container);
+  box-shadow: 0 0 0 2px var(--glow-primary);
+}
+
+.theme-toggle__track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  pointer-events: none;
+}
+
+.theme-toggle__track svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.theme-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-container);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+  pointer-events: none;
+}
+
+.theme-toggle--light .theme-toggle__thumb {
+  transform: translateX(24px);
+  background: var(--primary-container);
 }
 
 /* Base reset */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Smooth theme transition on all elements */
+*, *::before, *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.25s ease, box-shadow 0.3s ease;
+}
+/* But don't transition transforms or animations */
+.animate-ping, .animate-pulse, .theme-toggle__thumb, img, svg {
+  transition: none !important;
+}
+.theme-toggle__thumb {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease !important;
+}
+
 
 html, body {
   width: 100%;
@@ -406,4 +569,4 @@ body {
 .backdrop-blur-md { backdrop-filter: blur(12px); }
 
 /* shadow utilities */
-.shadow-glow { box-shadow: 0 0 24px rgba(0,210,255,0.3); }
+.shadow-glow { box-shadow: 0 0 24px var(--glow-primary); }

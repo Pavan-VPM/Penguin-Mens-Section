@@ -62,7 +62,7 @@ export default function ProductDetailPage() {
               borderRadius: 16,
               overflow: 'hidden',
               background: 'var(--surface-container-low)',
-              border: '1px solid rgba(187,201,207,0.08)',
+              border: '1px solid var(--brand-card-border)',
               boxShadow: '0 8px 32px rgba(0,0,0,0.35)'
             }}>
               {/* Sideways Sliding Track */}
@@ -97,9 +97,9 @@ export default function ProductDetailPage() {
                   width: 44,
                   height: 44,
                   borderRadius: '50%',
-                  background: 'rgba(18,19,22,0.82)',
+                  background: 'var(--glass-dark-heavy)',
                   backdropFilter: 'blur(14px)',
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  border: '1px solid var(--card-border)',
                   color: 'var(--on-surface)',
                   display: 'flex',
                   alignItems: 'center',
@@ -115,7 +115,7 @@ export default function ProductDetailPage() {
                   e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(18,19,22,0.82)'
+                  e.currentTarget.style.background = 'var(--glass-dark-heavy)'
                   e.currentTarget.style.color = 'var(--on-surface)'
                   e.currentTarget.style.transform = 'translateY(-50%) scale(1)'
                 }}
@@ -136,9 +136,9 @@ export default function ProductDetailPage() {
                   width: 44,
                   height: 44,
                   borderRadius: '50%',
-                  background: 'rgba(18,19,22,0.82)',
+                  background: 'var(--glass-dark-heavy)',
                   backdropFilter: 'blur(14px)',
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  border: '1px solid var(--card-border)',
                   color: 'var(--on-surface)',
                   display: 'flex',
                   alignItems: 'center',
@@ -154,7 +154,7 @@ export default function ProductDetailPage() {
                   e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(18,19,22,0.82)'
+                  e.currentTarget.style.background = 'var(--glass-dark-heavy)'
                   e.currentTarget.style.color = 'var(--on-surface)'
                   e.currentTarget.style.transform = 'translateY(-50%) scale(1)'
                 }}
@@ -167,14 +167,14 @@ export default function ProductDetailPage() {
                 position: 'absolute',
                 top: 16,
                 left: 16,
-                background: 'rgba(18,19,22,0.85)',
+                background: 'var(--product-card-badge-bg)',
                 backdropFilter: 'blur(12px)',
                 padding: '5px 12px',
                 borderRadius: 999,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--card-border)',
                 zIndex: 5
               }}>
                 <span className="animate-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-container)' }} />
@@ -186,7 +186,7 @@ export default function ProductDetailPage() {
                 position: 'absolute',
                 top: 16,
                 right: 16,
-                background: 'rgba(18,19,22,0.85)',
+                background: 'var(--product-card-badge-bg)',
                 backdropFilter: 'blur(12px)',
                 padding: '4px 10px',
                 borderRadius: 999,
@@ -194,7 +194,7 @@ export default function ProductDetailPage() {
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 color: 'var(--on-surface-variant)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--card-border)',
                 zIndex: 5
               }}>
                 0{activeImg + 1} / 0{IMAGES.length}
@@ -218,10 +218,10 @@ export default function ProductDetailPage() {
                     style={{
                       height: 4,
                       borderRadius: 999,
-                      background: i === activeImg ? 'var(--primary-container)' : 'rgba(255,255,255,0.3)',
+                      background: i === activeImg ? 'var(--primary-container)' : 'var(--outline)',
                       width: i === activeImg ? 24 : 8,
                       transition: 'all 0.3s ease',
-                      boxShadow: i === activeImg ? '0 0 10px rgba(0,210,255,0.7)' : 'none'
+                      boxShadow: i === activeImg ? '0 0 10px var(--glow-primary)' : 'none'
                     }}
                   />
                 ))}
@@ -241,14 +241,14 @@ export default function ProductDetailPage() {
                     height: 90,
                     borderRadius: 8,
                     overflow: 'hidden',
-                    border: idx === activeImg ? '2px solid var(--primary-container)' : '1px solid rgba(187,201,207,0.12)',
+                    border: idx === activeImg ? '2px solid var(--primary-container)' : '1px solid var(--card-border)',
                     opacity: idx === activeImg ? 1 : 0.55,
                     cursor: 'pointer',
                     padding: 0,
                     background: 'var(--surface-container-low)',
                     flexShrink: 0,
                     transition: 'all 0.2s',
-                    boxShadow: idx === activeImg ? '0 0 14px rgba(0,210,255,0.35)' : 'none'
+                    boxShadow: idx === activeImg ? '0 0 14px var(--glow-primary)' : 'none'
                   }}
                 >
                   <img src={src} alt={`Thumbnail ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -283,7 +283,7 @@ export default function ProductDetailPage() {
               </h1>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, paddingTop: 4, flexWrap: 'wrap' }}>
                 <span className="text-headline-lg text-on-surface" style={{ fontWeight: 800 }}>₹11,900</span>
-                <span className="text-body-sm text-primary" style={{ background: 'rgba(0,210,255,0.1)', padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>
+                <span className="text-body-sm text-on-surface-variant" style={{ background: 'var(--surface-container-high)', padding: '3px 8px', borderRadius: 4, whiteSpace: 'nowrap', border: '1px solid var(--card-border)', fontSize: 11, fontWeight: 600 }}>
                   Complimentary Express Shipping
                 </span>
               </div>
@@ -303,7 +303,7 @@ export default function ProductDetailPage() {
                     style={{
                       padding: '8px 14px',
                       borderRadius: 8,
-                      border: selectedColor === i ? '1px solid var(--primary-container)' : '1px solid rgba(187,201,207,0.15)',
+                      border: selectedColor === i ? '1px solid var(--primary-container)' : '1px solid var(--card-border)',
                       background: selectedColor === i ? 'var(--surface-container-high)' : 'var(--surface-container-low)',
                       color: selectedColor === i ? 'var(--primary-container)' : 'var(--on-surface-variant)',
                       cursor: 'pointer',
@@ -337,14 +337,14 @@ export default function ProductDetailPage() {
                     style={{
                       height: 44,
                       borderRadius: 8,
-                      border: selectedSize === s ? '1px solid var(--primary-container)' : '1px solid rgba(187,201,207,0.1)',
+                      border: selectedSize === s ? '1px solid var(--primary-container)' : '1px solid var(--card-border)',
                       background: selectedSize === s ? 'var(--primary-container)' : 'var(--surface-container)',
                       color: selectedSize === s ? 'var(--on-primary-fixed)' : 'var(--on-surface)',
                       fontWeight: 700,
                       fontSize: 13,
                       cursor: 'pointer',
                       transition: 'all 0.15s',
-                      boxShadow: selectedSize === s ? '0 0 12px rgba(0,210,255,0.3)' : 'none'
+                      boxShadow: selectedSize === s ? '0 0 12px var(--glow-primary)' : 'none'
                     }}
                   >
                     {s}
@@ -363,7 +363,7 @@ export default function ProductDetailPage() {
                   borderRadius: 10,
                   border: 'none',
                   cursor: 'pointer',
-                  background: added ? 'rgba(0,210,255,0.2)' : 'var(--primary-container)',
+                  background: added ? 'var(--glow-primary)' : 'var(--primary-container)',
                   color: added ? 'var(--primary-container)' : 'var(--on-primary-fixed)',
                   display: 'flex',
                   alignItems: 'center',
@@ -373,7 +373,7 @@ export default function ProductDetailPage() {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
-                  boxShadow: '0 0 24px rgba(0,210,255,0.35)',
+                  boxShadow: '0 0 24px var(--glow-primary)',
                   transition: 'all 0.2s'
                 }}
               >
@@ -387,7 +387,7 @@ export default function ProductDetailPage() {
                   width: 52,
                   height: 52,
                   borderRadius: 10,
-                  border: '1px solid rgba(187,201,207,0.15)',
+                  border: '1px solid var(--card-border)',
                   background: 'var(--surface-container)',
                   display: 'flex',
                   alignItems: 'center',
@@ -444,7 +444,7 @@ export default function ProductDetailPage() {
                   )
                 },
               ].map(({ key, label, content }) => (
-                <div key={key} style={{ borderRadius: 12, background: 'var(--surface-container)', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.03)' }}>
+                <div key={key} style={{ borderRadius: 12, background: 'var(--surface-container)', overflow: 'hidden', border: '1px solid var(--card-border)' }}>
                   <button
                     onClick={() => setOpenSection(openSection === key ? null : key)}
                     style={{ width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-surface)', textAlign: 'left' }}
@@ -469,11 +469,11 @@ export default function ProductDetailPage() {
         left: 0,
         right: 0,
         zIndex: 40,
-        background: 'rgba(18,19,22,0.94)',
+        background: 'var(--glass-dark-nav)',
         backdropFilter: 'blur(20px)',
         padding: '12px 1rem',
         boxShadow: '0 -8px 24px rgba(0,0,0,0.4)',
-        borderTop: '1px solid rgba(187,201,207,0.08)'
+        borderTop: '1px solid var(--brand-card-border)'
       }}>
         <div style={{ display: 'flex', gap: 12, maxWidth: 500, margin: '0 auto' }}>
           <button
@@ -482,7 +482,7 @@ export default function ProductDetailPage() {
               width: 52,
               height: 52,
               borderRadius: 12,
-              border: '1px solid rgba(187,201,207,0.15)',
+              border: '1px solid var(--card-border)',
               background: 'var(--surface-container)',
               display: 'flex',
               alignItems: 'center',
@@ -503,7 +503,7 @@ export default function ProductDetailPage() {
               borderRadius: 12,
               border: 'none',
               cursor: 'pointer',
-              background: added ? 'rgba(0,210,255,0.2)' : 'var(--primary-container)',
+              background: added ? 'var(--glow-primary)' : 'var(--primary-container)',
               color: added ? 'var(--primary-container)' : 'var(--on-primary-fixed)',
               display: 'flex',
               alignItems: 'center',
@@ -513,7 +513,7 @@ export default function ProductDetailPage() {
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
-              boxShadow: '0 0 24px rgba(0,210,255,0.3)',
+              boxShadow: '0 0 24px var(--glow-primary)',
               transition: 'all 0.2s',
             }}
           >
