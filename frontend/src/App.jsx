@@ -13,6 +13,7 @@ import CheckoutPage from './pages/Checkout'
 import WishlistPage from './pages/Wishlist'
 import AccountPage from './pages/Account'
 import SearchPage from './pages/Search'
+import AdminPage from './pages/Admin'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -25,6 +26,7 @@ function ScrollToTop() {
 export default function App() {
   const location = useLocation()
   const isCheckout = location.pathname === '/checkout'
+  const isAdmin = location.pathname === '/admin'
 
   return (
     <CartProvider>
@@ -63,15 +65,16 @@ export default function App() {
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
 
           {/* Global Minimal Luxury Footer */}
-          {!isCheckout && <Footer />}
+          {!isCheckout && !isAdmin && <Footer />}
 
           {/* Bottom Navigation (automatically hidden on desktop via CSS) */}
-          {!isCheckout && <BottomNav />}
+          {!isCheckout && !isAdmin && <BottomNav />}
         </div>
       </div>
     </CartProvider>

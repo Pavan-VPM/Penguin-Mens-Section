@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { getProducts } from '../services/api'
 
-const PRODUCTS = [
+const FALLBACK_PRODUCTS = [
   { id: 1, name: 'Structured Poplin Overshirt', color: 'Nocturne Black', price: '₹11,900', sizes: ['S','M','L'], img: 'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY' },
   { id: 2, name: 'Structured Oxford Shirt', color: 'Slate White', price: '₹9,900', sizes: ['S','M','L','XL'], img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDnR9S4fgMwiQA96pWo4DRRnR4yoqrORLPBRtU1exX8jFx4Mf2lu4FZb0To4JX24dcoEh-GbRf-FaR0s39tPIiS-Wq0OsNB6EjKqSxhQGXr6jGjGplvjbLYbTqyJxLhFFwdTcx8VHcX7jpv4b6tEmXM8HrtLl5wfKDkseOPqLDMKvkLxq7qflNN9MqLaF67Kxj_tJ08uRdK6jSUxDaYDhtHlAB-7Gx5TOqStb4NoD1G01OK9YFRlnEY' },
   { id: 3, name: 'Matte Tech Shirt', color: 'Deep Charcoal', price: '₹10,500', badge: 'New', sizes: ['S','M','L'], img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDw6PlIfD7vb_n4u5I_wD4HhFdTcV-UVOCENxio76QfVtj4TtfRRyePIpQIcJigP4x9Wc7TemI-nMXXz6Pt7XngwmTtRuBYdxnhGmoGboojO1aB4qDaF8UBDAqL-EKhubCIg19kp_1Kvw65x8WO4Rzftn8xvR5e0BIIwaGyqj97L00TABLrHE0n7YezXGVCKzCQSEdTRZNm10F1GUVNiBmvJvBz3q8wCtZpserBa9hHWrT6REccVN_4' },
@@ -16,13 +17,37 @@ export default function CollectionPage() {
   const { isWishlisted, toggleWishlist, addToCart } = useCart()
   const [sort, setSort] = useState('Newest')
   const [showFilter, setShowFilter] = useState(false)
+  const [collectionProducts, setCollectionProducts] = useState(FALLBACK_PRODUCTS)
 
-  const sortedProducts = [...PRODUCTS].sort((a, b) => {
-    const priceA = parseFloat(a.price.replace(/[^\d]/g, ''))
-    const priceB = parseFloat(b.price.replace(/[^\d]/g, ''))
+  useEffect(() => {
+    async function loadCollection() {
+      try {
+        const res = await getProducts({ category: 'Shirts' })
+        if (res?.data && res.data.length > 0) {
+          const formatted = res.data.map(p => ({
+            id: p._id || p.id,
+            name: p.name,
+            color: p.color || 'Nocturne Black',
+            price: typeof p.price === 'number' ? `₹${p.price.toLocaleString('en-IN')}` : p.price,
+            badge: p.badge || '',
+            sizes: p.sizes?.map(s => s.size) || ['S', 'M', 'L'],
+            img: p.images?.[0] || p.img,
+          }))
+          setCollectionProducts(formatted)
+        }
+      } catch (e) {
+        console.warn('Using fallback collection data')
+      }
+    }
+    loadCollection()
+  }, [])
+
+  const sortedProducts = [...collectionProducts].sort((a, b) => {
+    const priceA = parseFloat(String(a.price).replace(/[^\d]/g, '')) || 0
+    const priceB = parseFloat(String(b.price).replace(/[^\d]/g, '')) || 0
     if (sort === 'Price: Low to High') return priceA - priceB
     if (sort === 'Price: High to Low') return priceB - priceA
-    return a.id - b.id
+    return String(a.id).localeCompare(String(b.id))
   })
 
   return (
@@ -33,7 +58,7 @@ export default function CollectionPage() {
           <span className="text-label-caps text-primary">PENGUINS COLLECTION</span>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <h1 className="text-headline-lg text-on-surface" style={{ textTransform: 'uppercase', margin: 0 }}>Shirts & Overgarments</h1>
-            <span className="text-body-sm text-on-surface-variant">{PRODUCTS.length} curated garments</span>
+            <span className="text-body-sm text-on-surface-variant">{collectionProducts.length} curated garments</span>
           </div>
         </div>
 

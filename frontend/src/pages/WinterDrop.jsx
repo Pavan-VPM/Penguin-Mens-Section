@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { getProducts, getSiteConfig } from '../services/api'
 
 const HERO_BG = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDBqMfest0YG8OFoCNADoIuzQNXFvjHQz2qD4iHKt4M2NL1THc1d1j4Ve6CQKqxTspCVBdi-1mJl8CllfgjnfMMuVL904tsYa3couHqcPC7O6BReTg750LSGbffD4s-TQ0baAn9dlIUyrj5ugjKut3LsWVR-SpcWyQuXldc1P4Ux3Z9XADwIXLlYW0aQihiPmiYZiMNNP5mzYei0bFl-2WuwK_hp1f32TqRjnTgZBFtAfXkEQ0q-Pj6')"
 
-const PRODUCTS = [
+const FALLBACK_PRODUCTS = [
   {
     id: 1, name: 'Structured Poplin Overshirt', price: '₹11,900', stock: 'Only 4 left',
     img: 'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY',
@@ -50,9 +51,41 @@ function useCountdown(targetDate) {
 export default function WinterDropPage() {
   const navigate = useNavigate()
   const { isWishlisted, toggleWishlist, addToCart } = useCart()
-  const target = useRef(Date.now() + 2 * 86400000 + 14 * 3600000 + 38 * 60000).current
-  const countdown = useCountdown(target)
+  const [targetTime, setTargetTime] = useState(Date.now() + 2 * 86400000 + 14 * 3600000 + 38 * 60000)
+  const countdown = useCountdown(targetTime)
   const [selectedSizes, setSelectedSizes] = useState({})
+  const [winterProducts, setWinterProducts] = useState(FALLBACK_PRODUCTS)
+
+  useEffect(() => {
+    async function loadWinterData() {
+      try {
+        const [prodRes, cfgRes] = await Promise.all([
+          getProducts({ isWinterDrop: true }),
+          getSiteConfig(),
+        ])
+
+        if (prodRes?.data && prodRes.data.length > 0) {
+          const formatted = prodRes.data.map(p => ({
+            id: p._id || p.id,
+            name: p.name,
+            price: typeof p.price === 'number' ? `₹${p.price.toLocaleString('en-IN')}` : p.price,
+            stock: p.stockStatus || (p.inStock ? null : 'Sold Out'),
+            img: p.images?.[0] || p.img,
+            sizes: p.sizes?.filter(s => !s.isSoldOut && s.stock > 0).map(s => s.size) || ['S', 'M', 'L'],
+            soldOut: p.sizes?.filter(s => s.isSoldOut || s.stock === 0).map(s => s.size) || [],
+          }))
+          setWinterProducts(formatted)
+        }
+
+        if (cfgRes?.data?.winterDropTargetDate) {
+          setTargetTime(new Date(cfgRes.data.winterDropTargetDate).getTime())
+        }
+      } catch (e) {
+        console.warn('Using fallback winter drop data')
+      }
+    }
+    loadWinterData()
+  }, [])
 
   const pad = n => String(n).padStart(2, '0')
 
@@ -165,7 +198,7 @@ export default function WinterDropPage() {
           </div>
 
           <div className="product-grid-responsive">
-            {PRODUCTS.map(p => (
+            {winterProducts.map(p => (
               <div
                 key={p.id}
                 style={{

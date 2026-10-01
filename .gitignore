@@ -1,0 +1,47 @@
+# ===========================
+# Node / npm
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ===========================
+# Environment Variables — NEVER commit real secrets
+# ===========================
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env.local
+
+# ===========================
+# Build Outputs
+# ===========================
+frontend/.next/
+frontend/dist/
+frontend/out/
+backend/dist/
+
+# ===========================
+# Uploaded Files (local storage)
+# ===========================
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# ===========================
+# OS / Editor
+# ===========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===========================
+# Logs
+# ===========================
+*.log
+logs/

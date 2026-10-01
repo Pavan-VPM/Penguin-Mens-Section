@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { getProducts, getSiteConfig } from '../services/api'
 
-const HERO_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuD1ps0HdAx9ANRgkAI528SZuWNXqJ1WKlkHgpfYv2ybbogGSlvqSLviao-pPVvWvntNgt4clC3ZQhMQIMFLNn_yQ59lbpIKnLB_AYCQqkq9ojMmahSUtbSMwG8H-60x_Lu2FeCmwkOtbCE-FILoiZ7CBr6FaRHRM1oDOLigIDAVVCI14XVvM4wCnVUSqzxvhyHyfTadWCC0SkD4BjDQlxUHqLLgMszYK8LthVcUcm1CJex1S2t2GP57'
+const DEFAULT_HERO_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuD1ps0HdAx9ANRgkAI528SZuWNXqJ1WKlkHgpfYv2ybbogGSlvqSLviao-pPVvWvntNgt4clC3ZQhMQIMFLNn_yQ59lbpIKnLB_AYCQqkq9ojMmahSUtbSMwG8H-60x_Lu2FeCmwkOtbCE-FILoiZ7CBr6FaRHRM1oDOLigIDAVVCI14XVvM4wCnVUSqzxvhyHyfTadWCC0SkD4BjDQlxUHqLLgMszYK8LthVcUcm1CJex1S2t2GP57'
 
-const PRODUCTS = [
+const FALLBACK_PRODUCTS = [
   { id: 1, name: 'Structured Wool Overshirt', category: 'Shirts', color: 'Charcoal Melange', price: '₹14,500', badge: 'Drop 01', badgeColor: 'var(--primary)', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va' },
   { id: 2, name: 'Heavyweight Boxy Tee', category: 'Tees', color: 'Chalk White', price: '₹4,990', badge: 'Organic', badgeColor: 'var(--secondary)', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEg9HtS0jCzYVX0DNa-H01P07DEd3yPNgAGhR7l8uhurLYtOmmkzrWBT-fzc9gCXaU9VuLEaE7zzyWMh59UyiGYFM7gPlBxgZcVe6SJXIuDYleaWLtY2go9B0wDdGTc2ubG_j3tC9-6Q6dg6j6aaweB2iDSlt8Dp0Q5bHXK1YWSkFPa4a9ewDrgjcTvIBfBULm9Tzb2N4ps4HytEYk3FEgY9IyiyksGJUIWB1EsPMVZOGHdXrKzZeA' },
   { id: 3, name: 'Relaxed Pleated Trouser', category: 'Tailoring', color: 'Slate Grey', price: '₹11,500', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4oHKiDX7F1_YMYpKNYZoqlYF7sztvwDwydf5RcZxaf8C0CBQ6LPehQgqfUztS3CLuwQdgnTjbqiEZqLuiKunTxErcqb_wBugBzAYMpHteO9D-6M4Y51v_Qzu2CrcnhU9eciK73peSMNY4rvWqBZ1bWbZcXEUpFMy1v_eT2bOyR8OjuDhDSm7ysVzAzVD7wGTDhOA8wgWIHB3zb8OkLfYqEEhr_vSUj7Cg54RqZLtMgOdouZC6DQfl' },
@@ -19,10 +20,53 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { isWishlisted, toggleWishlist, addToCart } = useCart()
   const [activeCategory, setActiveCategory] = useState('All')
+  const [productsList, setProductsList] = useState(FALLBACK_PRODUCTS)
+  const [heroData, setHeroData] = useState({
+    marqueeText: 'FW25 Drop 01 Available Worldwide',
+    archiveText: 'Archive Curated',
+    heroHeadline: 'New Season Drop',
+    heroSubheadline: 'Minimalist silhouettes engineered for modern architectural movement. Double-faced wool, tech poplin, and structured forms.',
+    heroImage: DEFAULT_HERO_IMG,
+    heroDropTag: 'Drop 01 // Autumn Winter 2025',
+  })
+
+  useEffect(() => {
+    async function loadLiveData() {
+      try {
+        const [prodRes, cfgRes] = await Promise.all([getProducts(), getSiteConfig()])
+        if (prodRes?.data && prodRes.data.length > 0) {
+          const formatted = prodRes.data.map(p => ({
+            id: p._id || p.id,
+            name: p.name,
+            category: p.category,
+            color: p.color || 'Nocturne Black',
+            price: typeof p.price === 'number' ? `₹${p.price.toLocaleString('en-IN')}` : p.price,
+            badge: p.badge || '',
+            badgeColor: p.badgeColor || 'var(--primary)',
+            img: p.images?.[0] || p.img,
+          }))
+          setProductsList(formatted)
+        }
+        if (cfgRes?.data) {
+          setHeroData({
+            marqueeText: cfgRes.data.marqueeText || 'FW25 Drop 01 Available Worldwide',
+            archiveText: cfgRes.data.archiveText || 'Archive Curated',
+            heroHeadline: cfgRes.data.heroHeadline || 'New Season Drop',
+            heroSubheadline: cfgRes.data.heroSubheadline || 'Minimalist silhouettes engineered for modern architectural movement. Double-faced wool, tech poplin, and structured forms.',
+            heroImage: cfgRes.data.heroImage || DEFAULT_HERO_IMG,
+            heroDropTag: cfgRes.data.heroDropTag || 'Drop 01 // Autumn Winter 2025',
+          })
+        }
+      } catch (e) {
+        console.warn('Using fallback store catalog')
+      }
+    }
+    loadLiveData()
+  }, [])
 
   const displayProducts = activeCategory === 'All'
-    ? PRODUCTS
-    : PRODUCTS.filter(p => p.category === activeCategory)
+    ? productsList
+    : productsList.filter(p => p.category === activeCategory)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
@@ -40,9 +84,9 @@ export default function HomePage() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span className="animate-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-container)' }} />
-            <span className="text-label-caps text-on-surface-variant">FW25 Drop 01 Available Worldwide</span>
+            <span className="text-label-caps text-on-surface-variant">{heroData.marqueeText}</span>
           </div>
-          <span className="text-label-caps text-secondary" style={{ opacity: 0.7 }}>Archive Curated</span>
+          <span className="text-label-caps text-secondary" style={{ opacity: 0.7 }}>{heroData.archiveText}</span>
         </div>
       </div>
 
@@ -62,7 +106,7 @@ export default function HomePage() {
           maxHeight: 640
         }}>
           <img
-            src={HERO_IMG}
+            src={heroData.heroImage}
             alt="Penguins FW25"
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top 20%', filter: 'brightness(0.9) contrast(1.05)' }}
           />
@@ -81,15 +125,15 @@ export default function HomePage() {
           }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--glass-dark)', backdropFilter: 'blur(12px)', padding: '5px 12px', borderRadius: 999, alignSelf: 'flex-start' }}>
               <span className="animate-ping" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-container)' }} />
-              <span className="text-label-caps text-primary">Drop 01 // Autumn Winter 2025</span>
+              <span className="text-label-caps text-primary">{heroData.heroDropTag}</span>
             </div>
             
             <h1 className="text-headline-xl-mobile text-on-surface" style={{ textTransform: 'uppercase', marginTop: 4, maxWidth: 640, fontSize: 'clamp(28px, 4vw, 48px)', lineHeight: 1.1 }}>
-              New Season Drop
+              {heroData.heroHeadline}
             </h1>
             
             <p className="text-body-md text-on-surface-variant" style={{ maxWidth: 440, fontSize: 'clamp(13px, 1.5vw, 16px)' }}>
-              Minimalist silhouettes engineered for modern architectural movement. Double-faced wool, tech poplin, and structured forms.
+              {heroData.heroSubheadline}
             </p>
             
             <div style={{ display: 'flex', gap: 12, paddingTop: 10, maxWidth: 420 }}>

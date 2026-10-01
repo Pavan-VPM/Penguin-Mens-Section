@@ -1,34 +1,84 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { getProductById } from '../services/api'
 
-const IMAGES = [
+const DEFAULT_IMAGES = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDnR9S4fgMwiQA96pWo4DRRnR4yoqrORLPBRtU1exX8jFx4Mf2lu4FZb0To4JX24dcoEh-GbRf-FaR0s39tPIiS-Wq0OsNB6EjKqSxhQGXr6jGjGplvjbLYbTqyJxLhFFwdTcx8VHcX7jpv4b6tEmXM8HrtLl5wfKDkseOPqLDMKvkLxq7qflNN9MqLaF67Kxj_tJ08uRdK6jSUxDaYDhtHlAB-7Gx5TOqStb4NoD1G01OK9YFRlnEY',
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDw6PlIfD7vb_n4u5I_wD4HhFdTcV-UVOCENxio76QfVtj4TtfRRyePIpQIcJigP4x9Wc7TemI-nMXXz6Pt7XngwmTtRuBYdxnhGmoGboojO1aB4qDaF8UBDAqL-EKhubCIg19kp_1Kvw65x8WO4Rzftn8xvR5e0BIIwaGyqj97L00TABLrHE0n7YezXGVCKzCQSEdTRZNm10F1GUVNiBmvJvBz3q8wCtZpserBa9hHWrT6REccVN_4',
   'https://lh3.googleusercontent.com/aida-public/AB6AXuA8K4W-FWh7vCYR_mvxb8wOL-rNOr0a633cUAMpF8eh5QxC614cWcQEpiQSaRejQNnri7CgeDLbrRuYzbZuDbNAM_sJtIPV15Y8BBOKF-Y3EpQ3gHW36ynSnnFZGlzqccRALL8zRwe9P9L2eHAGDs8fdhRUsDXLjGzeIHvXqO8jaB4ybpyYPRq6Vvqc4d92tse7zqKIIhYfdKoqJ3fJc7Qrp8vmN9_ETZ30v2PzbUq4rVOVpYAGd_nk',
 ]
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-const COLOR_NAMES = ['Nocturne Black', 'Deep Charcoal', 'Slate White', 'Graphite']
+const DEFAULT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+const DEFAULT_COLOR_NAMES = ['Nocturne Black', 'Deep Charcoal', 'Slate White', 'Graphite']
 
 export default function ProductDetailPage() {
   const navigate = useNavigate()
+  const { id } = useParams()
   const { addToCart, isWishlisted, toggleWishlist } = useCart()
   const [activeImg, setActiveImg] = useState(0)
   const [selectedSize, setSelectedSize] = useState('M')
   const [selectedColor, setSelectedColor] = useState(0)
   const [openSection, setOpenSection] = useState('desc')
   const [added, setAdded] = useState(false)
+  const [productData, setProductData] = useState({
+    id: 1,
+    name: 'Structured Poplin Overshirt',
+    category: 'Shirts',
+    price: 11900,
+    badge: 'DROP 01',
+    images: DEFAULT_IMAGES,
+    sizes: DEFAULT_SIZES,
+    colors: DEFAULT_COLOR_NAMES,
+    fabricDetails: '100% Japanese High-Density Organic Cotton Poplin (180 GSM). Double-stitched seams with matte black hardware.',
+    careInstructions: 'Dry clean only or delicate machine wash at 30°C inside-out. Do not tumble dry. Cool iron on reverse.',
+    description: 'Precision tailored overshirt featuring an exaggerated camp collar, concealed placket, and side split vents.',
+  })
+
+  useEffect(() => {
+    async function loadProduct() {
+      if (!id) return
+      try {
+        const res = await getProductById(id)
+        if (res?.data) {
+          const p = res.data
+          setProductData({
+            id: p._id || p.id,
+            name: p.name,
+            category: p.category || 'Shirts',
+            price: typeof p.price === 'number' ? p.price : Number(String(p.price).replace(/[^\d.]/g, '')) || 11900,
+            badge: p.badge || 'DROP 01',
+            images: p.images && p.images.length > 0 ? p.images : DEFAULT_IMAGES,
+            sizes: p.sizes?.map(s => s.size) || DEFAULT_SIZES,
+            colors: p.colorVariants?.map(c => c.name) || (p.color ? [p.color] : DEFAULT_COLOR_NAMES),
+            fabricDetails: p.fabricDetails || '100% Japanese High-Density Organic Cotton Poplin (180 GSM).',
+            careInstructions: p.careInstructions || 'Dry clean only or delicate machine wash at 30°C.',
+            description: p.description || 'Precision tailored overshirt featuring an exaggerated camp collar.',
+          })
+          if (p.sizes && p.sizes.length > 0) {
+            setSelectedSize(p.sizes[0].size)
+          }
+        }
+      } catch (err) {
+        console.warn('Using fallback product detail')
+      }
+    }
+    loadProduct()
+  }, [id])
+
+  const IMAGES = productData.images
+  const SIZES = productData.sizes
+  const COLOR_NAMES = productData.colors
 
   const nextImage = () => setActiveImg(prev => (prev + 1) % IMAGES.length)
   const prevImage = () => setActiveImg(prev => (prev - 1 + IMAGES.length) % IMAGES.length)
 
   const product = {
-    id: 1,
-    name: 'Structured Poplin Overshirt',
-    color: COLOR_NAMES[selectedColor],
-    price: 11900,
-    badge: 'DROP 01',
+    id: productData.id,
+    name: productData.name,
+    color: COLOR_NAMES[selectedColor] || 'Nocturne Black',
+    price: productData.price,
+    badge: productData.badge,
     img: IMAGES[0]
   }
 

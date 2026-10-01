@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { getOrders } from '../services/api'
 
-const PAST_ORDERS = [
+const FALLBACK_PAST_ORDERS = [
   {
     id: 'PGN-FW25-8842',
     date: '28 Sep 2026',
@@ -32,6 +33,30 @@ export default function AccountPage() {
   const navigate = useNavigate()
   const { cartCount, wishlist } = useCart()
   const [activeTab, setActiveTab] = useState('orders')
+  const [ordersList, setOrdersList] = useState(FALLBACK_PAST_ORDERS)
+
+  useEffect(() => {
+    async function loadUserOrders() {
+      try {
+        const res = await getOrders()
+        if (res?.data && res.data.length > 0) {
+          const formatted = res.data.map(o => ({
+            id: o.orderNumber || o._id,
+            date: new Date(o.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            status: o.orderStatus || 'Processing',
+            courier: o.courier || 'DHL Express',
+            tracking: o.trackingNumber || 'DHL-8492019482',
+            total: `₹${(o.totalAmount || 0).toLocaleString('en-IN')}`,
+            items: o.items?.map(i => ({ name: i.name, size: i.size, qty: i.quantity || 1 })) || []
+          }))
+          setOrdersList(formatted)
+        }
+      } catch (e) {
+        console.warn('Using fallback past orders')
+      }
+    }
+    loadUserOrders()
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: '3rem' }}>
@@ -169,7 +194,7 @@ export default function AccountPage() {
         {/* Tab: Orders */}
         {activeTab === 'orders' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {PAST_ORDERS.map(order => (
+            {ordersList.map(order => (
               <div
                 key={order.id}
                 style={{

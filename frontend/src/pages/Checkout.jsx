@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { createOrder } from '../services/api'
 
 const STEPS = ['01 Address', '02 Delivery', '03 Payment']
 
@@ -10,6 +11,7 @@ export default function CheckoutPage() {
   const [activeStep] = useState(2) // Payment step active
   const [paymentMethod, setPaymentMethod] = useState('upi')
   const [orderPlaced, setOrderPlaced] = useState(false)
+  const [confirmedOrderNumber, setConfirmedOrderNumber] = useState('#PGN-FW25-8842')
   const [bagOpen, setBagOpen] = useState(true)
 
   const discount = items.length > 0 ? 2500 : 0
@@ -17,7 +19,42 @@ export default function CheckoutPage() {
   const tax = taxable * 0.12
   const total = items.length > 0 ? taxable + tax : 0
 
-  const handleConfirmOrder = () => {
+  const handleConfirmOrder = async () => {
+    try {
+      const orderPayload = {
+        customer: {
+          name: 'Alexandre Mercer',
+          email: 'alex.mercer@atelier.com',
+          phone: '+91 98201 92834',
+          address: 'Penthouse 4B, Cuffe Parade',
+          city: 'Mumbai',
+          postalCode: '400005',
+          country: 'India',
+        },
+        items: items.map(i => ({
+          productId: i.id,
+          name: i.name,
+          color: i.color || 'Nocturne Black',
+          size: i.size || 'M',
+          price: typeof i.price === 'number' ? i.price : Number(String(i.price).replace(/[^\d.]/g, '')) || 9900,
+          quantity: i.qty || 1,
+          image: i.img,
+        })),
+        subtotal: subtotal,
+        discount: discount,
+        tax: tax,
+        totalAmount: total,
+        paymentMethod: paymentMethod,
+      }
+
+      const res = await createOrder(orderPayload)
+      if (res?.data?.orderNumber) {
+        setConfirmedOrderNumber(`#${res.data.orderNumber}`)
+      }
+    } catch (e) {
+      console.warn('Using local order confirmation')
+    }
+
     setOrderPlaced(true)
     clearCart()
   }
@@ -33,7 +70,7 @@ export default function CheckoutPage() {
           Your bespoke atelier package is being prepared in our Porto facility. DHL Express tracking will arrive via email shortly.
         </p>
         <span className="text-label-caps text-primary" style={{ background: 'var(--surface-container)', padding: '6px 16px', borderRadius: 999, marginBottom: 24, letterSpacing: '0.1em' }}>
-          #PGN-FW25-8842
+          {confirmedOrderNumber}
         </span>
         <button
           onClick={() => navigate('/')}

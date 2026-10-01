@@ -209,7 +209,7 @@ export default function Footer() {
           color: 'var(--outline)'
         }}>
           <span>© 2026 PENGUIN MEN'S SECTION. ALL RIGHTS RESERVED.</span>
-          <div style={{ display: 'flex', gap: 20 }}>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
             <span style={{ cursor: 'pointer' }}>Privacy Policy</span>
             <span>•</span>
             <span style={{ cursor: 'pointer' }}>Terms of Atelier</span>
@@ -217,6 +217,28 @@ export default function Footer() {
             <span style={{ cursor: 'pointer' }}>Legal Notice</span>
             <span>•</span>
             <span style={{ cursor: 'pointer' }}>Sustainability</span>
+            <span>•</span>
+            {/* Discreet admin link — for store owners */}
+            <button
+              onClick={() => navigate('/admin')}
+              title="Atelier Admin Dashboard"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--outline)',
+                fontSize: 10,
+                opacity: 0.5,
+                letterSpacing: '0.08em',
+                padding: 0,
+                transition: 'opacity 0.2s',
+                fontFamily: 'inherit'
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+            >
+              ⚙ Atelier Admin
+            </button>
           </div>
         </div>
       </div>
