@@ -58,7 +58,8 @@ export default function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/winter-drop" element={<WinterDropPage />} />
-              <Route path="/collection/shirts" element={<CollectionPage />} />
+              <Route path="/collection" element={<CollectionPage />} />
+              <Route path="/collection/:category" element={<CollectionPage />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />

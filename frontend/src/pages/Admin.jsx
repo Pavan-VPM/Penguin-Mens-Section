@@ -38,6 +38,11 @@ export default function AdminPage() {
     heroSubheadline: '',
     heroImage: '',
     heroDropTag: '',
+    showWinterDrop: true,
+    winterDropTitle: 'WINTER DROP 01',
+    winterDropSubtitle: 'Limited capsule — Structured outerwear, heavyweight knitwear & tech bombers. Only 100 units per style.',
+    winterDropCta: 'Shop Winter Drop',
+    winterDropImage: '',
   });
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState({ text: '', type: 'success' });
@@ -259,10 +264,14 @@ export default function AdminPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Always persist locally so changes survive without a backend
+      localStorage.setItem('penguin_site_config', JSON.stringify(siteConfig));
       await updateSiteConfig(siteConfig);
-      showToast('Live website banners and marquee updated!');
+      showToast('Live website banners and drop settings updated!');
     } catch (err) {
-      showToast('Failed to update website configuration', 'error');
+      // Still save locally even if API fails
+      localStorage.setItem('penguin_site_config', JSON.stringify(siteConfig));
+      showToast('Settings saved locally (backend unavailable)');
     } finally {
       setLoading(false);
     }
@@ -977,6 +986,145 @@ export default function AdminPage() {
                 {siteConfig.heroImage && (
                   <div style={{ marginTop: 10, width: '100%', height: 160, borderRadius: 8, overflow: 'hidden' }}>
                     <img src={siteConfig.heroImage} alt="Hero preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+              </div>
+
+              {/* ─── Winter Drop Section Control ─────────────────────── */}
+              <div style={{
+                marginTop: 8,
+                padding: '20px',
+                borderRadius: 12,
+                border: '1px solid var(--outline-variant)',
+                background: siteConfig.showWinterDrop
+                  ? 'linear-gradient(135deg, rgba(0,120,200,0.07) 0%, rgba(0,80,160,0.04) 100%)'
+                  : 'var(--surface-container-lowest)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div>
+                    <div className="text-label-caps text-on-surface" style={{ marginBottom: 2 }}>
+                      ❄️ Winter Drop Section
+                    </div>
+                    <div className="text-body-sm text-on-surface-variant">
+                      {siteConfig.showWinterDrop ? 'Currently VISIBLE on homepage' : 'Currently HIDDEN from homepage'}
+                    </div>
+                  </div>
+                  {/* Toggle Switch */}
+                  <button
+                    type="button"
+                    onClick={() => setSiteConfig({ ...siteConfig, showWinterDrop: !siteConfig.showWinterDrop })}
+                    style={{
+                      position: 'relative',
+                      width: 52,
+                      height: 28,
+                      borderRadius: 999,
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'background 0.25s ease',
+                      background: siteConfig.showWinterDrop ? 'var(--primary, #1d6fc4)' : 'var(--outline-variant, #ccc)',
+                      flexShrink: 0,
+                    }}
+                    aria-label="Toggle Winter Drop visibility"
+                  >
+                    <span style={{
+                      position: 'absolute',
+                      top: 3,
+                      left: siteConfig.showWinterDrop ? 26 : 3,
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      background: '#ffffff',
+                      transition: 'left 0.25s ease',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                    }} />
+                  </button>
+                </div>
+
+                {siteConfig.showWinterDrop && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div>
+                        <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 6 }}>
+                          Drop Section Title
+                        </label>
+                        <input
+                          type="text"
+                          value={siteConfig.winterDropTitle || ''}
+                          onChange={(e) => setSiteConfig({ ...siteConfig, winterDropTitle: e.target.value })}
+                          placeholder="e.g. WINTER DROP 01"
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            borderRadius: 8,
+                            background: 'var(--surface-container-lowest)',
+                            border: '1px solid var(--outline-variant)',
+                            color: 'var(--on-surface)',
+                            fontSize: 13,
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 6 }}>
+                          CTA Button Text
+                        </label>
+                        <input
+                          type="text"
+                          value={siteConfig.winterDropCta || ''}
+                          onChange={(e) => setSiteConfig({ ...siteConfig, winterDropCta: e.target.value })}
+                          placeholder="e.g. Shop Winter Drop"
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            borderRadius: 8,
+                            background: 'var(--surface-container-lowest)',
+                            border: '1px solid var(--outline-variant)',
+                            color: 'var(--on-surface)',
+                            fontSize: 13,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 6 }}>
+                        Drop Section Subtitle
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={siteConfig.winterDropSubtitle || ''}
+                        onChange={(e) => setSiteConfig({ ...siteConfig, winterDropSubtitle: e.target.value })}
+                        placeholder="Short description of this drop..."
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: 8,
+                          background: 'var(--surface-container-lowest)',
+                          border: '1px solid var(--outline-variant)',
+                          color: 'var(--on-surface)',
+                          fontSize: 13,
+                          resize: 'vertical',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 6 }}>
+                        Drop Background Image URL (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={siteConfig.winterDropImage || ''}
+                        onChange={(e) => setSiteConfig({ ...siteConfig, winterDropImage: e.target.value })}
+                        placeholder="https://..."
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: 8,
+                          background: 'var(--surface-container-lowest)',
+                          border: '1px solid var(--outline-variant)',
+                          color: 'var(--on-surface)',
+                          fontSize: 13,
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

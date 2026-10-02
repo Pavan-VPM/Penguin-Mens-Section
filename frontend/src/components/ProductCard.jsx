@@ -1,0 +1,141 @@
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+
+const SIZES_LIST = ['S', 'M', 'L', 'XL', 'XXL']
+
+export default function ProductCard({ product, onQuickView }) {
+  const navigate = useNavigate()
+  const { isWishlisted, toggleWishlist, addToCart } = useCart()
+
+  const id = product._id || product.id
+  const name = product.name || 'Tailored Garment'
+  const category = product.category || 'Menswear'
+  const color = product.color || 'Nocturne Black'
+  
+  // Numerical price handling
+  const rawPrice = typeof product.price === 'number' 
+    ? product.price 
+    : parseFloat(String(product.price).replace(/[^\d.]/g, '')) || 1999
+  const formattedPrice = `₹${rawPrice.toLocaleString('en-IN')}`
+  
+  // Original MRP calculation (default ~40-50% higher for discount strike effect like Snitch / Souled Store)
+  const originalPrice = product.originalPrice || Math.round(rawPrice * 1.65)
+  const formattedOriginalPrice = `₹${originalPrice.toLocaleString('en-IN')}`
+  const discountPercent = Math.round(((originalPrice - rawPrice) / originalPrice) * 100)
+
+  const mainImg = product.images?.[0] || product.img || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va'
+  const hoverImg = product.images?.[1] || product.hoverImg || product.images?.[0] || mainImg
+
+  const badge = product.badge || (discountPercent > 35 ? `${discountPercent}% OFF` : 'NEW')
+  const rating = product.rating || '4.8'
+  const reviewsCount = product.reviewsCount || 148
+
+  const isFav = isWishlisted(id)
+
+  const handleCardClick = (e) => {
+    navigate(`/product/${id}`)
+  }
+
+  const handleWishlistClick = (e) => {
+    e.stopPropagation()
+    toggleWishlist(id)
+  }
+
+  const handleQuickAdd = (e, size) => {
+    e.stopPropagation()
+    addToCart({
+      id,
+      name,
+      price: rawPrice,
+      color,
+      badge,
+      img: mainImg
+    }, size)
+  }
+
+  return (
+    <div className="product-card" onClick={handleCardClick}>
+      {/* Media Wrap with Hover Flip */}
+      <div className="product-media-wrap">
+        <img 
+          src={mainImg} 
+          alt={name} 
+          className="product-img-main" 
+          loading="lazy" 
+        />
+        {hoverImg && hoverImg !== mainImg && (
+          <img 
+            src={hoverImg} 
+            alt={`${name} alt`} 
+            className="product-img-hover" 
+            loading="lazy" 
+          />
+        )}
+
+        {/* Badge Tag */}
+        {badge && (
+          <span className={`card-badge-tag ${badge.includes('OFF') ? 'tag-hot' : 'tag-new'}`}>
+            {badge}
+          </span>
+        )}
+
+        {/* Wishlist Button */}
+        <button 
+          className={`card-wishlist-btn ${isFav ? 'active' : ''}`}
+          onClick={handleWishlistClick}
+          aria-label={isFav ? 'Remove from Wishlist' : 'Add to Wishlist'}
+        >
+          <span 
+            className="material-symbols-outlined" 
+            style={{ 
+              fontSize: 20, 
+              fontVariationSettings: isFav ? "'FILL' 1" : "'FILL' 0" 
+            }}
+          >
+            favorite
+          </span>
+        </button>
+
+        {/* Quick Size Select Bar on Desktop Hover */}
+        <div className="card-quick-size-bar">
+          <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 4 }}>
+            Size:
+          </span>
+          {SIZES_LIST.map(sz => (
+            <button
+              key={sz}
+              className="quick-size-btn"
+              onClick={(e) => handleQuickAdd(e, sz)}
+              title={`Quick Add Size ${sz}`}
+            >
+              {sz}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Info Wrap */}
+      <div className="product-info-wrap">
+        <div className="product-brand-subtitle">PENGUIN • {category}</div>
+        <h3 className="product-title-text" title={name}>{name}</h3>
+        
+        <div className="product-price-row">
+          <span className="price-current">{formattedPrice}</span>
+          <span className="price-original">{formattedOriginalPrice}</span>
+          {discountPercent > 0 && (
+            <span className="price-discount-tag">{discountPercent}% OFF</span>
+          )}
+        </div>
+
+        <div className="product-rating-row">
+          <span className="material-symbols-outlined rating-star-icon" style={{ fontVariationSettings: "'FILL' 1" }}>
+            star
+          </span>
+          <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{rating}</span>
+          <span>({reviewsCount})</span>
+        </div>
+      </div>
+    </div>
+  )
+}

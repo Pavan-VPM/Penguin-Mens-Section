@@ -8,6 +8,7 @@ export default function Footer() {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const brandLogo = theme === 'light' ? brandLogoLight : brandLogoDark
+
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
 
@@ -16,229 +17,135 @@ export default function Footer() {
     if (email.trim()) {
       setSubscribed(true)
       setEmail('')
-      setTimeout(() => setSubscribed(false), 4000)
+      setTimeout(() => setSubscribed(false), 5000)
     }
   }
 
   return (
     <footer style={{
-      background: 'var(--surface-container-lowest)',
-      borderTop: '1px solid var(--ticker-border)',
+      backgroundColor: 'var(--bg-secondary)',
+      borderTop: '1px solid var(--border-light)',
       marginTop: 'auto',
-      padding: '4rem 0 2rem',
+      padding: '48px 0 32px',
       width: '100%'
     }}>
-      <div className="content-container" style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-        {/* Top Section: Brand & Newsletter */}
+      <div className="content-container">
+        {/* Main Grid: Brand & Newsletter + Links */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '2.5rem',
-          alignItems: 'start'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 32,
+          paddingBottom: 40,
+          borderBottom: '1px solid var(--border-light)'
         }}>
-          {/* Brand Philosophy */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Brand Col */}
+          <div style={{ gridColumn: 'span 1', maxWidth: 340 }}>
             <img
               src={brandLogo}
-              alt="Penguin Men's Section"
-              style={{ height: 42, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start' }}
+              alt="PENGUIN"
+              style={{ height: 40, width: 'auto', objectFit: 'contain', marginBottom: 14 }}
             />
-            <p className="text-body-sm text-on-surface-variant" style={{ maxWidth: 380, lineHeight: 1.6, fontSize: 13 }}>
-              Engineered architectural menswear designed for modern movement. Clean geometric lines, Japanese technical textiles, and timeless European tailoring.
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+              PENGUIN is India's contemporary menswear label engineering modern architectural silhouettes, breathable Japanese textiles, and effortless streetwear fits.
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary-container)', fontSize: 12, fontWeight: 600 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>verified</span>
-              <span>Atelier Verified Provenance // Porto & Tokyo</span>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-accent)' }}>#PenguinMen</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>• Over 50,000+ happy customers</span>
             </div>
           </div>
 
-          {/* Newsletter / Private Access */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span className="text-label-caps text-primary" style={{ letterSpacing: '0.12em' }}>Private Atelier Access</span>
-            <h3 className="text-headline-sm text-on-surface" style={{ fontSize: 18, textTransform: 'uppercase' }}>
-              Subscribe to Future Drops
-            </h3>
-            <p className="text-body-sm text-on-surface-variant" style={{ fontSize: 12, lineHeight: 1.5 }}>
-              Receive priority notifications for limited capsule releases, private atelier previews, and architectural archive additions.
+          {/* Quick Links */}
+          <div>
+            <h4 style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+              Shop Categories
+            </h4>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--text-secondary)' }}>
+              <li><button onClick={() => navigate('/winter-drop')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>New Arrivals (Drop 01)</button></li>
+              <li><button onClick={() => navigate('/collection/shirts')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Luxe Shirts</button></li>
+              <li><button onClick={() => navigate('/collection/tees')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Oversized T-Shirts</button></li>
+              <li><button onClick={() => navigate('/collection/jackets')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Jackets & Outerwear</button></li>
+              <li><button onClick={() => navigate('/collection/formals')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Formalwear & Suits</button></li>
+              <li><button onClick={() => navigate('/collection')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>All Collections</button></li>
+            </ul>
+          </div>
+
+          {/* Customer Care */}
+          <div>
+            <h4 style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+              Customer Care
+            </h4>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--text-secondary)' }}>
+              <li><button onClick={() => navigate('/account')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Track Your Order</button></li>
+              <li><button onClick={() => navigate('/account')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Returns & Exchanges</button></li>
+              <li><button onClick={() => navigate('/cart')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Shipping Policy</button></li>
+              <li><button onClick={() => navigate('/wishlist')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Wishlist</button></li>
+              <li><button onClick={() => navigate('/admin')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Admin Management</button></li>
+            </ul>
+          </div>
+
+          {/* Newsletter Box */}
+          <div style={{ maxWidth: 320 }}>
+            <h4 style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+              Join The Penguin Club
+            </h4>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
+              Get instant updates on secret flash drops and receive <strong>₹200 OFF</strong> on your first order.
             </p>
-            <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              <input
-                type="email"
-                required
-                placeholder="Enter your email address"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                style={{
-                  flex: 1,
-                  height: 44,
-                  background: 'var(--surface-container)',
-                  border: '1px solid var(--outline-variant)',
-                  borderRadius: 8,
-                  padding: '0 14px',
-                  color: 'var(--on-surface)',
-                  fontSize: 13,
-                  outline: 'none'
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  height: 44,
-                  padding: '0 20px',
-                  borderRadius: 8,
-                  background: 'var(--primary-container)',
-                  color: 'var(--on-primary-fixed)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 0 16px var(--glow-primary)'
-                }}
-              >
-                Join
-              </button>
+            <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{
+                    flex: 1,
+                    height: 42,
+                    padding: '0 14px',
+                    borderRadius: 4,
+                    border: '1px solid var(--border-light)',
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="btn-solid-primary"
+                  style={{ height: 42, padding: '0 16px', fontSize: 12 }}
+                >
+                  Join
+                </button>
+              </div>
+              {subscribed && (
+                <div style={{ fontSize: 12, color: 'var(--brand-green)', fontWeight: 700, marginTop: 4 }}>
+                  🎉 Welcome! Use Code <strong>FIRST100</strong> at checkout!
+                </div>
+              )}
             </form>
-            {subscribed && (
-              <span className="text-label-caps text-primary" style={{ fontSize: 11, marginTop: 4 }}>
-                ✓ You have been granted private access to FW25 Drop 02.
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Middle Section: Organized Directory Links */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '2rem',
-          borderTop: '1px solid var(--ticker-border)',
-          paddingTop: '2.5rem'
-        }}>
-          {/* Column 1: Collections */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <span className="text-label-caps text-on-surface" style={{ fontWeight: 700, letterSpacing: '0.1em' }}>Collection</span>
-            {[
-              { label: 'Drop 01 // FW25', path: '/winter-drop' },
-              { label: 'Shirts & Overshirts', path: '/collection/shirts' },
-              { label: 'Technical Outerwear', path: '/collection/shirts' },
-              { label: 'Relaxed Tailoring', path: '/collection/shirts' },
-              { label: 'Curated Wishlist', path: '/wishlist' }
-            ].map(item => (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', textAlign: 'left', fontSize: 13, padding: 0, transition: 'color 0.15s' }}
-                onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-container)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'var(--on-surface-variant)'}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Column 2: Client Concierge */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <span className="text-label-caps text-on-surface" style={{ fontWeight: 700, letterSpacing: '0.1em' }}>Client Service</span>
-            {[
-              'Express Courier & Customs',
-              'Doorstep Return Policy',
-              'Atelier Fit & Sizing Guide',
-              'Track Your Garment',
-              'VIP Concierge Contact'
-            ].map(item => (
-              <span
-                key={item}
-                style={{ color: 'var(--on-surface-variant)', fontSize: 13, cursor: 'pointer', transition: 'color 0.15s' }}
-                onMouseEnter={e => e.currentTarget.style.color = 'var(--on-surface)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'var(--on-surface-variant)'}
-                onClick={() => navigate('/account')}
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-
-          {/* Column 3: Atelier Provenance */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <span className="text-label-caps text-on-surface" style={{ fontWeight: 700, letterSpacing: '0.1em' }}>Atelier Provenance</span>
-            {[
-              'Japanese Tech Textiles',
-              'Double-Faced Wool Philosophy',
-              'Carbon Neutral Courier',
-              'Care & Longevity Manual',
-              'Archive Tier Membership'
-            ].map(item => (
-              <span
-                key={item}
-                style={{ color: 'var(--on-surface-variant)', fontSize: 13, cursor: 'pointer', transition: 'color 0.15s' }}
-                onMouseEnter={e => e.currentTarget.style.color = 'var(--on-surface)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'var(--on-surface-variant)'}
-                onClick={() => navigate('/collection/shirts')}
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-
-          {/* Column 4: Store Region */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <span className="text-label-caps text-on-surface" style={{ fontWeight: 700, letterSpacing: '0.1em' }}>Store Region</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface-container)', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--card-border)', width: 'fit-content' }}>
-              <span className="material-symbols-outlined text-primary-container" style={{ fontSize: 18 }}>language</span>
-              <span className="text-label-md text-on-surface" style={{ fontSize: 12, fontWeight: 600 }}>India // INR (₹)</span>
-            </div>
-            <p className="text-body-sm text-on-surface-variant" style={{ fontSize: 11, lineHeight: 1.4, marginTop: 4 }}>
-              All prices include import duties & domestic GST. Guaranteed 24h dispatch via DHL Express.
-            </p>
-          </div>
-        </div>
-
-        {/* Bottom Section: Copyright & Legal */}
+        {/* Bottom Bar: Copyright & Payment Badges */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 16,
-          borderTop: '1px solid var(--ticker-border)',
-          paddingTop: '1.5rem',
-          fontSize: 11,
-          color: 'var(--outline)'
+          paddingTop: 24,
+          fontSize: 12,
+          color: 'var(--text-muted)'
         }}>
-          <span>© 2026 PENGUIN MEN'S SECTION. ALL RIGHTS RESERVED.</span>
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <span style={{ cursor: 'pointer' }}>Privacy Policy</span>
-            <span>•</span>
-            <span style={{ cursor: 'pointer' }}>Terms of Atelier</span>
-            <span>•</span>
-            <span style={{ cursor: 'pointer' }}>Legal Notice</span>
-            <span>•</span>
-            <span style={{ cursor: 'pointer' }}>Sustainability</span>
-            <span>•</span>
-            {/* Discreet admin link — for store owners */}
-            <button
-              onClick={() => navigate('/admin')}
-              title="Atelier Admin Dashboard"
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--outline)',
-                fontSize: 10,
-                opacity: 0.5,
-                letterSpacing: '0.08em',
-                padding: 0,
-                transition: 'opacity 0.2s',
-                fontFamily: 'inherit'
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
-            >
-              ⚙ Atelier Admin
-            </button>
+          <div>
+            © {new Date().getFullYear()} PENGUIN MENSWEAR. All rights reserved. Crafted with precision in India.
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 700 }}>100% SECURE CHECKOUT</span>
+            <span>• UPI • VISA • MASTERCARD • RUPAY • COD</span>
           </div>
         </div>
       </div>

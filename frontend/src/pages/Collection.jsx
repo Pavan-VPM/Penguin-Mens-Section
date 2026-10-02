@@ -1,158 +1,326 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
+import React, { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getProducts } from '../services/api'
+import ProductCard from '../components/ProductCard'
 
-const FALLBACK_PRODUCTS = [
-  { id: 1, name: 'Structured Poplin Overshirt', color: 'Nocturne Black', price: '₹11,900', sizes: ['S','M','L'], img: 'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY' },
-  { id: 2, name: 'Structured Oxford Shirt', color: 'Slate White', price: '₹9,900', sizes: ['S','M','L','XL'], img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDnR9S4fgMwiQA96pWo4DRRnR4yoqrORLPBRtU1exX8jFx4Mf2lu4FZb0To4JX24dcoEh-GbRf-FaR0s39tPIiS-Wq0OsNB6EjKqSxhQGXr6jGjGplvjbLYbTqyJxLhFFwdTcx8VHcX7jpv4b6tEmXM8HrtLl5wfKDkseOPqLDMKvkLxq7qflNN9MqLaF67Kxj_tJ08uRdK6jSUxDaYDhtHlAB-7Gx5TOqStb4NoD1G01OK9YFRlnEY' },
-  { id: 3, name: 'Matte Tech Shirt', color: 'Deep Charcoal', price: '₹10,500', badge: 'New', sizes: ['S','M','L'], img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDw6PlIfD7vb_n4u5I_wD4HhFdTcV-UVOCENxio76QfVtj4TtfRRyePIpQIcJigP4x9Wc7TemI-nMXXz6Pt7XngwmTtRuBYdxnhGmoGboojO1aB4qDaF8UBDAqL-EKhubCIg19kp_1Kvw65x8WO4Rzftn8xvR5e0BIIwaGyqj97L00TABLrHE0n7YezXGVCKzCQSEdTRZNm10F1GUVNiBmvJvBz3q8wCtZpserBa9hHWrT6REccVN_4' },
-  { id: 4, name: 'Brushed Cotton Overshirt', color: 'Moss Green', price: '₹12,900', sizes: ['M','L','XL'], img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA8K4W-FWh7vCYR_mvxb8wOL-rNOr0a633cUAMpF8eh5QxC614cWcQEpiQSaRejQNnri7CgeDLbrRuYzbZuDbNAM_sJtIPV15Y8BBOKF-Y3EpQ3gHW36ynSnnFZGlzqccRALL8zRwe9P9L2eHAGDs8fdhRUsDXLjGzeIHvXqO8jaB4ybpyYPRq6Vvqc4d92tse7zqKIIhYfdKoqJ3fJc7Qrp8vmN9_ETZ30v2PzbUq4rVOVpYAGd_nk' },
+const CATEGORIES = ['All', 'Shirts', 'Tees', 'Jackets', 'Formals', 'Tailoring', 'Jeans', 'Footwear']
+const SIZES = ['S', 'M', 'L', 'XL', 'XXL']
+const SORT_OPTIONS = [
+  { label: 'Popularity', value: 'popular' },
+  { label: 'Price: Low to High', value: 'price_asc' },
+  { label: 'Price: High to Low', value: 'price_desc' },
+  { label: 'Newest First', value: 'newest' },
+  { label: 'Customer Rating', value: 'rating' },
 ]
 
-const SORT_OPTIONS = ['Newest', 'Price: Low to High', 'Price: High to Low', 'Best Rated']
+const FALLBACK_COLLECTION = [
+  {
+    id: 1,
+    name: 'Structured Poplin Overshirt',
+    category: 'Shirts',
+    color: 'Nocturne Black',
+    price: 1999,
+    originalPrice: 3499,
+    badge: '43% OFF',
+    rating: '4.9',
+    reviewsCount: 312,
+    images: [
+      'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va'
+    ]
+  },
+  {
+    id: 2,
+    name: 'Heavyweight Boxy Organic Tee',
+    category: 'Tees',
+    color: 'Chalk White',
+    price: 1299,
+    originalPrice: 2299,
+    badge: 'BESTSELLER',
+    rating: '4.8',
+    reviewsCount: 428,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAEg9HtS0jCzYVX0DNa-H01P07DEd3yPNgAGhR7l8uhurLYtOmmkzrWBT-fzc9gCXaU9VuLEaE7zzyWMh59UyiGYFM7gPlBxgZcVe6SJXIuDYleaWLtY2go9B0wDdGTc2ubG_j3tC9-6Q6dg6j6aaweB2iDSlt8Dp0Q5bHXK1YWSkFPa4a9ewDrgjcTvIBfBULm9Tzb2N4ps4HytEYk3FEgY9IyiyksGJUIWB1EsPMVZOGHdXrKzZeA',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDw6PlIfD7vb_n4u5I_wD4HhFdTcV-UVOCENxio76QfVtj4TtfRRyePIpQIcJigP4x9Wc7TemI-nMXXz6Pt7XngwmTtRuBYdxnhGmoGboojO1aB4qDaF8UBDAqL-EKhubCIg19kp_1Kvw65x8WO4Rzftn8xvR5e0BIIwaGyqj97L00TABLrHE0n7YezXGVCKzCQSEdTRZNm10F1GUVNiBmvJvBz3q8wCtZpserBa9hHWrT6REccVN_4'
+    ]
+  },
+  {
+    id: 3,
+    name: 'Relaxed Pleated Wide-Leg Trouser',
+    category: 'Tailoring',
+    color: 'Slate Grey',
+    price: 2499,
+    originalPrice: 4299,
+    badge: '42% OFF',
+    rating: '4.9',
+    reviewsCount: 184,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuA4oHKiDX7F1_YMYpKNYZoqlYF7sztvwDwydf5RcZxaf8C0CBQ6LPehQgqfUztS3CLuwQdgnTjbqiEZqLuiKunTxErcqb_wBugBzAYMpHteO9D-6M4Y51v_Qzu2CrcnhU9eciK73peSMNY4rvWqBZ1bWbZcXEUpFMy1v_eT2bOyR8OjuDhDSm7ysVzAzVD7wGTDhOA8wgWIHB3zb8OkLfYqEEhr_vSUj7Cg54RqZLtMgOdouZC6DQfl',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCflsrCJ4FMCSj_Kh2vIJ-49HTAOaEooBZXQidjqdRp-IdnUIHjg7Ea_dYD6NFC-5j8K1IQhs5ttiG2eqr6KZyXdZMQV5ZJeT4nN9ffxnJRBOd5m8m_HKGBg93ekINiMZ41mD9BmA_2Q969d9lPzvS8AXLfmUNwLQ0-fdjkML2j8M1s0X9nViJMrJbF7j7gtGm6AS8mSweO3EahcwxPFt2RiaCu7UHrqbaa5ZVhBQKg35U7CDlVkwl_'
+    ]
+  },
+  {
+    id: 4,
+    name: 'Technical Matte Bomber Jacket',
+    category: 'Jackets',
+    color: 'Washed Black',
+    price: 3499,
+    originalPrice: 5999,
+    badge: 'DROP 01',
+    rating: '5.0',
+    reviewsCount: 96,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuARmvTH6u7FeyWdAlKcRV2iSmOWqimIqVK7TvNs7EsEoF96C0uWUfh6WiwjB23tpGgO_eF2vd6faEeOMv35RikH2miws8kOYSQqvdn1CUSGc-BkNKUw9yVhaxkdllB88qCYUiqqE-QLSWjjVw11EDpSPnLTNPeVKR1KKd0auAsHs3ml1SIln3dM9p6_hl8kDW4qANNQtbNXyDdqS_GW_a90i6X9O0vlX7i6w-mFQrs-LrMrgatzn4uF',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBMcWjy3fc8ms2v322i4KsHjjqsF8Aq-MkauMwU7eFgN9eltVE2jd-ie_damkN6PrGmoYwQdT9lHTQfL4lmA9vYBjLiY0J3Ub8LLGwmH4qgRkmOvtfEEX2gL5u-zYEgSpC8HjBWjxRekLABxWoGfPOffgV_u4MrrkdczbPqI8OfLAPNdKlfkqJGo65U2u-qO4SG_rHV_UnwvLyTbsVvNlZLbIgF2RyYYidVi36LVb5GfFM0ZTnuDJjN'
+    ]
+  },
+  {
+    id: 5,
+    name: 'Raw Selvedge Straight-Leg Denim',
+    category: 'Jeans',
+    color: 'Deep Indigo',
+    price: 2799,
+    originalPrice: 4599,
+    badge: '39% OFF',
+    rating: '4.8',
+    reviewsCount: 167,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCflsrCJ4FMCSj_Kh2vIJ-49HTAOaEooBZXQidjqdRp-IdnUIHjg7Ea_dYD6NFC-5j8K1IQhs5ttiG2eqr6KZyXdZMQV5ZJeT4nN9ffxnJRBOd5m8m_HKGBg93ekINiMZ41mD9BmA_2Q969d9lPzvS8AXLfmUNwLQ0-fdjkML2j8M1s0X9nViJMrJbF7j7gtGm6AS8mSweO3EahcwxPFt2RiaCu7UHrqbaa5ZVhBQKg35U7CDlVkwl_',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuA4oHKiDX7F1_YMYpKNYZoqlYF7sztvwDwydf5RcZxaf8C0CBQ6LPehQgqfUztS3CLuwQdgnTjbqiEZqLuiKunTxErcqb_wBugBzAYMpHteO9D-6M4Y51v_Qzu2CrcnhU9eciK73peSMNY4rvWqBZ1bWbZcXEUpFMy1v_eT2bOyR8OjuDhDSm7ysVzAzVD7wGTDhOA8wgWIHB3zb8OkLfYqEEhr_vSUj7Cg54RqZLtMgOdouZC6DQfl'
+    ]
+  },
+  {
+    id: 6,
+    name: 'Monolith Lug Sole Derby',
+    category: 'Footwear',
+    color: 'Matte Black',
+    price: 3999,
+    originalPrice: 6499,
+    badge: 'LIMITED',
+    rating: '4.9',
+    reviewsCount: 78,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAGCcnQ_lQZYjZwKw_4fdayJ8Vg2b_LBOV3aku10uRPEJDfpurL0Soont9haqftelg8LfVX1jcH4SeuOFi5cw1KMoAzCnvrjhcbjqqks_DLXzjVZXpIi2MHCloBp75Sf7kbNQ0HSWzT40quJiPtMaJ6zMg7iYkvFUkMdDdixjc6MB_cAN5q5EznxDmmyjt6Ds7kVMaPomWX8ttdcmOy5UQrWMHfq9OFSg5nuaMLrzlaTBjMOmypfdm',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAE1gnBz655IdvVc1kO3NYSAvFEtlpZ66Wu9-iyodD2SqX8lAO6XchzyrZ6KdjTiv0hZALzdKDErN0So9P4trw3X16PBFg2lpzRVlsEf0TafladgrnZ_xB_UuzBhHsVWH_-KgjTxZSKXjyWxQngmueCK6uMeTKdEkPCee_IAJqqJfgXD1SN9RUmxjJPavdVubh2wgZ3Ihsbe-IN8KyomS25QkT6EyJR0tIgYVwSPiDlNOZNJNbK2MfJ'
+    ]
+  },
+  {
+    id: 7,
+    name: 'Structured Oxford Button Down',
+    category: 'Shirts',
+    color: 'Slate White',
+    price: 1899,
+    originalPrice: 3299,
+    badge: '42% OFF',
+    rating: '4.8',
+    reviewsCount: 219,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDnR9S4fgMwiQA96pWo4DRRnR4yoqrORLPBRtU1exX8jFx4Mf2lu4FZb0To4JX24dcoEh-GbRf-FaR0s39tPIiS-Wq0OsNB6EjKqSxhQGXr6jGjGplvjbLYbTqyJxLhFFwdTcx8VHcX7jpv4b6tEmXM8HrtLl5wfKDkseOPqLDMKvkLxq7qflNN9MqLaF67Kxj_tJ08uRdK6jSUxDaYDhtHlAB-7Gx5TOqStb4NoD1G01OK9YFRlnEY',
+      'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY'
+    ]
+  },
+  {
+    id: 8,
+    name: 'Brushed Mohair Knit Sweater',
+    category: 'Jackets',
+    color: 'Olive Moss',
+    price: 2999,
+    originalPrice: 4999,
+    badge: 'WINTER',
+    rating: '4.9',
+    reviewsCount: 142,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDcGdhD4ZhQZ3oH5KMNUpJBqde0mkUzM9j4twJPVO21A63Ua1y4VTDOAOACkYyw_jInAlG-EqHBlCnvAcZo6fVekY73Jbek2y9iO1xA9d1Vog4RgiGAGlrr3blonbPBzgPxsZgaIue--6RcwEZXAhdeyqlM33Rs08jPqiftAcBYM-82jrlxXWv5bPyPXoopwRUVdXinW98_SB412MGmNP3RGAYsEK9PM2h6uGbXLYmayNsYHY_RgGje',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBMcWjy3fc8ms2v322i4KsHjjqsF8Aq-MkauMwU7eFgN9eltVE2jd-ie_damkN6PrGmoYwQdT9lHTQfL4lmA9vYBjLiY0J3Ub8LLGwmH4qgRkmOvtfEEX2gL5u-zYEgSpC8HjBWjxRekLABxWoGfPOffgV_u4MrrkdczbPqI8OfLAPNdKlfkqJGo65U2u-qO4SG_rHV_UnwvLyTbsVvNlZLbIgF2RyYYidVi36LVb5GfFM0ZTnuDJjN'
+    ]
+  }
+]
 
 export default function CollectionPage() {
   const navigate = useNavigate()
-  const { isWishlisted, toggleWishlist, addToCart } = useCart()
-  const [sort, setSort] = useState('Newest')
-  const [showFilter, setShowFilter] = useState(false)
-  const [collectionProducts, setCollectionProducts] = useState(FALLBACK_PRODUCTS)
+  const { category: urlCategory } = useParams()
+  const [searchParams] = useSearchParams()
+
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedSize, setSelectedSize] = useState('All')
+  const [sortBy, setSortBy] = useState('popular')
+  const [products, setProducts] = useState(FALLBACK_COLLECTION)
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
+
+  // Sync category from route parameter (e.g., /collection/shirts, /collection/jackets, /collection/formals)
+  useEffect(() => {
+    const rawCat = urlCategory || searchParams.get('category')
+    if (rawCat) {
+      const found = CATEGORIES.find(c => c.toLowerCase() === rawCat.toLowerCase())
+      if (found) {
+        setSelectedCategory(found)
+      } else if (rawCat.toLowerCase().includes('shirt')) {
+        setSelectedCategory('Shirts')
+      } else if (rawCat.toLowerCase().includes('tee')) {
+        setSelectedCategory('Tees')
+      } else if (rawCat.toLowerCase().includes('jacket')) {
+        setSelectedCategory('Jackets')
+      } else if (rawCat.toLowerCase().includes('formal')) {
+        setSelectedCategory('Formals')
+      }
+    } else {
+      setSelectedCategory('All')
+    }
+  }, [urlCategory, searchParams])
 
   useEffect(() => {
-    async function loadCollection() {
+    async function loadProducts() {
       try {
-        const res = await getProducts({ category: 'Shirts' })
+        const res = await getProducts()
         if (res?.data && res.data.length > 0) {
           const formatted = res.data.map(p => ({
             id: p._id || p.id,
             name: p.name,
+            category: p.category || 'Shirts',
             color: p.color || 'Nocturne Black',
-            price: typeof p.price === 'number' ? `₹${p.price.toLocaleString('en-IN')}` : p.price,
-            badge: p.badge || '',
-            sizes: p.sizes?.map(s => s.size) || ['S', 'M', 'L'],
-            img: p.images?.[0] || p.img,
+            price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999,
+            originalPrice: p.originalPrice || Math.round((typeof p.price === 'number' ? p.price : 1999) * 1.65),
+            badge: p.badge || 'NEW',
+            rating: p.rating || '4.9',
+            reviewsCount: p.reviewsCount || 128,
+            images: p.images && p.images.length > 0 ? p.images : [p.img],
           }))
-          setCollectionProducts(formatted)
+          setProducts(formatted)
         }
-      } catch (e) {
-        console.warn('Using fallback collection data')
+      } catch (err) {
+        console.warn('Using fallback collection')
       }
     }
-    loadCollection()
+    loadProducts()
   }, [])
 
-  const sortedProducts = [...collectionProducts].sort((a, b) => {
-    const priceA = parseFloat(String(a.price).replace(/[^\d]/g, '')) || 0
-    const priceB = parseFloat(String(b.price).replace(/[^\d]/g, '')) || 0
-    if (sort === 'Price: Low to High') return priceA - priceB
-    if (sort === 'Price: High to Low') return priceB - priceA
-    return String(a.id).localeCompare(String(b.id))
-  })
+  // Filter & Sort Logic
+  const filteredAndSorted = useMemo(() => {
+    let list = [...products]
+
+    if (selectedCategory !== 'All') {
+      list = list.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase())
+    }
+
+    if (sortBy === 'price_asc') {
+      list.sort((a, b) => a.price - b.price)
+    } else if (sortBy === 'price_desc') {
+      list.sort((a, b) => b.price - a.price)
+    } else if (sortBy === 'rating') {
+      list.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))
+    }
+
+    return list
+  }, [products, selectedCategory, sortBy])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: '3rem' }}>
-      <div className="content-container">
-        {/* Header */}
-        <div style={{ padding: '1.5rem 0 1rem', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span className="text-label-caps text-primary">PENGUINS COLLECTION</span>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-            <h1 className="text-headline-lg text-on-surface" style={{ textTransform: 'uppercase', margin: 0 }}>Shirts & Overgarments</h1>
-            <span className="text-body-sm text-on-surface-variant">{collectionProducts.length} curated garments</span>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: 60 }}>
+      {/* ─── Breadcrumb & Banner Header ────────────────────────────────────── */}
+      <div style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-light)', padding: '24px 0' }}>
+        <div className="content-container">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+            <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>Home</button>
+            <span>/</span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Men's Collection</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 900, textTransform: 'uppercase', color: 'var(--text-primary)' }}>
+                {selectedCategory === 'All' ? "All Men's Apparel" : `${selectedCategory} Collection`}
+              </h1>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
+                Explore {filteredAndSorted.length} premium silhouettes designed for contemporary fit and effortless luxury.
+              </p>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Filter / Sort Bar */}
-        <div style={{ display: 'flex', gap: 8, paddingBottom: 24, overflowX: 'auto' }} className="no-scrollbar">
-          <button
-            onClick={() => setShowFilter(!showFilter)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 999, border: '1px solid var(--outline-variant)', background: 'var(--surface-container)', color: 'var(--on-surface)', cursor: 'pointer', flexShrink: 0, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>tune</span>
-            Filter
-          </button>
-          {SORT_OPTIONS.map(opt => (
-            <button
-              key={opt}
-              onClick={() => setSort(opt)}
-              className="text-label-caps"
-              style={{
-                padding: '8px 16px', borderRadius: 999, border: 'none', cursor: 'pointer', flexShrink: 0,
-                background: sort === opt ? 'var(--primary-container)' : 'var(--surface-container)',
-                color: sort === opt ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
-                transition: 'all 0.15s',
-              }}
-            >{opt}</button>
-          ))}
-        </div>
+      {/* ─── Sticky Filter & Sort Controls ─────────────────────────────────── */}
+      <div style={{
+        position: 'sticky',
+        top: 'var(--header-height-desktop)',
+        zIndex: 30,
+        backgroundColor: 'var(--bg-primary)',
+        borderBottom: '1px solid var(--border-light)',
+        padding: '12px 0'
+      }}>
+        <div className="content-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          {/* Category Chips Desktop */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto' }} className="no-scrollbar">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  border: selectedCategory === cat ? '1px solid var(--brand-primary)' : '1px solid var(--border-light)',
+                  backgroundColor: selectedCategory === cat ? 'var(--brand-primary)' : 'var(--bg-secondary)',
+                  color: selectedCategory === cat ? 'var(--text-inverse)' : 'var(--text-primary)',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-        {/* Product Grid - Responsive */}
-        <div className="product-grid-responsive">
-          {sortedProducts.map(p => (
-            <div
-              key={p.id}
+          {/* Sort Dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }} className="desktop-only">
+              Sort By:
+            </span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: 12,
-                background: 'var(--surface-container-low)',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                border: '1px solid var(--card-border)',
-                transition: 'transform 0.2s, box-shadow 0.2s'
-              }}
-              onClick={() => navigate('/product/structured-poplin-overshirt')}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-3px)'
-                e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
+                height: 36,
+                padding: '0 12px',
+                borderRadius: 'var(--radius-xs)',
+                border: '1px solid var(--border-light)',
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                fontSize: 12,
+                fontWeight: 700,
+                outline: 'none',
+                cursor: 'pointer'
               }}
             >
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', background: 'var(--surface-container)', overflow: 'hidden' }}>
-                <img
-                  src={p.img}
-                  alt={p.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
-                  onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
-                  onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-                />
-                {p.badge && (
-                  <div style={{ position: 'absolute', top: 10, left: 10, background: 'var(--primary-container)', padding: '2px 8px', borderRadius: 4 }}>
-                    <span className="text-label-caps" style={{ color: 'var(--on-primary-fixed)', fontSize: 10 }}>{p.badge}</span>
-                  </div>
-                )}
-                <button
-                  aria-label="Wishlist"
-                  onClick={e => { e.stopPropagation(); toggleWishlist(p.id) }}
-                  style={{ position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: '50%', background: 'var(--glass-wishlist-btn)', backdropFilter: 'blur(8px)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWishlisted(p.id) ? 'var(--primary-container)' : 'var(--on-surface)' }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: isWishlisted(p.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-                </button>
-                <button
-                  onClick={e => { e.stopPropagation(); addToCart(p, 'M') }}
-                  style={{ position: 'absolute', bottom: 10, right: 10, width: 36, height: 36, borderRadius: '50%', background: 'var(--primary-container)', color: 'var(--on-primary-fixed)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add</span>
-                </button>
-              </div>
-              <div style={{ padding: '12px' }}>
-                <p className="text-label-caps text-on-surface-variant">{p.color}</p>
-                <h3 className="text-title-sm text-on-surface" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 4 }}>{p.name}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                  <span className="text-title-sm text-primary" style={{ fontWeight: 700 }}>{p.price}</span>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {p.sizes.slice(0, 3).map(s => (
-                      <span key={s} className="text-label-caps" style={{ background: 'var(--surface-container-high)', padding: '3px 6px', borderRadius: 4, fontSize: 9, color: 'var(--on-surface-variant)' }}>{s}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+              {SORT_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
+      </div>
+
+      {/* ─── Main Products Grid ────────────────────────────────────────────── */}
+      <div className="content-container" style={{ marginTop: 24 }}>
+        {filteredAndSorted.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'var(--text-muted)' }}>search_off</span>
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 12 }}>No Garments Found</h3>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>Try clearing active filters to see our full catalog.</p>
+            <button
+              onClick={() => { setSelectedCategory('All'); setSelectedSize('All'); }}
+              className="btn-solid-primary"
+              style={{ marginTop: 16, height: 40, fontSize: 12 }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="product-grid-home">
+            {filteredAndSorted.map(prod => (
+              <ProductCard key={prod.id} product={prod} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

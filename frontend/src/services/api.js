@@ -67,6 +67,12 @@ export const getSiteConfig = async () => {
     return res.data;
   } catch (err) {
     console.warn('API getSiteConfig fallback:', err.message);
+    // Check localStorage for admin-saved config (works without backend)
+    let savedData = {};
+    try {
+      const saved = localStorage.getItem('penguin_site_config');
+      if (saved) savedData = JSON.parse(saved);
+    } catch (_) {}
     return {
       success: true,
       data: {
@@ -76,6 +82,13 @@ export const getSiteConfig = async () => {
         heroSubheadline: 'Minimalist silhouettes engineered for modern architectural movement. Double-faced wool, tech poplin, and structured forms.',
         heroImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD1ps0HdAx9ANRgkAI528SZuWNXqJ1WKlkHgpfYv2ybbogGSlvqSLviao-pPVvWvntNgt4clC3ZQhMQIMFLNn_yQ59lbpIKnLB_AYCQqkq9ojMmahSUtbSMwG8H-60x_Lu2FeCmwkOtbCE-FILoiZ7CBr6FaRHRM1oDOLigIDAVVCI14XVvM4wCnVUSqzxvhyHyfTadWCC0SkD4BjDQlxUHqLLgMszYK8LthVcUcm1CJex1S2t2GP57',
         heroDropTag: 'Drop 01 // Autumn Winter 2025',
+        showWinterDrop: true,
+        winterDropTitle: 'WINTER DROP 01',
+        winterDropSubtitle: 'Limited capsule — Structured outerwear, heavyweight knitwear & tech bombers. Only 100 units per style.',
+        winterDropCta: 'Shop Winter Drop',
+        winterDropImage: 'https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=1200&auto=format&fit=crop',
+        // Override defaults with anything admin has saved locally
+        ...savedData,
       },
     };
   }

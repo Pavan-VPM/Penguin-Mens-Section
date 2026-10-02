@@ -1,138 +1,153 @@
-import React, { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
+import React, { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { getProducts } from '../services/api'
+import ProductCard from '../components/ProductCard'
 
-const SEARCH_CATALOG = [
+const POPULAR_SEARCHES = ['Poplin Shirts', 'Oversized Tees', 'Bomber Jackets', 'Pleated Trousers', 'Mohair Knit', 'Cargo Pants']
+
+const FALLBACK_SEARCH_ITEMS = [
   {
     id: 1,
     name: 'Structured Poplin Overshirt',
     category: 'Shirts',
     color: 'Nocturne Black',
-    price: '₹11,900',
-    badge: 'Drop 01',
-    img: 'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY'
+    price: 1999,
+    originalPrice: 3499,
+    badge: '43% OFF',
+    rating: '4.9',
+    reviewsCount: 312,
+    images: [
+      'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va'
+    ]
   },
   {
     id: 2,
-    name: 'Heavyweight Boxy Tee',
+    name: 'Heavyweight Boxy Organic Tee',
     category: 'Tees',
     color: 'Chalk White',
-    price: '₹4,990',
-    badge: 'Organic',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEg9HtS0jCzYVX0DNa-H01P07DEd3yPNgAGhR7l8uhurLYtOmmkzrWBT-fzc9gCXaU9VuLEaE7zzyWMh59UyiGYFM7gPlBxgZcVe6SJXIuDYleaWLtY2go9B0wDdGTc2ubG_j3tC9-6Q6dg6j6aaweB2iDSlt8Dp0Q5bHXK1YWSkFPa4a9ewDrgjcTvIBfBULm9Tzb2N4ps4HytEYk3FEgY9IyiyksGJUIWB1EsPMVZOGHdXrKzZeA'
+    price: 1299,
+    originalPrice: 2299,
+    badge: 'BESTSELLER',
+    rating: '4.8',
+    reviewsCount: 428,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAEg9HtS0jCzYVX0DNa-H01P07DEd3yPNgAGhR7l8uhurLYtOmmkzrWBT-fzc9gCXaU9VuLEaE7zzyWMh59UyiGYFM7gPlBxgZcVe6SJXIuDYleaWLtY2go9B0wDdGTc2ubG_j3tC9-6Q6dg6j6aaweB2iDSlt8Dp0Q5bHXK1YWSkFPa4a9ewDrgjcTvIBfBULm9Tzb2N4ps4HytEYk3FEgY9IyiyksGJUIWB1EsPMVZOGHdXrKzZeA',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDw6PlIfD7vb_n4u5I_wD4HhFdTcV-UVOCENxio76QfVtj4TtfRRyePIpQIcJigP4x9Wc7TemI-nMXXz6Pt7XngwmTtRuBYdxnhGmoGboojO1aB4qDaF8UBDAqL-EKhubCIg19kp_1Kvw65x8WO4Rzftn8xvR5e0BIIwaGyqj97L00TABLrHE0n7YezXGVCKzCQSEdTRZNm10F1GUVNiBmvJvBz3q8wCtZpserBa9hHWrT6REccVN_4'
+    ]
   },
   {
     id: 3,
-    name: 'Relaxed Pleated Trouser',
+    name: 'Relaxed Pleated Wide-Leg Trouser',
     category: 'Tailoring',
     color: 'Slate Grey',
-    price: '₹11,500',
-    badge: 'Tailored',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4oHKiDX7F1_YMYpKNYZoqlYF7sztvwDwydf5RcZxaf8C0CBQ6LPehQgqfUztS3CLuwQdgnTjbqiEZqLuiKunTxErcqb_wBugBzAYMpHteO9D-6M4Y51v_Qzu2CrcnhU9eciK73peSMNY4rvWqBZ1bWbZcXEUpFMy1v_eT2bOyR8OjuDhDSm7ysVzAzVD7wGTDhOA8wgWIHB3zb8OkLfYqEEhr_vSUj7Cg54RqZLtMgOdouZC6DQfl'
+    price: 2499,
+    originalPrice: 4299,
+    badge: '42% OFF',
+    rating: '4.9',
+    reviewsCount: 184,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuA4oHKiDX7F1_YMYpKNYZoqlYF7sztvwDwydf5RcZxaf8C0CBQ6LPehQgqfUztS3CLuwQdgnTjbqiEZqLuiKunTxErcqb_wBugBzAYMpHteO9D-6M4Y51v_Qzu2CrcnhU9eciK73peSMNY4rvWqBZ1bWbZcXEUpFMy1v_eT2bOyR8OjuDhDSm7ysVzAzVD7wGTDhOA8wgWIHB3zb8OkLfYqEEhr_vSUj7Cg54RqZLtMgOdouZC6DQfl',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCflsrCJ4FMCSj_Kh2vIJ-49HTAOaEooBZXQidjqdRp-IdnUIHjg7Ea_dYD6NFC-5j8K1IQhs5ttiG2eqr6KZyXdZMQV5ZJeT4nN9ffxnJRBOd5m8m_HKGBg93ekINiMZ41mD9BmA_2Q969d9lPzvS8AXLfmUNwLQ0-fdjkML2j8M1s0X9nViJMrJbF7j7gtGm6AS8mSweO3EahcwxPFt2RiaCu7UHrqbaa5ZVhBQKg35U7CDlVkwl_'
+    ]
   },
   {
     id: 4,
-    name: 'Technical Bomber Jacket',
+    name: 'Technical Matte Bomber Jacket',
     category: 'Jackets',
     color: 'Washed Black',
-    price: '₹18,900',
-    badge: 'Limited',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARmvTH6u7FeyWdAlKcRV2iSmOWqimIqVK7TvNs7EsEoF96C0uWUfh6WiwjB23tpGgO_eF2vd6faEeOMv35RikH2miws8kOYSQqvdn1CUSGc-BkNKUw9yVhaxkdllB88qCYUiqqE-QLSWjjVw11EDpSPnLTNPeVKR1KKd0auAsHs3ml1SIln3dM9p6_hl8kDW4qANNQtbNXyDdqS_GW_a90i6X9O0vlX7i6w-mFQrs-LrMrgatzn4uF'
-  },
-  {
-    id: 5,
-    name: 'Raw Selvedge Denim',
-    category: 'Jeans',
-    color: 'Deep Indigo',
-    price: '₹14,900',
-    badge: 'Selvedge',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCflsrCJ4FMCSj_Kh2vIJ-49HTAOaEooBZXQidjqdRp-IdnUIHjg7Ea_dYD6NFC-5j8K1IQhs5ttiG2eqr6KZyXdZMQV5ZJeT4nN9ffxnJRBOd5m8m_HKGBg93ekINiMZ41mD9BmA_2Q969d9lPzvS8AXLfmUNwLQ0-fdjkML2j8M1s0X9nViJMrJbF7j7gtGm6AS8mSweO3EahcwxPFt2RiaCu7UHrqbaa5ZVhBQKg35U7CDlVkwl_'
-  },
-  {
-    id: 6,
-    name: 'Monolith Lug Derby',
-    category: 'Footwear',
-    color: 'Matte Black',
-    price: '₹21,500',
-    badge: 'Handcrafted',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAGCcnQ_lQZYjZwKw_4fdayJ8Vg2b_LBOV3aku10uRPEJDfpurL0Soont9haqftelg8LfVX1jcH4SeuOFi5cw1KMoAzCnvrjhcbjqqks_DLXzjVZXpIi2MHCloBp75Sf7kbNQ0HSWzT40quJiPtMaJ6zMg7iYkvFUkMdDdixjc6MB_cAN5q5EznxDmmyjt6Ds7kVMaPomWX8ttdcmOy5UQrWMHfq9OFSg5nuaMLrzlaTBjMOmypfdm'
+    price: 3499,
+    originalPrice: 5999,
+    badge: 'DROP 01',
+    rating: '5.0',
+    reviewsCount: 96,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuARmvTH6u7FeyWdAlKcRV2iSmOWqimIqVK7TvNs7EsEoF96C0uWUfh6WiwjB23tpGgO_eF2vd6faEeOMv35RikH2miws8kOYSQqvdn1CUSGc-BkNKUw9yVhaxkdllB88qCYUiqqE-QLSWjjVw11EDpSPnLTNPeVKR1KKd0auAsHs3ml1SIln3dM9p6_hl8kDW4qANNQtbNXyDdqS_GW_a90i6X9O0vlX7i6w-mFQrs-LrMrgatzn4uF',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBMcWjy3fc8ms2v322i4KsHjjqsF8Aq-MkauMwU7eFgN9eltVE2jd-ie_damkN6PrGmoYwQdT9lHTQfL4lmA9vYBjLiY0J3Ub8LLGwmH4qgRkmOvtfEEX2gL5u-zYEgSpC8HjBWjxRekLABxWoGfPOffgV_u4MrrkdczbPqI8OfLAPNdKlfkqJGo65U2u-qO4SG_rHV_UnwvLyTbsVvNlZLbIgF2RyYYidVi36LVb5GfFM0ZTnuDJjN'
+    ]
   }
 ]
 
-const POPULAR_SEARCHES = ['Poplin Overshirt', 'Wool Outerwear', 'Lug Derby', 'Black Jacket', 'Drop 01']
-
 export default function SearchPage() {
-  const navigate = useNavigate()
-  const { isWishlisted, toggleWishlist } = useCart()
-  const [query, setQuery] = useState('')
+  const [searchParams] = useSearchParams()
+  const initialQuery = searchParams.get('q') || ''
+  const [query, setQuery] = useState(initialQuery)
+  const [allProducts, setAllProducts] = useState(FALLBACK_SEARCH_ITEMS)
 
-  const filtered = useMemo(() => {
-    if (!query.trim()) return SEARCH_CATALOG
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await getProducts()
+        if (res?.data && res.data.length > 0) {
+          const formatted = res.data.map(p => ({
+            id: p._id || p.id,
+            name: p.name,
+            category: p.category || 'Shirts',
+            color: p.color || 'Nocturne Black',
+            price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999,
+            originalPrice: p.originalPrice || Math.round((typeof p.price === 'number' ? p.price : 1999) * 1.65),
+            badge: p.badge || 'NEW',
+            rating: p.rating || '4.9',
+            reviewsCount: p.reviewsCount || 120,
+            images: p.images && p.images.length > 0 ? p.images : [p.img],
+          }))
+          setAllProducts(formatted)
+        }
+      } catch (err) {
+        console.warn('Using fallback search catalog')
+      }
+    }
+    loadData()
+  }, [])
+
+  const filteredResults = useMemo(() => {
+    if (!query.trim()) return allProducts
     const q = query.toLowerCase()
-    return SEARCH_CATALOG.filter(item =>
+    return allProducts.filter(item =>
       item.name.toLowerCase().includes(q) ||
       item.category.toLowerCase().includes(q) ||
-      item.color.toLowerCase().includes(q)
+      (item.color && item.color.toLowerCase().includes(q))
     )
-  }, [query])
+  }, [query, allProducts])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: '3rem' }}>
-      <div className="content-container" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* Search Input Bar */}
-        <div style={{ position: 'relative', marginTop: 16, maxWidth: 720 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', padding: '24px 0 80px' }}>
+      <div className="content-container">
+        {/* Search Input Box */}
+        <div style={{ position: 'relative', maxWidth: 680, margin: '0 auto 24px' }}>
+          <span className="material-symbols-outlined" style={{ position: 'absolute', left: 16, top: 14, fontSize: 22, color: 'var(--text-muted)' }}>
+            search
+          </span>
           <input
             type="text"
+            placeholder="Search shirts, jackets, oversized tees, trousers..."
             value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search garments, drops, silhouettes, materials..."
+            onChange={(e) => setQuery(e.target.value)}
             autoFocus
             style={{
               width: '100%',
-              height: 54,
-              borderRadius: 12,
-              background: 'var(--surface-container)',
-              border: '1px solid var(--outline-variant)',
-              color: 'var(--on-surface)',
-              padding: '0 46px 0 50px',
-              fontSize: 15,
+              height: 50,
+              padding: '0 44px 0 50px',
+              borderRadius: 999,
+              border: '1.5px solid var(--border-light)',
+              backgroundColor: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              fontSize: 14,
               outline: 'none',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-              transition: 'border-color 0.15s'
+              boxShadow: 'var(--shadow-sm)'
             }}
-            onFocus={e => e.target.style.borderColor = 'var(--primary-container)'}
-            onBlur={e => e.target.style.borderColor = 'var(--outline-variant)'}
           />
-          <span
-            className="material-symbols-outlined"
-            style={{
-              position: 'absolute',
-              left: 16,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              fontSize: 24,
-              color: 'var(--on-surface-variant)',
-              pointerEvents: 'none'
-            }}
-          >
-            search
-          </span>
           {query && (
             <button
               onClick={() => setQuery('')}
               style={{
                 position: 'absolute',
                 right: 14,
-                top: '50%',
-                transform: 'translateY(-50%)',
+                top: 14,
                 background: 'none',
                 border: 'none',
-                color: 'var(--on-surface-variant)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 4
+                color: 'var(--text-muted)',
+                cursor: 'pointer'
               }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>close</span>
@@ -140,131 +155,52 @@ export default function SearchPage() {
           )}
         </div>
 
-        {/* Trending Chips */}
-        <div>
-          <span className="text-label-caps text-on-surface-variant" style={{ display: 'block', marginBottom: 8, fontSize: 10 }}>
-            Trending Searches
+        {/* Popular Searches */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            Popular:
           </span>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {POPULAR_SEARCHES.map(term => (
-              <button
-                key={term}
-                onClick={() => setQuery(term)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 999,
-                  background: query === term ? 'var(--primary-container)' : 'var(--surface-container-high)',
-                  color: query === term ? 'var(--on-primary-fixed)' : 'var(--on-surface)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
-                  transition: 'all 0.15s'
-                }}
-              >
-                {term}
-              </button>
-            ))}
-          </div>
+          {POPULAR_SEARCHES.map(term => (
+            <button
+              key={term}
+              onClick={() => setQuery(term.replace(' Shirts', '').replace(' Tees', ''))}
+              style={{
+                padding: '4px 12px',
+                borderRadius: 999,
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-light)',
+                color: 'var(--text-secondary)',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              {term}
+            </button>
+          ))}
         </div>
 
         {/* Results Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h2 className="text-title-sm text-on-surface" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {query.trim() ? `Search Results for "${query}"` : 'Curated Atelier Pieces'}
-            </h2>
-            <span className="text-label-caps text-primary">({filtered.length})</span>
-          </div>
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              style={{ background: 'none', border: 'none', color: 'var(--primary-container)', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
-            >
-              Clear Search
-            </button>
-          )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderBottom: '1px solid var(--border-light)', paddingBottom: 12, marginBottom: 20 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 900, textTransform: 'uppercase' }}>
+            {query ? `Search Results for "${query}"` : 'All Menswear Catalog'}
+          </h2>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {filteredResults.length} Garments
+          </span>
         </div>
 
-        {/* Product Results Grid */}
-        {filtered.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '4rem 1rem',
-            background: 'var(--surface-container-low)',
-            borderRadius: 14,
-            border: '1px dashed var(--outline-variant)'
-          }}>
-            <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 44, marginBottom: 10 }}>search_off</span>
-            <p className="text-title-sm text-on-surface">No pieces matched "{query}"</p>
-            <p className="text-body-sm text-on-surface-variant" style={{ marginTop: 4 }}>Try searching for generic terms like "Overshirt", "Jacket", or "Black".</p>
+        {/* Results Grid */}
+        {filteredResults.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'var(--text-muted)' }}>search_off</span>
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 12 }}>No matches found for "{query}"</h3>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>Check your spelling or search for broader categories like "Shirts" or "Jackets".</p>
           </div>
         ) : (
-          <div className="product-grid-responsive">
-            {filtered.map(p => (
-              <div
-                key={p.id}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  background: 'var(--surface-container-low)',
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                  padding: 10,
-                  cursor: 'pointer',
-                  border: '1px solid var(--card-border)',
-                  transition: 'transform 0.2s, box-shadow 0.2s'
-                }}
-                onClick={() => navigate('/product/structured-poplin-overshirt')}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-3px)'
-                  e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              >
-                <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 8, overflow: 'hidden', background: 'var(--surface-container)' }}>
-                  <img
-                    src={p.img}
-                    alt={p.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                  <button
-                    aria-label="Wishlist"
-                    onClick={e => {
-                      e.stopPropagation()
-                      toggleWishlist(p.id)
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: 10,
-                      right: 10,
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      background: 'var(--glass-wishlist-btn)',
-                      backdropFilter: 'blur(8px)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: isWishlisted(p.id) ? 'var(--primary-container)' : 'var(--on-surface)'
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: isWishlisted(p.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-                  </button>
-                </div>
-
-                <div style={{ padding: '10px 4px 4px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span className="text-label-caps text-on-surface-variant" style={{ fontSize: 10 }}>{p.category} // {p.color}</span>
-                  <h3 className="text-title-sm text-on-surface" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
-                  <span className="text-title-sm text-primary" style={{ fontWeight: 700 }}>{p.price}</span>
-                </div>
-              </div>
+          <div className="product-grid-home">
+            {filteredResults.map(prod => (
+              <ProductCard key={prod.id} product={prod} />
             ))}
           </div>
         )}

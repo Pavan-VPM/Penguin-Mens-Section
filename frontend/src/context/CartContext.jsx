@@ -38,9 +38,9 @@ export function CartProvider({ children }) {
   const [wishlist, setWishlist] = useState(() => {
     try {
       const saved = localStorage.getItem('penguin_wishlist')
-      return saved ? JSON.parse(saved) : [1, 4]
+      return saved ? JSON.parse(saved) : []
     } catch {
-      return [1, 4]
+      return []
     }
   })
 
@@ -113,15 +113,20 @@ export function CartProvider({ children }) {
   }
 
   const toggleWishlist = (productId) => {
+    if (!productId) return
+    const idStr = String(productId)
     setWishlist(prev => {
-      const exists = prev.includes(productId)
-      const next = exists ? prev.filter(id => id !== productId) : [...prev, productId]
+      const exists = prev.some(id => String(id) === idStr)
+      const next = exists ? prev.filter(id => String(id) !== idStr) : [...prev, productId]
       showToast(exists ? 'Removed from Wishlist' : 'Saved to Wishlist')
       return next
     })
   }
 
-  const isWishlisted = (productId) => wishlist.includes(productId)
+  const isWishlisted = (productId) => {
+    if (!productId) return false
+    return wishlist.some(id => String(id) === String(productId))
+  }
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0)
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0)

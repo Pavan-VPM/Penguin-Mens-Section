@@ -1,38 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
-import { getProducts, getSiteConfig } from '../services/api'
+import { getProducts } from '../services/api'
+import ProductCard from '../components/ProductCard'
 
-const HERO_BG = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDBqMfest0YG8OFoCNADoIuzQNXFvjHQz2qD4iHKt4M2NL1THc1d1j4Ve6CQKqxTspCVBdi-1mJl8CllfgjnfMMuVL904tsYa3couHqcPC7O6BReTg750LSGbffD4s-TQ0baAn9dlIUyrj5ugjKut3LsWVR-SpcWyQuXldc1P4Ux3Z9XADwIXLlYW0aQihiPmiYZiMNNP5mzYei0bFl-2WuwK_hp1f32TqRjnTgZBFtAfXkEQ0q-Pj6')"
+function useCountdown(targetTimestamp) {
+  const [time, setTime] = useState({ days: 2, hours: 14, mins: 38, secs: 45 })
 
-const FALLBACK_PRODUCTS = [
-  {
-    id: 1, name: 'Structured Poplin Overshirt', price: '₹11,900', stock: 'Only 4 left',
-    img: 'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY',
-    sizes: ['S', 'M', 'L'], soldOut: ['XL'],
-  },
-  {
-    id: 2, name: 'Cocoon Tech Overcoat', price: '₹29,900', stock: 'Low Stock',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBMcWjy3fc8ms2v322i4KsHjjqsF8Aq-MkauMwU7eFgN9eltVE2jd-ie_damkN6PrGmoYwQdT9lHTQfL4lmA9vYBjLiY0J3Ub8LLGwmH4qgRkmOvtfEEX2gL5u-zYEgSpC8HjBWjxRekLABxWoGfPOffgV_u4MrrkdczbPqI8OfLAPNdKlfkqJGo65U2u-qO4SG_rHV_UnwvLyTbsVvNlZLbIgF2RyYYidVi36LVb5GfFM0ZTnuDJjN',
-    sizes: ['46', '48', '50', '52'], soldOut: [],
-  },
-  {
-    id: 3, name: 'Brushed Mohair Knit', price: '₹15,500', stock: null,
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDcGdhD4ZhQZ3oH5KMNUpJBqde0mkUzM9j4twJPVO21A63Ua1y4VTDOAOACkYyw_jInAlG-EqHBlCnvAcZo6fVekY73Jbek2y9iO1xA9d1Vog4RgiGAGlrr3blonbPBzgPxsZgaIue--6RcwEZXAhdeyqlM33Rs08jPqiftAcBYM-82jrlxXWv5bPyPXoopwRUVdXinW98_SB412MGmNP3RGAYsEK9PM2h6uGbXLYmayNsYHY_RgGje',
-    sizes: ['XS', 'S', 'M', 'L'], soldOut: ['XS'],
-  },
-  {
-    id: 4, name: 'Monolith Lug Derby', price: '₹21,500', stock: null,
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAE1gnBz655IdvVc1kO3NYSAvFEtlpZ66Wu9-iyodD2SqX8lAO6XchzyrZ6KdjTiv0hZALzdKDErN0So9P4trw3X16PBFg2lpzRVlsEf0TafladgrnZ_xB_UuzBhHsVWH_-KgjTxZSKXjyWxQngmueCK6uMeTKdEkPCee_IAJqqJfgXD1SN9RUmxjJPavdVubh2wgZ3Ihsbe-IN8KyomS25QkT6EyJR0tIgYVwSPiDlNOZNJNbK2MfJ',
-    sizes: ['40', '41', '42', '43', '44'], soldOut: ['40'],
-  },
-]
-
-function useCountdown(targetDate) {
-  const [time, setTime] = useState({ days: 0, hours: 0, mins: 0, secs: 0 })
   useEffect(() => {
     const update = () => {
-      const diff = targetDate - Date.now()
+      const diff = targetTimestamp - Date.now()
       if (diff <= 0) return
       setTime({
         days: Math.floor(diff / 86400000),
@@ -42,262 +18,175 @@ function useCountdown(targetDate) {
       })
     }
     update()
-    const id = setInterval(update, 1000)
-    return () => clearInterval(id)
-  }, [targetDate])
+    const timer = setInterval(update, 1000)
+    return () => clearInterval(timer)
+  }, [targetTimestamp])
+
   return time
 }
 
+const FALLBACK_DROP_PRODUCTS = [
+  {
+    id: 4,
+    name: 'Technical Matte Bomber Jacket',
+    category: 'Jackets',
+    color: 'Washed Black',
+    price: 3499,
+    originalPrice: 5999,
+    badge: 'DROP 01',
+    rating: '5.0',
+    reviewsCount: 96,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuARmvTH6u7FeyWdAlKcRV2iSmOWqimIqVK7TvNs7EsEoF96C0uWUfh6WiwjB23tpGgO_eF2vd6faEeOMv35RikH2miws8kOYSQqvdn1CUSGc-BkNKUw9yVhaxkdllB88qCYUiqqE-QLSWjjVw11EDpSPnLTNPeVKR1KKd0auAsHs3ml1SIln3dM9p6_hl8kDW4qANNQtbNXyDdqS_GW_a90i6X9O0vlX7i6w-mFQrs-LrMrgatzn4uF',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBMcWjy3fc8ms2v322i4KsHjjqsF8Aq-MkauMwU7eFgN9eltVE2jd-ie_damkN6PrGmoYwQdT9lHTQfL4lmA9vYBjLiY0J3Ub8LLGwmH4qgRkmOvtfEEX2gL5u-zYEgSpC8HjBWjxRekLABxWoGfPOffgV_u4MrrkdczbPqI8OfLAPNdKlfkqJGo65U2u-qO4SG_rHV_UnwvLyTbsVvNlZLbIgF2RyYYidVi36LVb5GfFM0ZTnuDJjN'
+    ]
+  },
+  {
+    id: 7,
+    name: 'Brushed Mohair Knit Sweater',
+    category: 'Jackets',
+    color: 'Olive Moss',
+    price: 2999,
+    originalPrice: 4999,
+    badge: 'WINTER',
+    rating: '4.9',
+    reviewsCount: 142,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDcGdhD4ZhQZ3oH5KMNUpJBqde0mkUzM9j4twJPVO21A63Ua1y4VTDOAOACkYyw_jInAlG-EqHBlCnvAcZo6fVekY73Jbek2y9iO1xA9d1Vog4RgiGAGlrr3blonbPBzgPxsZgaIue--6RcwEZXAhdeyqlM33Rs08jPqiftAcBYM-82jrlxXWv5bPyPXoopwRUVdXinW98_SB412MGmNP3RGAYsEK9PM2h6uGbXLYmayNsYHY_RgGje',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBMcWjy3fc8ms2v322i4KsHjjqsF8Aq-MkauMwU7eFgN9eltVE2jd-ie_damkN6PrGmoYwQdT9lHTQfL4lmA9vYBjLiY0J3Ub8LLGwmH4qgRkmOvtfEEX2gL5u-zYEgSpC8HjBWjxRekLABxWoGfPOffgV_u4MrrkdczbPqI8OfLAPNdKlfkqJGo65U2u-qO4SG_rHV_UnwvLyTbsVvNlZLbIgF2RyYYidVi36LVb5GfFM0ZTnuDJjN'
+    ]
+  },
+  {
+    id: 1,
+    name: 'Structured Poplin Overshirt',
+    category: 'Shirts',
+    color: 'Nocturne Black',
+    price: 1999,
+    originalPrice: 3499,
+    badge: 'DROP 01',
+    rating: '4.9',
+    reviewsCount: 312,
+    images: [
+      'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va'
+    ]
+  },
+  {
+    id: 6,
+    name: 'Monolith Lug Sole Derby',
+    category: 'Footwear',
+    color: 'Matte Black',
+    price: 3999,
+    originalPrice: 6499,
+    badge: 'LIMITED',
+    rating: '4.9',
+    reviewsCount: 78,
+    images: [
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAGCcnQ_lQZYjZwKw_4fdayJ8Vg2b_LBOV3aku10uRPEJDfpurL0Soont9haqftelg8LfVX1jcH4SeuOFi5cw1KMoAzCnvrjhcbjqqks_DLXzjVZXpIi2MHCloBp75Sf7kbNQ0HSWzT40quJiPtMaJ6zMg7iYkvFUkMdDdixjc6MB_cAN5q5EznxDmmyjt6Ds7kVMaPomWX8ttdcmOy5UQrWMHfq9OFSg5nuaMLrzlaTBjMOmypfdm',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAE1gnBz655IdvVc1kO3NYSAvFEtlpZ66Wu9-iyodD2SqX8lAO6XchzyrZ6KdjTiv0hZALzdKDErN0So9P4trw3X16PBFg2lpzRVlsEf0TafladgrnZ_xB_UuzBhHsVWH_-KgjTxZSKXjyWxQngmueCK6uMeTKdEkPCee_IAJqqJfgXD1SN9RUmxjJPavdVubh2wgZ3Ihsbe-IN8KyomS25QkT6EyJR0tIgYVwSPiDlNOZNJNbK2MfJ'
+    ]
+  }
+]
+
 export default function WinterDropPage() {
   const navigate = useNavigate()
-  const { isWishlisted, toggleWishlist, addToCart } = useCart()
-  const [targetTime, setTargetTime] = useState(Date.now() + 2 * 86400000 + 14 * 3600000 + 38 * 60000)
-  const countdown = useCountdown(targetTime)
-  const [selectedSizes, setSelectedSizes] = useState({})
-  const [winterProducts, setWinterProducts] = useState(FALLBACK_PRODUCTS)
+  const countdown = useCountdown(Date.now() + 2 * 86400000 + 14 * 3600000 + 38 * 60000)
+  const [dropProducts, setDropProducts] = useState(FALLBACK_DROP_PRODUCTS)
 
   useEffect(() => {
-    async function loadWinterData() {
+    async function loadData() {
       try {
-        const [prodRes, cfgRes] = await Promise.all([
-          getProducts({ isWinterDrop: true }),
-          getSiteConfig(),
-        ])
-
-        if (prodRes?.data && prodRes.data.length > 0) {
-          const formatted = prodRes.data.map(p => ({
+        const res = await getProducts()
+        if (res?.data && res.data.length > 0) {
+          const formatted = res.data.map(p => ({
             id: p._id || p.id,
             name: p.name,
-            price: typeof p.price === 'number' ? `₹${p.price.toLocaleString('en-IN')}` : p.price,
-            stock: p.stockStatus || (p.inStock ? null : 'Sold Out'),
-            img: p.images?.[0] || p.img,
-            sizes: p.sizes?.filter(s => !s.isSoldOut && s.stock > 0).map(s => s.size) || ['S', 'M', 'L'],
-            soldOut: p.sizes?.filter(s => s.isSoldOut || s.stock === 0).map(s => s.size) || [],
+            category: p.category || 'Jackets',
+            color: p.color || 'Nocturne Black',
+            price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999,
+            originalPrice: p.originalPrice || Math.round((typeof p.price === 'number' ? p.price : 1999) * 1.65),
+            badge: 'DROP 01',
+            rating: p.rating || '4.9',
+            reviewsCount: 140,
+            images: p.images && p.images.length > 0 ? p.images : [p.img],
           }))
-          setWinterProducts(formatted)
+          setDropProducts(formatted)
         }
-
-        if (cfgRes?.data?.winterDropTargetDate) {
-          setTargetTime(new Date(cfgRes.data.winterDropTargetDate).getTime())
-        }
-      } catch (e) {
-        console.warn('Using fallback winter drop data')
+      } catch (err) {
+        console.warn('Using fallback drop catalog')
       }
     }
-    loadWinterData()
+    loadData()
   }, [])
 
-  const pad = n => String(n).padStart(2, '0')
+  const pad = (n) => String(n).padStart(2, '0')
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', color: 'var(--on-surface)' }}>
-      {/* Hero */}
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 36, paddingBottom: 80 }}>
+      {/* ─── Hero Drop Showcase ─────────────────────────────────────────────── */}
       <section style={{
         position: 'relative',
-        width: '100%',
-        minHeight: 520,
-        maxHeight: 680,
-        overflow: 'hidden',
-        background: 'var(--surface-container-lowest)'
+        minHeight: 460,
+        backgroundColor: '#0a0a0c',
+        color: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        overflow: 'hidden'
       }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: HERO_BG, backgroundSize: 'cover', backgroundPosition: 'center 20%', transform: 'scale(1.02)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--surface) 0%, var(--overlay-mid) 50%, transparent 100%)' }} />
-        <div style={{ position: 'absolute', inset: '0 0 auto', height: 96, background: 'linear-gradient(to bottom, var(--glass-dark-heavy), transparent)' }} />
+        <img
+          src="https://images.unsplash.com/photo-1516257984-b1b4d707412e?q=80&w=1920&auto=format&fit=crop"
+          alt="Winter Drop Hero"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
+        />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0a0a0c 0%, transparent 60%)' }} />
 
-        <div className="content-container" style={{
-          position: 'relative',
-          minHeight: 520,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          paddingBottom: '3rem',
-          gap: 12
-        }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--glass-dark-heavy)', backdropFilter: 'blur(12px)', padding: '5px 12px', borderRadius: 999, alignSelf: 'flex-start', border: '1px solid var(--card-border)' }}>
-            <span className="animate-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-container)' }} />
-            <span className="text-label-caps text-primary">FW25 ARCHIVE // LIMITED EDITION</span>
+        <div className="content-container" style={{ position: 'relative', zIndex: 10, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--brand-accent)', color: '#ffffff', padding: '4px 14px', borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing: '0.1em' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#ffffff' }} />
+            EXCLUSIVE CAPSULE LAUNCH
           </div>
-          
-          <h1 className="text-headline-xl-mobile text-on-surface" style={{ textTransform: 'uppercase', fontSize: 'clamp(32px, 5vw, 56px)', lineHeight: 1.1 }}>
-            WINTER DROP 01
+
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 36, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+            WINTER DROP 01 // ARCHITECTURAL FORMS
           </h1>
-          
-          <p className="text-body-sm text-on-surface-variant" style={{ maxWidth: 440, fontSize: 14 }}>
-            Architectural Outerwear & Cold-Weather Tailoring engineered for severe elements. Hand-cut and serialized in Porto.
+          <p style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.8)', maxWidth: 540, lineHeight: 1.5 }}>
+            Heavyweight structured wool, water-repellent tech poplin, and insulated outerwear engineered for extreme comfort.
           </p>
 
-          {/* Countdown Grid */}
-          <div style={{ display: 'flex', gap: 10, maxWidth: 360, marginTop: 4 }}>
-            {[['Days', pad(countdown.days)], ['Hours', pad(countdown.hours)], ['Mins', pad(countdown.mins)], ['Secs', pad(countdown.secs)]].map(([label, val], i) => (
-              <div key={label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 4px', borderRadius: 8, background: 'var(--surface-container-high)', backdropFilter: 'blur(8px)', border: '1px solid var(--card-border)' }}>
-                <span className="text-headline-md text-on-surface" style={{ fontVariantNumeric: 'tabular-nums', lineHeight: 1, color: i === 3 ? 'var(--primary-container)' : 'var(--on-surface)', fontWeight: 700 }}>{val}</span>
-                <span className="text-label-caps text-on-surface-variant" style={{ fontSize: 9, marginTop: 4 }}>{label}</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, paddingTop: 6, flexWrap: 'wrap' }}>
-            <button
-              onClick={() => document.getElementById('capsule')?.scrollIntoView({ behavior: 'smooth' })}
-              className="btn-primary"
-              style={{
-                height: 48,
-                padding: '0 28px',
-                borderRadius: 999,
-                fontSize: 13,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                gap: 8,
-                boxShadow: 'var(--card-hover-shadow)'
-              }}
-            >
-              <span>Explore The Capsule</span>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_downward</span>
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--on-surface-variant)' }}>
-              <span className="material-symbols-outlined text-primary" style={{ fontSize: 16 }}>lock_open</span>
-              <span className="text-label-caps text-on-surface-variant">Early Atelier Access · Members First</span>
+          {/* Countdown Clock */}
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+            <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 8, padding: '10px 16px', minWidth: 64 }}>
+              <div style={{ fontSize: 24, fontWeight: 900 }}>{pad(countdown.days)}</div>
+              <div style={{ fontSize: 10, opacity: 0.7, textTransform: 'uppercase' }}>Days</div>
+            </div>
+            <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 8, padding: '10px 16px', minWidth: 64 }}>
+              <div style={{ fontSize: 24, fontWeight: 900 }}>{pad(countdown.hours)}</div>
+              <div style={{ fontSize: 10, opacity: 0.7, textTransform: 'uppercase' }}>Hours</div>
+            </div>
+            <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 8, padding: '10px 16px', minWidth: 64 }}>
+              <div style={{ fontSize: 24, fontWeight: 900 }}>{pad(countdown.mins)}</div>
+              <div style={{ fontSize: 10, opacity: 0.7, textTransform: 'uppercase' }}>Mins</div>
+            </div>
+            <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 8, padding: '10px 16px', minWidth: 64 }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--brand-accent)' }}>{pad(countdown.secs)}</div>
+              <div style={{ fontSize: 10, opacity: 0.7, textTransform: 'uppercase' }}>Secs</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Manifesto Strip */}
-      <section style={{ padding: '2.5rem 0', background: 'var(--surface)', borderBottom: '1px solid var(--ticker-border)' }}>
-        <div className="content-container">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span className="text-label-caps text-primary">ATELIER MANIFESTO</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--surface-container-highest)' }} />
-            </div>
-            <p className="text-headline-md text-on-surface" style={{ lineHeight: 1.4, maxWidth: 900, fontSize: 'clamp(18px, 2vw, 22px)' }}>
-              Sculptural warmth engineered for severe elements. Heavyweight double-faced wool, weather-resistant Japanese technical poplin, and modular ergonomic silhouettes.
-            </p>
-            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingTop: 6 }} className="no-scrollbar">
-              {[['verified', 'Made in Portugal'], ['eco', '100% Traceable Wool'], ['layers', 'Modular System'], ['shield', 'Storm Resistant Japanese Poplin']].map(([icon, text]) => (
-                <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999, background: 'var(--surface-container)', flexShrink: 0 }}>
-                  <span className="material-symbols-outlined text-primary" style={{ fontSize: 18 }}>{icon}</span>
-                  <span className="text-label-md text-secondary">{text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* ─── Drop Products Grid ─────────────────────────────────────────────── */}
+      <section className="content-container">
+        <div className="section-header-wrap">
+          <span className="section-tag-pill">LIMITED INVENTORY</span>
+          <h2 className="section-main-title">CAPSULE PIECES</h2>
+          <p className="section-sub-desc">Only 100 units crafted per design. Once sold out, archived permanently.</p>
         </div>
-      </section>
 
-      {/* Capsule Grid */}
-      <section id="capsule" style={{ padding: '2.5rem 0 4rem', background: 'var(--surface)' }}>
-        <div className="content-container">
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20 }}>
-            <div>
-              <span className="text-label-caps text-primary" style={{ display: 'block', marginBottom: 4 }}>WINTER DROP CAPSULE</span>
-              <h2 className="text-headline-lg text-on-surface" style={{ textTransform: 'uppercase' }}>HERO PIECES</h2>
-            </div>
-            <span className="text-label-caps text-on-surface-variant">04 Garments Available</span>
-          </div>
-
-          <div className="product-grid-responsive">
-            {winterProducts.map(p => (
-              <div
-                key={p.id}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  borderRadius: 12,
-                  background: 'var(--surface-container)',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  border: '1px solid var(--ticker-border)',
-                  transition: 'transform 0.2s, box-shadow 0.2s'
-                }}
-                onClick={() => navigate('/product/structured-poplin-overshirt')}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-3px)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              >
-                <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', background: 'var(--surface-container-high)', overflow: 'hidden' }}>
-                  <img
-                    src={p.img}
-                    alt={p.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
-                    onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
-                    onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-                  />
-                  <button
-                    aria-label="Wishlist"
-                    onClick={e => { e.stopPropagation(); toggleWishlist(p.id) }}
-                    style={{
-                      position: 'absolute',
-                      top: 10,
-                      right: 10,
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      background: 'var(--glass-wishlist-btn)',
-                      backdropFilter: 'blur(8px)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: isWishlisted(p.id) ? 'var(--primary-container)' : 'var(--on-surface)'
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: isWishlisted(p.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-                  </button>
-                  {p.stock && (
-                    <div style={{ position: 'absolute', bottom: 8, left: 8, padding: '2px 8px', borderRadius: 4, background: p.stock.includes('Low') ? 'var(--error-container)' : 'var(--glass-dark-heavy)', backdropFilter: 'blur(4px)', border: '1px solid var(--card-border)' }}>
-                      <span className="text-label-caps" style={{ fontSize: 10, color: p.stock.includes('Low') ? 'var(--on-error-container)' : 'var(--primary)' }}>{p.stock}</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div>
-                    <h3 className="text-title-sm text-on-surface" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
-                    <span className="text-body-sm text-on-surface-variant" style={{ display: 'block', marginTop: 2, fontWeight: 600 }}>{p.price}</span>
-                  </div>
-                  
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {p.sizes.slice(0, 4).map(s => (
-                      <button
-                        key={s}
-                        onClick={e => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [p.id]: s })) }}
-                        style={{
-                          width: 30, height: 30, borderRadius: 4, border: 'none', cursor: p.soldOut.includes(s) ? 'not-allowed' : 'pointer',
-                          background: selectedSizes[p.id] === s ? 'var(--on-surface)' : p.soldOut.includes(s) ? 'var(--surface-container-low)' : 'var(--surface-bright)',
-                          color: selectedSizes[p.id] === s ? 'var(--surface)' : p.soldOut.includes(s) ? 'var(--outline-variant)' : 'var(--on-surface)',
-                          fontSize: 11, fontWeight: 600,
-                          textDecoration: p.soldOut.includes(s) ? 'line-through' : 'none',
-                          opacity: p.soldOut.includes(s) ? 0.4 : 1,
-                        }}
-                      >{s}</button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={e => {
-                      e.stopPropagation()
-                      const chosenSize = selectedSizes[p.id] || p.sizes[0]
-                      addToCart(p, chosenSize)
-                    }}
-                    style={{ width: '100%', height: 38, borderRadius: 999, border: 'none', cursor: 'pointer', background: 'var(--surface-bright)', color: 'var(--on-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-container)'; e.currentTarget.style.color = 'var(--on-primary-fixed)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-bright)'; e.currentTarget.style.color = 'var(--on-surface)' }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>shopping_bag</span>
-                    <span>Quick Add</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="product-grid-home">
+          {dropProducts.map(prod => (
+            <ProductCard key={prod.id} product={prod} />
+          ))}
         </div>
       </section>
     </div>

@@ -1,237 +1,283 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useTheme } from '../context/ThemeContext'
-import brandLogoDark from '../assets/logo 2.png'
+import AnnouncementBar from './AnnouncementBar'
+import QuickCartDrawer from './QuickCartDrawer'
+import brandLogoDark from '../assets/logo-dark.png'
 import brandLogoLight from '../assets/logo-light.png'
 
-export default function Header({ cartCount: propCartCount }) {
+const MAIN_NAV_LINKS = [
+  { label: 'New Arrivals', path: '/winter-drop', badge: 'NEW' },
+  { label: 'Shirts', path: '/collection/shirts' },
+  { label: 'T-Shirts & Tops', path: '/collection/tees' },
+  { label: 'Jackets & Outerwear', path: '/collection/jackets' },
+  { label: 'Formalwear & Suits', path: '/collection/formals' },
+  { label: 'Winter Drop', path: '/winter-drop', badge: 'HOT' },
+  { label: 'Wishlist', path: '/wishlist' },
+]
+
+export default function Header() {
   const navigate = useNavigate()
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
-  const brandLogo = theme === 'light' ? brandLogoLight : brandLogoDark
-  let contextCount = 0
-  let wishlistCount = 0
-  try {
-    const { cartCount, wishlist } = useCart()
-    contextCount = cartCount
-    wishlistCount = wishlist.length
-  } catch (e) {}
-  const count = propCartCount !== undefined ? propCartCount : contextCount
+  const { cartCount, wishlist } = useCart()
 
-  const NAV_LINKS = [
-    { label: 'Drop 01', path: '/winter-drop' },
-    { label: 'Collection', path: '/collection/shirts' },
-    { label: 'Wishlist', path: '/wishlist' },
-  ]
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const brandLogo = theme === 'light' ? brandLogoDark : brandLogoLight
+
+  // Handle scroll shadow
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [location.pathname])
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchQuery('')
+    } else {
+      navigate('/search')
+    }
+  }
 
   return (
-    <header className="app-header">
-      <div className="app-header-inner">
-        {/* Left: Minimal Brand Logo */}
-        <button
-          onClick={() => navigate('/')}
-          aria-label="Home"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0
-          }}
-        >
-          <img
-            src={brandLogo}
-            alt="Penguin Men's Section"
-            className="brand-logo-img"
-          />
-        </button>
+    <>
+      {/* Top Announcement Ticker */}
+      <AnnouncementBar />
 
-        {/* Center: Minimalist Desktop Navigation */}
-        <nav className="desktop-only" style={{ alignItems: 'center', gap: 36 }}>
-          {NAV_LINKS.map(link => {
-            const isActive = location.pathname === link.path
-            return (
+      {/* Main Sticky Header */}
+      <header className={`app-header ${isScrolled ? 'scrolled' : ''}`}>
+        <div className="content-container">
+          <div className="header-main-row">
+            {/* Left: Menu Toggle & Brand Logo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* Menu Drawer Trigger */}
               <button
-                key={link.path}
-                onClick={() => navigate(link.path)}
+                className="header-icon-btn"
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Open Navigation Menu"
+                title="Open Menu"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>menu</span>
+              </button>
+
+              {/* Brand Logo */}
+              <div className="brand-logo-wrap" onClick={() => navigate('/')}>
+                <img
+                  src={brandLogo}
+                  alt="PENGUIN Menswear"
+                  style={{ height: 44, width: 'auto', objectFit: 'contain' }}
+                />
+              </div>
+            </div>
+
+            {/* Right: Search, Wishlist, Bag, Theme, Account */}
+            <div className="header-actions">
+              {/* Desktop Search Input Box */}
+              <form onSubmit={handleSearchSubmit} className="header-search-box">
+                <span 
+                  className="material-symbols-outlined" 
+                  style={{ position: 'absolute', left: 12, top: 10, fontSize: 20, color: 'var(--text-muted)' }}
+                >
+                  search
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search shirts, jackets, tees..."
+                  className="header-search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </form>
+
+              {/* Mobile Search Icon */}
+              <button
+                className="header-icon-btn search-icon-mobile"
+                onClick={() => navigate('/search')}
+                aria-label="Search"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>search</span>
+              </button>
+
+              {/* Wishlist Icon */}
+              <button
+                className="header-icon-btn"
+                onClick={() => navigate('/wishlist')}
+                aria-label="Wishlist"
+              >
+                <span 
+                  className="material-symbols-outlined" 
+                  style={{ 
+                    fontSize: 22, 
+                    fontVariationSettings: wishlist.length > 0 ? "'FILL' 1" : "'FILL' 0" 
+                  }}
+                >
+                  favorite
+                </span>
+                {wishlist.length > 0 && (
+                  <span className="badge-count">{wishlist.length}</span>
+                )}
+              </button>
+
+              {/* Shopping Bag Icon with Quick Drawer */}
+              <button
+                className="header-icon-btn"
+                onClick={() => setIsCartDrawerOpen(true)}
+                aria-label="Open Shopping Bag"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>shopping_bag</span>
+                {cartCount > 0 && (
+                  <span className="badge-count">{cartCount}</span>
+                )}
+              </button>
+
+              {/* Theme Switcher Toggle */}
+              <button
+                className="header-icon-btn"
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+                aria-label="Toggle Theme"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                  {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Slide-Out Drawer Navigation */}
+      {isMobileMenuOpen && (
+        <>
+          <div className="drawer-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="drawer-panel-left">
+            {/* Drawer Header */}
+            <div style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: '1px solid var(--border-light)',
+              backgroundColor: 'var(--bg-secondary)'
+            }}>
+              <img
+                src={brandLogo}
+                alt="PENGUIN"
+                style={{ height: 32, width: 'auto', objectFit: 'contain' }}
+              />
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>close</span>
+              </button>
+            </div>
+
+            {/* Drawer Navigation Links */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 0' }}>
+              <div style={{ padding: '0 20px 12px', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Categories
+              </div>
+              {MAIN_NAV_LINKS.map(link => (
+                <button
+                  key={link.label}
+                  onClick={() => navigate(link.path)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    textAlign: 'left',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>{link.label}</span>
+                  {link.badge ? (
+                    <span className="nav-pill-badge">{link.badge}</span>
+                  ) : (
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-muted)' }}>chevron_right</span>
+                  )}
+                </button>
+              ))}
+
+              <div style={{ padding: '24px 20px 12px', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Account & Help
+              </div>
+              <button
+                onClick={() => navigate('/account')}
                 style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
                   background: 'none',
                   border: 'none',
-                  cursor: 'pointer',
-                  padding: '6px 0',
-                  fontSize: 12,
-                  fontWeight: isActive ? 700 : 500,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  color: isActive ? 'var(--primary-container)' : 'var(--on-surface-variant)',
-                  borderBottom: isActive ? '2px solid var(--primary-container)' : '2px solid transparent',
-                  transition: 'all 0.15s'
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer'
                 }}
               >
-                {link.label}
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>person</span>
+                <span>My Profile & Orders</span>
               </button>
-            )
-          })}
-        </nav>
-
-        {/* Right: Minimal Icon Group */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          {/* Search Icon */}
-          <button
-            aria-label="Search"
-            onClick={() => navigate('/search')}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: location.pathname === '/search' ? 'var(--primary-container)' : 'var(--on-surface)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'color 0.15s'
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>search</span>
-          </button>
-
-          {/* Desktop Wishlist Icon */}
-          <button
-            aria-label="Wishlist"
-            onClick={() => navigate('/wishlist')}
-            className="desktop-only"
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: location.pathname === '/wishlist' ? 'var(--primary-container)' : 'var(--on-surface)',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              transition: 'color 0.15s'
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: location.pathname === '/wishlist' ? "'FILL' 1" : "'FILL' 0" }}>
-              favorite
-            </span>
-            {wishlistCount > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: 7,
-                right: 7,
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: 'var(--primary-container)'
-              }} />
-            )}
-          </button>
-
-          {/* Shopping Bag Icon with Minimal Badge */}
-          <button
-            aria-label="Shopping Cart"
-            onClick={() => navigate('/cart')}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: location.pathname === '/cart' ? 'var(--primary-container)' : 'var(--on-surface)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              transition: 'color 0.15s'
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-              shopping_bag
-            </span>
-            {count > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: 5,
-                right: 5,
-                minWidth: 16,
-                height: 16,
-                padding: '0 4px',
-                borderRadius: 999,
-                background: 'var(--primary-container)',
-                color: 'var(--on-primary-fixed)',
-                fontSize: 10,
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                lineHeight: 1
-              }}>
-                {count}
-              </span>
-            )}
-          </button>
-
-          {/* Theme Toggle */}
-          <button
-            aria-label="Toggle theme"
-            onClick={toggleTheme}
-            className={`theme-toggle${theme === 'light' ? ' theme-toggle--light' : ''}`}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            <div className="theme-toggle__track">
-              {/* Moon icon (dark side) */}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                style={{ color: theme === 'dark' ? 'var(--primary-container)' : 'var(--on-surface-variant)', opacity: theme === 'dark' ? 1 : 0.4, transition: 'opacity 0.3s' }}>
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-              {/* Sun icon (light side) */}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                style={{ color: theme === 'light' ? 'var(--primary-container)' : 'var(--on-surface-variant)', opacity: theme === 'light' ? 1 : 0.4, transition: 'opacity 0.3s' }}>
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
+              <button
+                onClick={() => navigate('/admin')}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>admin_panel_settings</span>
+                <span>Admin Portal</span>
+              </button>
             </div>
-            <div className="theme-toggle__thumb" />
-          </button>
 
-          {/* Account Icon */}
-          <button
-            aria-label="Account"
-            onClick={() => navigate('/account')}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              background: location.pathname === '/account' ? 'var(--primary-container)' : 'var(--surface-container-high)',
-              border: '1px solid var(--card-border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              marginLeft: 4,
-              color: location.pathname === '/account' ? 'var(--on-primary-fixed)' : 'var(--on-surface)',
-              transition: 'all 0.15s'
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person</span>
-          </button>
-        </div>
-      </div>
-    </header>
+            {/* Mobile Footer Note */}
+            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-light)', backgroundColor: 'var(--bg-secondary)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
+              ⚡ Free Express Delivery on orders above ₹1,999
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Slide-out Quick Cart Drawer */}
+      <QuickCartDrawer 
+        isOpen={isCartDrawerOpen} 
+        onClose={() => setIsCartDrawerOpen(false)} 
+      />
+    </>
   )
 }

@@ -1,378 +1,620 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
 import { getProducts, getSiteConfig } from '../services/api'
+import ProductCard from '../components/ProductCard'
 
-const DEFAULT_HERO_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuD1ps0HdAx9ANRgkAI528SZuWNXqJ1WKlkHgpfYv2ybbogGSlvqSLviao-pPVvWvntNgt4clC3ZQhMQIMFLNn_yQ59lbpIKnLB_AYCQqkq9ojMmahSUtbSMwG8H-60x_Lu2FeCmwkOtbCE-FILoiZ7CBr6FaRHRM1oDOLigIDAVVCI14XVvM4wCnVUSqzxvhyHyfTadWCC0SkD4BjDQlxUHqLLgMszYK8LthVcUcm1CJex1S2t2GP57'
-
-const FALLBACK_PRODUCTS = [
-  { id: 1, name: 'Structured Wool Overshirt', category: 'Shirts', color: 'Charcoal Melange', price: '₹14,500', badge: 'Drop 01', badgeColor: 'var(--primary)', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va' },
-  { id: 2, name: 'Heavyweight Boxy Tee', category: 'Tees', color: 'Chalk White', price: '₹4,990', badge: 'Organic', badgeColor: 'var(--secondary)', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEg9HtS0jCzYVX0DNa-H01P07DEd3yPNgAGhR7l8uhurLYtOmmkzrWBT-fzc9gCXaU9VuLEaE7zzyWMh59UyiGYFM7gPlBxgZcVe6SJXIuDYleaWLtY2go9B0wDdGTc2ubG_j3tC9-6Q6dg6j6aaweB2iDSlt8Dp0Q5bHXK1YWSkFPa4a9ewDrgjcTvIBfBULm9Tzb2N4ps4HytEYk3FEgY9IyiyksGJUIWB1EsPMVZOGHdXrKzZeA' },
-  { id: 3, name: 'Relaxed Pleated Trouser', category: 'Tailoring', color: 'Slate Grey', price: '₹11,500', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4oHKiDX7F1_YMYpKNYZoqlYF7sztvwDwydf5RcZxaf8C0CBQ6LPehQgqfUztS3CLuwQdgnTjbqiEZqLuiKunTxErcqb_wBugBzAYMpHteO9D-6M4Y51v_Qzu2CrcnhU9eciK73peSMNY4rvWqBZ1bWbZcXEUpFMy1v_eT2bOyR8OjuDhDSm7ysVzAzVD7wGTDhOA8wgWIHB3zb8OkLfYqEEhr_vSUj7Cg54RqZLtMgOdouZC6DQfl' },
-  { id: 4, name: 'Technical Bomber Jacket', category: 'Jackets', color: 'Washed Black', price: '₹18,900', badge: 'Limited', badgeColor: 'var(--primary)', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARmvTH6u7FeyWdAlKcRV2iSmOWqimIqVK7TvNs7EsEoF96C0uWUfh6WiwjB23tpGgO_eF2vd6faEeOMv35RikH2miws8kOYSQqvdn1CUSGc-BkNKUw9yVhaxkdllB88qCYUiqqE-QLSWjjVw11EDpSPnLTNPeVKR1KKd0auAsHs3ml1SIln3dM9p6_hl8kDW4qANNQtbNXyDdqS_GW_a90i6X9O0vlX7i6w-mFQrs-LrMrgatzn4uF' },
-  { id: 5, name: 'Raw Selvedge Denim', category: 'Jeans', color: 'Deep Indigo', price: '₹14,900', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCflsrCJ4FMCSj_Kh2vIJ-49HTAOaEooBZXQidjqdRp-IdnUIHjg7Ea_dYD6NFC-5j8K1IQhs5ttiG2eqr6KZyXdZMQV5ZJeT4nN9ffxnJRBOd5m8m_HKGBg93ekINiMZ41mD9BmA_2Q969d9lPzvS8AXLfmUNwLQ0-fdjkML2j8M1s0X9nViJMrJbF7j7gtGm6AS8mSweO3EahcwxPFt2RiaCu7UHrqbaa5ZVhBQKg35U7CDlVkwl_' },
-  { id: 6, name: 'Monolith Lug Derby', category: 'Footwear', color: 'Matte Black', price: '₹21,500', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAGCcnQ_lQZYjZwKw_4fdayJ8Vg2b_LBOV3aku10uRPEJDfpurL0Soont9haqftelg8LfVX1jcH4SeuOFi5cw1KMoAzCnvrjhcbjqqks_DLXzjVZXpIi2MHCloBp75Sf7kbNQ0HSWzT40quJiPtMaJ6zMg7iYkvFUkMdDdixjc6MB_cAN5q5EznxDmmyjt6Ds7kVMaPomWX8ttdcmOy5UQrWMHfq9OFSg5nuaMLrzlaTBjMOmypfdm' },
+// High-definition fashion hero banners inspired by Snitch & Souled Store
+const HERO_SLIDES = [
+  {
+    id: 1,
+    tag: 'NEW FW25 CAPSULE // DROP 01',
+    title: 'THE STREETWEAR & LINEN EDIT',
+    subtitle: 'Relaxed silhouettes, heavyweight French terry, and crisp Japanese poplin tailored for modern everyday movement.',
+    cta: 'SHOP COLLECTION',
+    link: '/collection/shirts',
+    img: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?q=80&w=1920&auto=format&fit=crop'
+  },
+  {
+    id: 2,
+    tag: 'WINTER CAPSULE 2025',
+    title: 'ARCHITECTURAL OUTERWEAR',
+    subtitle: 'Double-faced wool overshirts, technical bomber jackets, and cold-weather essentials engineered for urban climates.',
+    cta: 'EXPLORE WINTER DROP',
+    link: '/winter-drop',
+    img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1920&auto=format&fit=crop'
+  },
+  {
+    id: 3,
+    tag: 'DAILY ESSENTIALS',
+    title: 'LUXE OVERSIZED & SHIRTS',
+    subtitle: 'High-density organic cotton tees, relaxed camp collars, and pleated trousers crafted with meticulous atelier precision.',
+    cta: 'DISCOVER BESTSELLERS',
+    link: '/collection/shirts',
+    img: 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?q=80&w=1920&auto=format&fit=crop'
+  }
 ]
 
-const CATEGORIES = ['All', 'Jackets', 'Shirts', 'Tees', 'Tailoring', 'Jeans', 'Footwear']
+// Story categories (Snitch-style circular category navigation)
+const STORY_CATEGORIES = [
+  { name: 'Oversized', img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300&auto=format&fit=crop', category: 'Tees' },
+  { name: 'Luxe Shirts', img: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&auto=format&fit=crop', category: 'Shirts' },
+  { name: 'Cargos & Pants', img: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=300&auto=format&fit=crop', category: 'Tailoring' },
+  { name: 'Winter Drop', img: 'https://images.unsplash.com/photo-1548883354-7622d03aca27?w=300&auto=format&fit=crop', category: 'Jackets' },
+  { name: 'Footwear', img: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=300&auto=format&fit=crop', category: 'Footwear' },
+  { name: 'Jackets', img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&auto=format&fit=crop', category: 'Jackets' },
+  { name: 'Denim', img: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=300&auto=format&fit=crop', category: 'Jeans' },
+  { name: 'Best Sellers', img: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=300&auto=format&fit=crop', category: 'All' },
+]
+
+// 10 clean, open-source product images from Unsplash — curated for menswear
+const FALLBACK_PRODUCTS = [
+  {
+    id: 1,
+    name: 'Oversized Premium Tee',
+    category: 'Tees',
+    color: 'Chalk White',
+    price: 1199,
+    originalPrice: 1999,
+    badge: 'BESTSELLER',
+    rating: '4.9',
+    reviewsCount: 514,
+    images: [
+      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 2,
+    name: 'Linen Camp Collar Shirt',
+    category: 'Shirts',
+    color: 'Ivory White',
+    price: 1799,
+    originalPrice: 3299,
+    badge: '45% OFF',
+    rating: '4.8',
+    reviewsCount: 387,
+    images: [
+      'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 3,
+    name: 'Slim Raw Denim Jeans',
+    category: 'Jeans',
+    color: 'Deep Indigo',
+    price: 2299,
+    originalPrice: 3999,
+    badge: '42% OFF',
+    rating: '4.7',
+    reviewsCount: 296,
+    images: [
+      'https://images.unsplash.com/photo-1542272604-780c96856592?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 4,
+    name: 'Technical Bomber Jacket',
+    category: 'Jackets',
+    color: 'Matte Olive',
+    price: 3499,
+    originalPrice: 5999,
+    badge: 'DROP 01',
+    rating: '5.0',
+    reviewsCount: 112,
+    images: [
+      'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1544441893-675973e31985?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 5,
+    name: 'Tailored Slim Chino Pants',
+    category: 'Tailoring',
+    color: 'Slate Grey',
+    price: 1999,
+    originalPrice: 3499,
+    badge: '43% OFF',
+    rating: '4.8',
+    reviewsCount: 241,
+    images: [
+      'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 6,
+    name: 'Structured Formal Blazer',
+    category: 'Formals',
+    color: 'Charcoal Black',
+    price: 4999,
+    originalPrice: 8499,
+    badge: '41% OFF',
+    rating: '4.9',
+    reviewsCount: 178,
+    images: [
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 7,
+    name: 'Heavyweight Graphic Tee',
+    category: 'Tees',
+    color: 'Washed Black',
+    price: 999,
+    originalPrice: 1799,
+    badge: 'NEW',
+    rating: '4.7',
+    reviewsCount: 632,
+    images: [
+      'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 8,
+    name: 'Cargo Wide-Leg Pants',
+    category: 'Tailoring',
+    color: 'Military Khaki',
+    price: 2499,
+    originalPrice: 4199,
+    badge: '40% OFF',
+    rating: '4.8',
+    reviewsCount: 203,
+    images: [
+      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 9,
+    name: 'Double-Breasted Wool Overcoat',
+    category: 'Jackets',
+    color: 'Camel Tan',
+    price: 5999,
+    originalPrice: 9999,
+    badge: 'LIMITED',
+    rating: '5.0',
+    reviewsCount: 89,
+    images: [
+      'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 10,
+    name: 'Oxford Button-Down Shirt',
+    category: 'Shirts',
+    color: 'Sky Blue',
+    price: 1599,
+    originalPrice: 2799,
+    badge: '43% OFF',
+    rating: '4.8',
+    reviewsCount: 319,
+    images: [
+      'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+]
+
+const CATALOG_TABS = ['All', 'Shirts', 'Tees', 'Jeans', 'Jackets', 'Tailoring', 'Formals']
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { isWishlisted, toggleWishlist, addToCart } = useCart()
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [productsList, setProductsList] = useState(FALLBACK_PRODUCTS)
-  const [heroData, setHeroData] = useState({
-    marqueeText: 'FW25 Drop 01 Available Worldwide',
-    archiveText: 'Archive Curated',
-    heroHeadline: 'New Season Drop',
-    heroSubheadline: 'Minimalist silhouettes engineered for modern architectural movement. Double-faced wool, tech poplin, and structured forms.',
-    heroImage: DEFAULT_HERO_IMG,
-    heroDropTag: 'Drop 01 // Autumn Winter 2025',
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [activeTab, setActiveTab] = useState('All')
+  const [products, setProducts] = useState(FALLBACK_PRODUCTS)
+  const [siteConfig, setSiteConfig] = useState({
+    showWinterDrop: true,
+    winterDropTitle: 'WINTER DROP 01',
+    winterDropSubtitle: 'Limited capsule — Structured outerwear, heavyweight knitwear & tech bombers. Only 100 units per style.',
+    winterDropCta: 'Shop Winter Drop',
+    winterDropImage: 'https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=1200&auto=format&fit=crop',
   })
 
+  // Auto-advance hero carousel
   useEffect(() => {
-    async function loadLiveData() {
-      try {
-        const [prodRes, cfgRes] = await Promise.all([getProducts(), getSiteConfig()])
-        if (prodRes?.data && prodRes.data.length > 0) {
-          const formatted = prodRes.data.map(p => ({
-            id: p._id || p.id,
-            name: p.name,
-            category: p.category,
-            color: p.color || 'Nocturne Black',
-            price: typeof p.price === 'number' ? `₹${p.price.toLocaleString('en-IN')}` : p.price,
-            badge: p.badge || '',
-            badgeColor: p.badgeColor || 'var(--primary)',
-            img: p.images?.[0] || p.img,
-          }))
-          setProductsList(formatted)
-        }
-        if (cfgRes?.data) {
-          setHeroData({
-            marqueeText: cfgRes.data.marqueeText || 'FW25 Drop 01 Available Worldwide',
-            archiveText: cfgRes.data.archiveText || 'Archive Curated',
-            heroHeadline: cfgRes.data.heroHeadline || 'New Season Drop',
-            heroSubheadline: cfgRes.data.heroSubheadline || 'Minimalist silhouettes engineered for modern architectural movement. Double-faced wool, tech poplin, and structured forms.',
-            heroImage: cfgRes.data.heroImage || DEFAULT_HERO_IMG,
-            heroDropTag: cfgRes.data.heroDropTag || 'Drop 01 // Autumn Winter 2025',
-          })
-        }
-      } catch (e) {
-        console.warn('Using fallback store catalog')
-      }
-    }
-    loadLiveData()
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % HERO_SLIDES.length)
+    }, 5500)
+    return () => clearInterval(timer)
   }, [])
 
-  const displayProducts = activeCategory === 'All'
-    ? productsList
-    : productsList.filter(p => p.category === activeCategory)
+  // Load products from backend API
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await getProducts()
+        if (res?.data && res.data.length > 0) {
+          const formatted = res.data.map(p => ({
+            id: p._id || p.id,
+            name: p.name,
+            category: p.category || 'Shirts',
+            color: p.color || 'Nocturne Black',
+            price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999,
+            originalPrice: p.originalPrice || Math.round((typeof p.price === 'number' ? p.price : 1999) * 1.65),
+            badge: p.badge || 'NEW',
+            rating: p.rating || '4.9',
+            reviewsCount: p.reviewsCount || 128,
+            images: p.images && p.images.length > 0 ? p.images : [p.img],
+          }))
+          setProducts(formatted)
+        }
+      } catch (err) {
+        console.warn('Using rich fallback catalog')
+      }
+    }
+    loadData()
+  }, [])
+
+  // Load site config (Winter Drop toggle etc.)
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const res = await getSiteConfig()
+        if (res?.data) {
+          setSiteConfig(prev => ({ ...prev, ...res.data }))
+        }
+      } catch (err) {
+        // Use defaults
+      }
+    }
+    loadConfig()
+  }, [])
+
+  const filteredProducts = activeTab === 'All'
+    ? products
+    : products.filter(p => p.category.toLowerCase() === activeTab.toLowerCase())
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-      {/* Ticker */}
-      <div style={{
-        background: 'var(--surface-container-lowest)',
-        borderBottom: '1px solid var(--ticker-border)'
-      }}>
-        <div className="content-container" style={{
-          paddingTop: 8,
-          paddingBottom: 8,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="animate-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-container)' }} />
-            <span className="text-label-caps text-on-surface-variant">{heroData.marqueeText}</span>
-          </div>
-          <span className="text-label-caps text-secondary" style={{ opacity: 0.7 }}>{heroData.archiveText}</span>
-        </div>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 40, paddingBottom: 60 }}>
+      {/* ─── 1. HERO CAROUSEL BANNER ────────────────────────────────────────── */}
+      <section className="hero-slider-section">
+        {HERO_SLIDES.map((slide, index) => {
+          const isActive = index === currentSlide
+          return (
+            <div
+              key={slide.id}
+              className="hero-slide-item"
+              style={{
+                display: isActive ? 'flex' : 'none',
+                animation: isActive ? 'fadeIn 0.5s ease' : 'none'
+              }}
+            >
+              <img src={slide.img} alt={slide.title} className="hero-slide-img" />
+              <div className="hero-overlay-gradient" />
 
-      {/* Hero Section */}
-      <section style={{
-        position: 'relative',
-        width: '100%',
-        maxHeight: 640,
-        overflow: 'hidden',
-        background: 'var(--surface-container-low)'
-      }}>
-        <div style={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '16/10',
-          minHeight: 460,
-          maxHeight: 640
-        }}>
-          <img
-            src={heroData.heroImage}
-            alt="Penguins FW25"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top 20%', filter: 'brightness(0.9) contrast(1.05)' }}
-          />
-          <div style={{ position: 'absolute', inset: 0, background: 'var(--hero-gradient-v)' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'var(--hero-gradient-h)' }} />
-          
-          <div className="content-container" style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            paddingBottom: '2.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10
-          }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--glass-dark)', backdropFilter: 'blur(12px)', padding: '5px 12px', borderRadius: 999, alignSelf: 'flex-start' }}>
-              <span className="animate-ping" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary-container)' }} />
-              <span className="text-label-caps text-primary">{heroData.heroDropTag}</span>
+              <div className="content-container">
+                <div className="hero-content-box">
+                  <div className="hero-drop-tag">
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--brand-accent)' }} />
+                    {slide.tag}
+                  </div>
+                  <h1 className="hero-headline">{slide.title}</h1>
+                  <p className="hero-subheadline">{slide.subtitle}</p>
+                  <button
+                    onClick={() => navigate(slide.link)}
+                    className="hero-cta-btn"
+                  >
+                    <span>{slide.cta}</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                  </button>
+                </div>
+              </div>
             </div>
-            
-            <h1 className="text-headline-xl-mobile text-on-surface" style={{ textTransform: 'uppercase', marginTop: 4, maxWidth: 640, fontSize: 'clamp(28px, 4vw, 48px)', lineHeight: 1.1 }}>
-              {heroData.heroHeadline}
-            </h1>
-            
-            <p className="text-body-md text-on-surface-variant" style={{ maxWidth: 440, fontSize: 'clamp(13px, 1.5vw, 16px)' }}>
-              {heroData.heroSubheadline}
-            </p>
-            
-            <div style={{ display: 'flex', gap: 12, paddingTop: 10, maxWidth: 420 }}>
+          )
+        })}
+
+        {/* Carousel Nav Arrows */}
+        <button
+          className="slider-arrow-btn prev desktop-only"
+          onClick={() => setCurrentSlide(prev => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)}
+          aria-label="Previous Slide"
+        >
+          <span className="material-symbols-outlined">chevron_left</span>
+        </button>
+        <button
+          className="slider-arrow-btn next desktop-only"
+          onClick={() => setCurrentSlide(prev => (prev + 1) % HERO_SLIDES.length)}
+          aria-label="Next Slide"
+        >
+          <span className="material-symbols-outlined">chevron_right</span>
+        </button>
+
+        {/* Dots */}
+        <div className="slider-dots-container">
+          {HERO_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              className={`slider-dot-btn ${i === currentSlide ? 'active' : ''}`}
+              onClick={() => setCurrentSlide(i)}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ─── 2. CATEGORY STORIES (Snitch Style Round Avatars) ───────────────── */}
+      <section className="content-container">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ fontSize: 14, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+            Shop By Category
+          </h2>
+          <button
+            onClick={() => navigate('/collection')}
+            style={{ background: 'none', border: 'none', color: 'var(--brand-accent)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          >
+            View All →
+          </button>
+        </div>
+
+        <div className="category-stories-wrapper no-scrollbar">
+          {STORY_CATEGORIES.map(story => (
+            <div
+              key={story.name}
+              className="story-circle-item"
+              onClick={() => {
+                if (story.category === 'All') navigate('/collection')
+                else if (story.name === 'Winter Drop') navigate('/winter-drop')
+                else navigate(`/collection/${story.category.toLowerCase()}`)
+              }}
+            >
+              <div className="story-avatar-ring">
+                <img src={story.img} alt={story.name} className="story-avatar-img" />
+              </div>
+              <span className="story-label-text">{story.name}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── 3. WINTER DROP PROMO BANNER (Admin-controlled toggle) ─────────── */}
+      {siteConfig.showWinterDrop && (
+        <section className="content-container">
+          <div style={{
+            position: 'relative',
+            borderRadius: 'var(--radius-md)',
+            overflow: 'hidden',
+            minHeight: 160,
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: '#0a0a0c',
+            boxShadow: 'var(--shadow-md)',
+          }}>
+            {siteConfig.winterDropImage && (
+              <img
+                src={siteConfig.winterDropImage}
+                alt="Winter Drop"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
+              />
+            )}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%)' }} />
+
+            <div style={{ position: 'relative', zIndex: 1, padding: '24px 28px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16, width: '100%' }}>
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--brand-accent)', color: '#fff', padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', marginBottom: 10 }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#fff' }} />
+                  LIMITED CAPSULE
+                </div>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(18px, 4vw, 26px)', fontWeight: 900, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '-0.01em', margin: '0 0 6px' }}>
+                  {siteConfig.winterDropTitle || 'WINTER DROP 01'}
+                </h2>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', maxWidth: 460, lineHeight: 1.5, margin: 0 }}>
+                  {siteConfig.winterDropSubtitle || 'Limited capsule — Only 100 units per style.'}
+                </p>
+              </div>
               <button
                 onClick={() => navigate('/winter-drop')}
-                className="btn-primary"
-                style={{
-                  flex: 1,
-                  height: 48,
-                  borderRadius: 8,
-                  gap: 8,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  boxShadow: '0 0 24px var(--glow-primary)'
-                }}
+                className="btn-solid-accent"
+                style={{ height: 44, padding: '0 24px', fontSize: 12, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                <span>Explore Collection</span>
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                {siteConfig.winterDropCta || 'Shop Drop'}
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
               </button>
-              <button
-                onClick={() => navigate('/collection/shirts')}
-                style={{
-                  height: 48,
-                  padding: '0 20px',
-                  borderRadius: 8,
-                  background: 'var(--glass-dark)',
-                  backdropFilter: 'blur(12px)',
-                  border: '1px solid var(--card-border)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  color: 'var(--on-surface)',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                <span>View Lookbook</span>
-              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── 4. SIGNATURE BENTO COLLECTIONS (Snitch Showcase Style) ─────────── */}
+      <section className="content-container">
+        <div className="section-header-wrap">
+          <span className="section-tag-pill">CURATED COLLECTIONS</span>
+          <h2 className="section-main-title">EXPLORE THE EDITS</h2>
+          <p className="section-sub-desc">Handcrafted wardrobe capsules designed for comfort, luxury drape, and streetwear presence.</p>
+        </div>
+
+        <div className="bento-collection-grid">
+          {/* Main Large Bento Tile */}
+          <div
+            className="bento-card-tile"
+            onClick={() => navigate('/collection/shirts')}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop"
+              alt="Luxe Linen & Poplin"
+              className="bento-tile-img"
+            />
+            <div className="bento-tile-overlay" />
+            <div className="bento-tile-content">
+              <span className="bento-tile-tag">SIGNATURE ATELIER</span>
+              <h3 className="bento-tile-title">Luxe Linen & Poplin Shirts</h3>
+              <p style={{ fontSize: 13, opacity: 0.9 }}>Ultra-breathable Japanese poplin crafted for tropical versatility.</p>
+            </div>
+          </div>
+
+          {/* Compact Bento Tile 1 */}
+          <div
+            className="bento-card-tile"
+            onClick={() => navigate('/winter-drop')}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800&auto=format&fit=crop"
+              alt="Winter Outerwear"
+              className="bento-tile-img"
+            />
+            <div className="bento-tile-overlay" />
+            <div className="bento-tile-content">
+              <span className="bento-tile-tag">WINTER 2025</span>
+              <h3 className="bento-tile-title">Structured Outerwear</h3>
+            </div>
+          </div>
+
+          {/* Compact Bento Tile 2 */}
+          <div
+            className="bento-card-tile"
+            onClick={() => navigate('/collection/shirts')}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop"
+              alt="Oversized Heavyweight"
+              className="bento-tile-img"
+            />
+            <div className="bento-tile-overlay" />
+            <div className="bento-tile-content">
+              <span className="bento-tile-tag">STREETWEAR</span>
+              <h3 className="bento-tile-title">Heavyweight Boxy Tees</h3>
+            </div>
+          </div>
+
+          {/* Compact Bento Tile 3 */}
+          <div
+            className="bento-card-tile"
+            onClick={() => navigate('/collection/shirts')}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?q=80&w=800&auto=format&fit=crop"
+              alt="Pleated Trousers"
+              className="bento-tile-img"
+            />
+            <div className="bento-tile-overlay" />
+            <div className="bento-tile-content">
+              <span className="bento-tile-tag">TAILORING</span>
+              <h3 className="bento-tile-title">Pleated & Cargo Trousers</h3>
+            </div>
+          </div>
+
+          {/* Compact Bento Tile 4 */}
+          <div
+            className="bento-card-tile"
+            onClick={() => navigate('/collection/shirts')}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=800&auto=format&fit=crop"
+              alt="Monolith Derbies"
+              className="bento-tile-img"
+            />
+            <div className="bento-tile-overlay" />
+            <div className="bento-tile-content">
+              <span className="bento-tile-tag">FOOTWEAR</span>
+              <h3 className="bento-tile-title">Lug-Sole Monolith Footwear</h3>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Content Area */}
-      <div className="content-container" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Category Tabs */}
-        <div style={{
-          background: 'var(--category-bar-bg)',
-          backdropFilter: 'blur(12px)',
-          position: 'sticky',
-          top: 64,
-          zIndex: 30,
-          padding: '12px 0',
-          margin: '0 -1rem',
-          borderBottom: '1px solid var(--ticker-border)'
-        }}>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 1rem' }} className="no-scrollbar">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className="text-label-caps"
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: 999,
-                  border: 'none',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  fontWeight: 700,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  transition: 'all 0.15s',
-                  background: activeCategory === cat ? 'var(--primary-container)' : 'var(--surface-container)',
-                  color: activeCategory === cat ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
-                  boxShadow: activeCategory === cat ? 'var(--card-hover-shadow)' : 'none',
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+      {/* ─── 5. PRODUCT CATALOG & TABS (Bestsellers & New Arrivals) ─────────── */}
+      <section className="content-container">
+        <div className="section-header-wrap">
+          <span className="section-tag-pill">TRENDING NOW</span>
+          <h2 className="section-main-title">BESTSELLERS & FRESH DROPS</h2>
+          <p className="section-sub-desc">Discover the season's most sought-after garments, loved by over 50,000+ men across India.</p>
         </div>
 
-        {/* New Arrivals Header */}
-        <div style={{ padding: '2rem 0 1rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <h2 className="text-headline-md text-on-surface" style={{ textTransform: 'uppercase', letterSpacing: '-0.01em' }}>
-              New Arrivals
-            </h2>
-            <span className="text-label-caps text-primary">({displayProducts.length} {displayProducts.length === 1 ? 'Piece' : 'Pieces'})</span>
-          </div>
-          <button
-            onClick={() => navigate('/collection/shirts')}
-            className="text-label-caps text-on-surface-variant"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.15s' }}
-          >
-            <span>View All Pieces</span>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_outward</span>
-          </button>
-        </div>
-
-        {/* Product Grid - Responsive (2 on mobile, 3-4 on desktop) */}
-        <div className="product-grid-responsive" style={{ paddingBottom: '2.5rem' }}>
-          {displayProducts.map(p => (
-            <div
-              key={p.id}
+        {/* Filter Category Chips */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, overflowX: 'auto', paddingBottom: 16 }} className="no-scrollbar">
+          {CATALOG_TABS.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                background: 'var(--surface-container-low)',
-                borderRadius: 12,
-                overflow: 'hidden',
-                padding: 10,
+                padding: '8px 20px',
+                borderRadius: 999,
+                border: activeTab === tab ? '1.5px solid var(--brand-primary)' : '1px solid var(--border-light)',
+                backgroundColor: activeTab === tab ? 'var(--brand-primary)' : 'var(--bg-card)',
+                color: activeTab === tab ? 'var(--text-inverse)' : 'var(--text-primary)',
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
                 cursor: 'pointer',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                border: '1px solid var(--card-border)'
-              }}
-              onClick={() => navigate('/product/structured-poplin-overshirt')}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-3px)'
-                e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease'
               }}
             >
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 8, overflow: 'hidden', background: 'var(--surface-container)' }}>
-                <img
-                  src={p.img}
-                  alt={p.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease-out' }}
-                  onMouseEnter={e => e.target.style.transform = 'scale(1.06)'}
-                  onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-                />
-                {p.badge && (
-                  <div style={{ position: 'absolute', top: 10, left: 10 }}>
-                    <span className="text-label-caps product-badge-label" style={{ background: 'var(--product-card-badge-bg)', backdropFilter: 'blur(8px)', padding: '3px 8px', borderRadius: 4, color: p.badgeColor, border: '1px solid var(--card-border)' }}>
-                      {p.badge}
-                    </span>
-                  </div>
-                )}
-                <button
-                  aria-label="Favourite"
-                  onClick={e => { e.stopPropagation(); toggleWishlist(p.id) }}
-                  style={{
-                    position: 'absolute',
-                    top: 10,
-                    right: 10,
-                    width: 34,
-                    height: 34,
-                    borderRadius: '50%',
-                    background: 'var(--glass-wishlist-btn)',
-                    backdropFilter: 'blur(8px)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: isWishlisted(p.id) ? 'var(--primary-container)' : 'var(--on-surface)'
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: isWishlisted(p.id) ? "'FILL' 1" : "'FILL' 0" }}>
-                    favorite
-                  </span>
-                </button>
-                <button
-                  aria-label="Add to cart"
-                  onClick={e => { e.stopPropagation(); addToCart(p, 'M') }}
-                  style={{
-                    position: 'absolute',
-                    bottom: 10,
-                    right: 10,
-                    width: 38,
-                    height: 38,
-                    borderRadius: '50%',
-                    background: 'var(--primary-container)',
-                    color: 'var(--on-primary-fixed)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-                    transition: 'transform 0.15s'
-                  }}
-                  onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'}
-                  onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add</span>
-                </button>
-              </div>
-              <div style={{ padding: '12px 6px 6px', minWidth: 0 }}>
-                <p className="text-label-caps text-on-surface-variant" style={{ fontSize: 10 }}>{p.color}</p>
-                <h3 className="text-title-sm text-on-surface" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 4 }}>{p.name}</h3>
-                <p className="text-title-sm text-primary" style={{ marginTop: 6, fontWeight: 700 }}>{p.price}</p>
-              </div>
-            </div>
+              {tab}
+            </button>
           ))}
         </div>
 
-        {/* Brand Statement - Desktop Multi-Pillar & Mobile Card */}
-        <div style={{
-          marginBottom: '3rem',
-          padding: '2rem',
-          background: 'var(--surface-container-lowest)',
-          borderRadius: 16,
-          border: '1px solid var(--brand-card-border)'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span className="text-label-caps text-primary">Atelier Manifesto</span>
-              <span className="text-label-caps text-on-surface-variant">Est. 2025</span>
-            </div>
-            
-            <p className="text-headline-md text-on-surface" style={{ lineHeight: 1.4, maxWidth: 840, fontSize: 'clamp(18px, 2.5vw, 24px)' }}>
-              Minimal silhouettes. Maximum intent. Modern menswear designed with architectural geometry and executed with Portuguese precision craftsmanship.
-            </p>
+        {/* Product Grid — responsive: 2 col mobile / 4 col desktop */}
+        <div className="product-grid-home">
+          {filteredProducts.map(prod => (
+            <ProductCard key={prod.id} product={prod} />
+          ))}
+        </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, paddingTop: 12 }}>
-              {[
-                { title: 'Japanese Poplin', desc: 'High-density weave resistant to wind and moisture while breathing naturally.' },
-                { title: 'Modular Architecture', desc: 'Cut with calculated proportions allowing seamless layering across all seasonal drops.' },
-                { title: 'Carbon Neutral Courier', desc: 'Direct atelier dispatch with guaranteed 24-hour tracked DHL Express delivery.' },
-              ].map(f => (
-                <div key={f.title} style={{ padding: '14px', background: 'var(--surface-container-low)', borderRadius: 10, border: '1px solid var(--feature-tile-border)' }}>
-                  <h4 className="text-title-sm text-on-surface" style={{ fontSize: 13, fontWeight: 700 }}>{f.title}</h4>
-                  <p className="text-body-sm text-on-surface-variant" style={{ marginTop: 4, lineHeight: 1.4, fontSize: 12 }}>{f.desc}</p>
-                </div>
-              ))}
+        {/* View All Button */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+          <button
+            onClick={() => navigate('/collection')}
+            className="btn-outline"
+            style={{ padding: '0 36px', height: 46 }}
+          >
+            <span>Explore Entire Catalog ({products.length} Items)</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+          </button>
+        </div>
+      </section>
+
+      {/* ─── 6. EDITORIAL CAMPAIGN SECTION ─────────────────────────────────── */}
+      <section className="content-container">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+          backgroundColor: 'var(--bg-secondary)',
+          border: '1px solid var(--border-light)'
+        }}>
+          <div style={{ position: 'relative', minHeight: 380 }}>
+            <img
+              src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1200&auto=format&fit=crop"
+              alt="Editorial Campaign"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+
+          <div style={{ padding: '40px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16 }}>
+            <span className="section-tag-pill">THE PENGUIN PHILOSOPHY</span>
+            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.2 }}>
+              REDEFINE YOUR EVERYDAY SILHOUETTE
+            </h2>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              We reject fleeting trends in favor of timeless structural forms. Each Penguin garment is engineered using high-density organic textiles, reinforced stress seams, and thoughtful ergonomic proportions.
+            </p>
+            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+              <button
+                onClick={() => navigate('/winter-drop')}
+                className="btn-solid-accent"
+                style={{ height: 44, fontSize: 12 }}
+              >
+                Shop Drop 01
+              </button>
+              <button
+                onClick={() => navigate('/collection/shirts')}
+                className="btn-outline"
+                style={{ height: 44, fontSize: 12 }}
+              >
+                Learn More
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }

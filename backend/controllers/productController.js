@@ -1,251 +1,897 @@
 import Product from '../models/Product.js';
 
-// Initial curated menswear catalog data
+// ═══════════════════════════════════════════════════════════════════════════
+// PENGUIN MENSWEAR — 40-Product Curated Catalog
+// Images: High-resolution open-source Pexels CDN
+// ═══════════════════════════════════════════════════════════════════════════
 export const INITIAL_PRODUCTS = [
+  // ── SHIRTS (10) ──────────────────────────────────────────────────────────
   {
-    name: 'Structured Wool Overshirt',
+    slug: 'linen-camp-collar-shirt-1',
+    name: 'Linen Camp Collar Shirt',
     category: 'Shirts',
-    color: 'Charcoal Melange',
-    price: 14500,
-    originalPrice: 18500,
-    badge: 'Drop 01',
-    badgeColor: 'var(--primary)',
+    color: 'Ivory White',
+    price: 1799,
+    originalPrice: 3299,
+    badge: '45% OFF',
     images: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDnR9S4fgMwiQA96pWo4DRRnR4yoqrORLPBRtU1exX8jFx4Mf2lu4FZb0To4JX24dcoEh-GbRf-FaR0s39tPIiS-Wq0OsNB6EjKqSxhQGXr6jGjGplvjbLYbTqyJxLhFFwdTcx8VHcX7jpv4b6tEmXM8HrtLl5wfKDkseOPqLDMKvkLxq7qflNN9MqLaF67Kxj_tJ08uRdK6jSUxDaYDhtHlAB-7Gx5TOqStb4NoD1G01OK9YFRlnEY',
+      'https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
-    sizes: [
-      { size: 'S', stock: 5, isSoldOut: false },
-      { size: 'M', stock: 12, isSoldOut: false },
-      { size: 'L', stock: 8, isSoldOut: false },
-      { size: 'XL', stock: 2, isSoldOut: false },
+    sizes: [{size:'S',stock:8,isSoldOut:false},{size:'M',stock:14,isSoldOut:false},{size:'L',stock:10,isSoldOut:false},{size:'XL',stock:5,isSoldOut:false}],
+    colorVariants: [{name:'Ivory White',hex:'#F5F0E8'},{name:'Sky Blue',hex:'#A8C4D4'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Premium European Linen (140 GSM). Pre-washed for softness.',
+    careInstructions: 'Machine wash 30°C. Iron damp.',
+    description: 'Relaxed camp collar silhouette in ultra-breathable linen.'
+  },
+  {
+    slug: 'oxford-button-down-shirt-2',
+    name: 'Oxford Button-Down Shirt',
+    category: 'Shirts',
+    color: 'Classic Blue',
+    price: 1599,
+    originalPrice: 2799,
+    badge: '43% OFF',
+    images: [
+      'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
-    colorVariants: [
-      { name: 'Charcoal Melange', hex: '#2A2B2D' },
-      { name: 'Nocturne Black', hex: '#111111' },
-      { name: 'Slate Grey', hex: '#5A6065' },
+    sizes: [{size:'S',stock:10,isSoldOut:false},{size:'M',stock:18,isSoldOut:false},{size:'L',stock:12,isSoldOut:false},{size:'XL',stock:6,isSoldOut:false}],
+    colorVariants: [{name:'Classic Blue',hex:'#5B7FA6'},{name:'White',hex:'#F8F8F8'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Ring-Spun Oxford Cotton (160 GSM).',
+    careInstructions: 'Machine wash 40°C. Iron medium.',
+    description: 'Classic button-down collar with a modern relaxed fit.'
+  },
+  {
+    slug: 'slim-poplin-dress-shirt-3',
+    name: 'Slim Poplin Dress Shirt',
+    category: 'Shirts',
+    color: 'Crisp White',
+    price: 1899,
+    originalPrice: 3299,
+    badge: 'BESTSELLER',
+    images: [
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
+    sizes: [{size:'S',stock:12,isSoldOut:false},{size:'M',stock:20,isSoldOut:false},{size:'L',stock:15,isSoldOut:false},{size:'XL',stock:8,isSoldOut:false}],
+    colorVariants: [{name:'Crisp White',hex:'#FAFAFA'},{name:'Light Blue',hex:'#B8D4E8'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Egyptian Giza Cotton Poplin (100 GSM).',
+    careInstructions: 'Machine wash 30°C. Iron hot.',
+    description: 'Ultra-slim cut poplin dress shirt for formal occasions.'
+  },
+  {
+    slug: 'oversized-flannel-check-shirt-4',
+    name: 'Oversized Flannel Check Shirt',
+    category: 'Shirts',
+    color: 'Navy Plaid',
+    price: 2199,
+    originalPrice: 3799,
+    badge: '42% OFF',
+    images: [
+      'https://images.pexels.com/photos/1300550/pexels-photo-1300550.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:6,isSoldOut:false},{size:'M',stock:10,isSoldOut:false},{size:'L',stock:8,isSoldOut:false},{size:'XL',stock:4,isSoldOut:false}],
+    colorVariants: [{name:'Navy Plaid',hex:'#1A2744'},{name:'Red Plaid',hex:'#8B1A1A'}],
     isFeatured: true,
     isWinterDrop: true,
     inStock: true,
     stockStatus: 'In Stock',
-    fabricDetails: '100% Double-faced Wool Melange (380 GSM). Brushed interior for soft drape and wind resistance.',
-    careInstructions: 'Dry clean only. Cool iron over a damp cloth if necessary.',
-    description: 'Minimalist architecture meets bespoke tailoring. Heavyweight structured wool silhouette cut with relaxed shoulders and matte horn buttons.',
+    fabricDetails: '100% Brushed Cotton Flannel (200 GSM).',
+    careInstructions: 'Machine wash 40°C. Tumble dry medium.',
+    description: 'Heavyweight flannel in oversized boxy cut for layered styling.'
   },
   {
-    name: 'Heavyweight Boxy Tee',
+    slug: 'cuban-collar-resort-shirt-5',
+    name: 'Cuban Collar Resort Shirt',
+    category: 'Shirts',
+    color: 'Ecru Sand',
+    price: 1699,
+    originalPrice: 2999,
+    badge: 'NEW',
+    images: [
+      'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1300550/pexels-photo-1300550.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:9,isSoldOut:false},{size:'M',stock:16,isSoldOut:false},{size:'L',stock:11,isSoldOut:false},{size:'XL',stock:5,isSoldOut:false}],
+    colorVariants: [{name:'Ecru Sand',hex:'#D4C5A9'},{name:'Washed Black',hex:'#2A2A2A'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '55% Linen, 45% Viscose (130 GSM).',
+    careInstructions: 'Hand wash 30°C.',
+    description: 'Open-collar resort shirt with relaxed boxy silhouette.'
+  },
+  {
+    slug: 'chambray-work-shirt-6',
+    name: 'Chambray Work Shirt',
+    category: 'Shirts',
+    color: 'Light Denim',
+    price: 1499,
+    originalPrice: 2599,
+    badge: '42% OFF',
+    images: [
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:7,isSoldOut:false},{size:'M',stock:13,isSoldOut:false},{size:'L',stock:9,isSoldOut:false},{size:'XL',stock:3,isSoldOut:false}],
+    colorVariants: [{name:'Light Denim',hex:'#8FA8C8'},{name:'Dark Denim',hex:'#2D4062'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Yarn-Dyed Chambray Cotton (130 GSM).',
+    careInstructions: 'Machine wash 40°C.',
+    description: 'Workwear chambray with chest patch pocket.'
+  },
+  {
+    slug: 'mandarin-collar-linen-shirt-7',
+    name: 'Mandarin Collar Linen Shirt',
+    category: 'Shirts',
+    color: 'Stone Beige',
+    price: 1899,
+    originalPrice: 3199,
+    badge: '40% OFF',
+    images: [
+      'https://images.pexels.com/photos/1300550/pexels-photo-1300550.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:5,isSoldOut:false},{size:'M',stock:11,isSoldOut:false},{size:'L',stock:7,isSoldOut:false},{size:'XL',stock:2,isSoldOut:false}],
+    colorVariants: [{name:'Stone Beige',hex:'#C8B89A'},{name:'Olive',hex:'#6B7A3D'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Washed Linen (150 GSM). Hidden placket.',
+    careInstructions: 'Machine wash cold. Iron medium.',
+    description: 'Minimalist mandarin collar with hidden placket.'
+  },
+  {
+    slug: 'stripe-poplin-regular-shirt-8',
+    name: 'Stripe Poplin Regular Shirt',
+    category: 'Shirts',
+    color: 'Blue Stripe',
+    price: 1399,
+    originalPrice: 2499,
+    badge: '44% OFF',
+    images: [
+      'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:10,isSoldOut:false},{size:'M',stock:20,isSoldOut:false},{size:'L',stock:14,isSoldOut:false},{size:'XL',stock:8,isSoldOut:false}],
+    colorVariants: [{name:'Blue Stripe',hex:'#4A7AB5'},{name:'Pink Stripe',hex:'#D4A0A0'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Mercerized Cotton Poplin (120 GSM).',
+    careInstructions: 'Machine wash 40°C. Iron hot.',
+    description: 'Classic Bengal stripe poplin shirt, versatile for office or weekend.'
+  },
+  {
+    slug: 'corduroy-overshirt-jacket-9',
+    name: 'Corduroy Overshirt Jacket',
+    category: 'Shirts',
+    color: 'Tobacco Brown',
+    price: 2799,
+    originalPrice: 4499,
+    badge: '38% OFF',
+    images: [
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1300550/pexels-photo-1300550.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:4,isSoldOut:false},{size:'M',stock:8,isSoldOut:false},{size:'L',stock:6,isSoldOut:false},{size:'XL',stock:2,isSoldOut:false}],
+    colorVariants: [{name:'Tobacco Brown',hex:'#795548'},{name:'Forest Green',hex:'#3E5C3E'}],
+    isFeatured: true,
+    isWinterDrop: true,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Cotton Wide-Wale Corduroy (280 GSM).',
+    careInstructions: 'Machine wash inside-out 30°C.',
+    description: 'Heavy corduroy overshirt doubling as a light jacket.'
+  },
+  {
+    slug: 'classic-white-dress-shirt-10',
+    name: 'Classic White Dress Shirt',
+    category: 'Shirts',
+    color: 'Pure White',
+    price: 1699,
+    originalPrice: 2999,
+    badge: '43% OFF',
+    images: [
+      'https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:15,isSoldOut:false},{size:'M',stock:25,isSoldOut:false},{size:'L',stock:18,isSoldOut:false},{size:'XL',stock:10,isSoldOut:false}],
+    colorVariants: [{name:'Pure White',hex:'#FFFFFF'},{name:'Ecru',hex:'#F0EBD8'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Supima Cotton Twill (140 GSM). Easy-iron finish.',
+    careInstructions: 'Machine wash 60°C. Iron hot.',
+    description: 'The wardrobe staple — premium Supima cotton in classic white.'
+  },
+
+  // ── T-SHIRTS (10) ─────────────────────────────────────────────────────────
+  {
+    slug: 'oversized-heavyweight-tee-11',
+    name: 'Oversized Heavyweight Tee',
     category: 'Tees',
     color: 'Chalk White',
-    price: 4990,
-    originalPrice: 6500,
-    badge: 'Organic',
-    badgeColor: 'var(--secondary)',
+    price: 1199,
+    originalPrice: 1999,
+    badge: 'BESTSELLER',
     images: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAEg9HtS0jCzYVX0DNa-H01P07DEd3yPNgAGhR7l8uhurLYtOmmkzrWBT-fzc9gCXaU9VuLEaE7zzyWMh59UyiGYFM7gPlBxgZcVe6SJXIuDYleaWLtY2go9B0wDdGTc2ubG_j3tC9-6Q6dg6j6aaweB2iDSlt8Dp0Q5bHXK1YWSkFPa4a9ewDrgjcTvIBfBULm9Tzb2N4ps4HytEYk3FEgY9IyiyksGJUIWB1EsPMVZOGHdXrKzZeA',
+      'https://images.pexels.com/photos/1656684/pexels-photo-1656684.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1760900/pexels-photo-1760900.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
-    sizes: [
-      { size: 'XS', stock: 4, isSoldOut: false },
-      { size: 'S', stock: 10, isSoldOut: false },
-      { size: 'M', stock: 15, isSoldOut: false },
-      { size: 'L', stock: 14, isSoldOut: false },
-      { size: 'XL', stock: 6, isSoldOut: false },
-    ],
-    colorVariants: [
-      { name: 'Chalk White', hex: '#F0EFEA' },
-      { name: 'Pitch Black', hex: '#0B0B0B' },
-      { name: 'Washed Olive', hex: '#4A5043' },
-    ],
+    sizes: [{size:'XS',stock:5,isSoldOut:false},{size:'S',stock:12,isSoldOut:false},{size:'M',stock:20,isSoldOut:false},{size:'L',stock:16,isSoldOut:false},{size:'XL',stock:8,isSoldOut:false}],
+    colorVariants: [{name:'Chalk White',hex:'#F5F5F0'},{name:'Washed Black',hex:'#1A1A1A'},{name:'Stone Grey',hex:'#9E9E9E'}],
     isFeatured: true,
     isWinterDrop: false,
     inStock: true,
     stockStatus: 'In Stock',
-    fabricDetails: '100% Ring-Spun GOTS Certified Organic Combed Cotton (260 GSM).',
-    careInstructions: 'Machine wash delicate at 30°C. Line dry in shade.',
-    description: 'The definitive daily luxury foundation. High-density organic cotton jersey engineered with dropped shoulder seams and a bound ribbed collar.',
+    fabricDetails: '100% Ring-Spun Organic Cotton (260 GSM). Dropped shoulder.',
+    careInstructions: 'Machine wash 30°C. Line dry.',
+    description: '260 GSM organic cotton with dropped shoulders and boxy silhouette.'
   },
   {
-    name: 'Relaxed Pleated Trouser',
-    category: 'Tailoring',
+    slug: 'acid-wash-vintage-tee-12',
+    name: 'Acid Wash Vintage Tee',
+    category: 'Tees',
+    color: 'Washed Black',
+    price: 999,
+    originalPrice: 1799,
+    badge: '44% OFF',
+    images: [
+      'https://images.pexels.com/photos/1760900/pexels-photo-1760900.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1656684/pexels-photo-1656684.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:8,isSoldOut:false},{size:'M',stock:15,isSoldOut:false},{size:'L',stock:10,isSoldOut:false},{size:'XL',stock:5,isSoldOut:false}],
+    colorVariants: [{name:'Washed Black',hex:'#2D2D2D'},{name:'Washed Grey',hex:'#7A7A7A'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Cotton (220 GSM). Garment acid-washed.',
+    careInstructions: 'Cold wash. Do not bleach. Line dry.',
+    description: 'Pre-distressed acid wash tee — each piece unique.'
+  },
+  {
+    slug: 'essential-crew-neck-tee-13',
+    name: 'Essential Crew Neck Tee',
+    category: 'Tees',
+    color: 'Jet Black',
+    price: 799,
+    originalPrice: 1399,
+    badge: '43% OFF',
+    images: [
+      'https://images.pexels.com/photos/1656684/pexels-photo-1656684.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/2294342/pexels-photo-2294342.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'XS',stock:10,isSoldOut:false},{size:'S',stock:18,isSoldOut:false},{size:'M',stock:25,isSoldOut:false},{size:'L',stock:20,isSoldOut:false},{size:'XL',stock:12,isSoldOut:false}],
+    colorVariants: [{name:'Jet Black',hex:'#0A0A0A'},{name:'White',hex:'#FAFAFA'},{name:'Navy',hex:'#1B2A4A'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Combed Cotton Single Jersey (180 GSM).',
+    careInstructions: 'Machine wash 40°C. Tumble dry low.',
+    description: 'Precision-cut crew neck — the foundation of every outfit.'
+  },
+  {
+    slug: 'graphic-print-oversized-tee-14',
+    name: 'Graphic Print Oversized Tee',
+    category: 'Tees',
+    color: 'Off White',
+    price: 1299,
+    originalPrice: 2199,
+    badge: 'NEW DROP',
+    images: [
+      'https://images.pexels.com/photos/2294342/pexels-photo-2294342.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1760900/pexels-photo-1760900.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:6,isSoldOut:false},{size:'M',stock:12,isSoldOut:false},{size:'L',stock:9,isSoldOut:false},{size:'XL',stock:4,isSoldOut:false}],
+    colorVariants: [{name:'Off White',hex:'#F0EDE5'},{name:'Washed Black',hex:'#2A2A2A'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% GOTS Organic Cotton (240 GSM). Water-based screen print.',
+    careInstructions: 'Wash inside-out 30°C. Line dry.',
+    description: 'Limited edition graphic tee with original Penguin artwork.'
+  },
+  {
+    slug: 'v-neck-slim-fit-tee-15',
+    name: 'V-Neck Slim Fit Tee',
+    category: 'Tees',
+    color: 'Navy Blue',
+    price: 899,
+    originalPrice: 1499,
+    badge: '40% OFF',
+    images: [
+      'https://images.pexels.com/photos/1760900/pexels-photo-1760900.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1656684/pexels-photo-1656684.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:12,isSoldOut:false},{size:'M',stock:22,isSoldOut:false},{size:'L',stock:16,isSoldOut:false},{size:'XL',stock:9,isSoldOut:false}],
+    colorVariants: [{name:'Navy Blue',hex:'#1A2A5E'},{name:'Burgundy',hex:'#7A1A2A'},{name:'Forest',hex:'#2A4A2A'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '95% Supima Cotton, 5% Elastane (190 GSM).',
+    careInstructions: 'Machine wash 30°C.',
+    description: 'Slim v-neck in Supima cotton with natural stretch.'
+  },
+  {
+    slug: 'pigment-dyed-pocket-tee-16',
+    name: 'Pigment Dyed Pocket Tee',
+    category: 'Tees',
+    color: 'Dusty Rose',
+    price: 1099,
+    originalPrice: 1899,
+    badge: '42% OFF',
+    images: [
+      'https://images.pexels.com/photos/2294342/pexels-photo-2294342.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1656684/pexels-photo-1656684.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'XS',stock:4,isSoldOut:false},{size:'S',stock:10,isSoldOut:false},{size:'M',stock:16,isSoldOut:false},{size:'L',stock:12,isSoldOut:false}],
+    colorVariants: [{name:'Dusty Rose',hex:'#C4A0A0'},{name:'Sage',hex:'#8FA48F'},{name:'Sand',hex:'#C4B48A'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Pigment-Dyed Cotton (220 GSM).',
+    careInstructions: 'Cold wash. Line dry.',
+    description: 'Pigment-dyed pocket tee with worn-in vintage aesthetic.'
+  },
+  {
+    slug: 'long-sleeve-thermal-tee-17',
+    name: 'Long Sleeve Thermal Tee',
+    category: 'Tees',
+    color: 'Charcoal Grey',
+    price: 1399,
+    originalPrice: 2399,
+    badge: 'WINTER',
+    images: [
+      'https://images.pexels.com/photos/1760900/pexels-photo-1760900.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/2294342/pexels-photo-2294342.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:8,isSoldOut:false},{size:'M',stock:14,isSoldOut:false},{size:'L',stock:10,isSoldOut:false},{size:'XL',stock:5,isSoldOut:false}],
+    colorVariants: [{name:'Charcoal Grey',hex:'#4A4A4A'},{name:'Cream',hex:'#EDE8D8'}],
+    isFeatured: true,
+    isWinterDrop: true,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '60% Cotton, 40% Polyester Thermal Waffle Knit (260 GSM).',
+    careInstructions: 'Machine wash 30°C. Tumble dry medium.',
+    description: 'Long-sleeve thermal waffle tee — layers under jackets perfectly.'
+  },
+  {
+    slug: 'printed-relaxed-crop-tee-18',
+    name: 'Printed Relaxed Crop Tee',
+    category: 'Tees',
+    color: 'Ecru',
+    price: 999,
+    originalPrice: 1699,
+    badge: '41% OFF',
+    images: [
+      'https://images.pexels.com/photos/1656684/pexels-photo-1656684.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1760900/pexels-photo-1760900.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:7,isSoldOut:false},{size:'M',stock:13,isSoldOut:false},{size:'L',stock:8,isSoldOut:false}],
+    colorVariants: [{name:'Ecru',hex:'#EDE0C4'},{name:'Black',hex:'#111111'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Combed Cotton (200 GSM). Slightly cropped hem.',
+    careInstructions: 'Wash inside-out cold.',
+    description: 'Slightly cropped tee pairs with high-rise trousers.'
+  },
+  {
+    slug: 'ribbed-collar-essential-tee-19',
+    name: 'Ribbed Collar Essential Tee',
+    category: 'Tees',
     color: 'Slate Grey',
-    price: 11500,
-    originalPrice: null,
-    badge: '',
+    price: 849,
+    originalPrice: 1499,
+    badge: '43% OFF',
     images: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuA4oHKiDX7F1_YMYpKNYZoqlYF7sztvwDwydf5RcZxaf8C0CBQ6LPehQgqfUztS3CLuwQdgnTjbqiEZqLuiKunTxErcqb_wBugBzAYMpHteO9D-6M4Y51v_Qzu2CrcnhU9eciK73peSMNY4rvWqBZ1bWbZcXEUpFMy1v_eT2bOyR8OjuDhDSm7ysVzAzVD7wGTDhOA8wgWIHB3zb8OkLfYqEEhr_vSUj7Cg54RqZLtMgOdouZC6DQfl',
+      'https://images.pexels.com/photos/2294342/pexels-photo-2294342.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1656684/pexels-photo-1656684.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
-    sizes: [
-      { size: '30', stock: 6, isSoldOut: false },
-      { size: '32', stock: 10, isSoldOut: false },
-      { size: '34', stock: 8, isSoldOut: false },
-      { size: '36', stock: 3, isSoldOut: false },
-    ],
-    colorVariants: [
-      { name: 'Slate Grey', hex: '#484D52' },
-      { name: 'Nocturne Black', hex: '#111111' },
-    ],
-    isFeatured: true,
+    sizes: [{size:'XS',stock:6,isSoldOut:false},{size:'S',stock:14,isSoldOut:false},{size:'M',stock:22,isSoldOut:false},{size:'L',stock:18,isSoldOut:false}],
+    colorVariants: [{name:'Slate Grey',hex:'#708090'},{name:'Marl White',hex:'#F0F0F0'}],
+    isFeatured: false,
     isWinterDrop: false,
     inStock: true,
     stockStatus: 'In Stock',
-    fabricDetails: 'Italian Tropical Virgin Wool Blend with 2% Elastane for subtle flex.',
-    careInstructions: 'Dry clean only. Steam press.',
-    description: 'Modern relaxed tailoring. Double forward pleats create an elegant drape from the high waist down to a wide, breakless hem.',
+    fabricDetails: '100% Supima Cotton (200 GSM). Double ribbed collar.',
+    careInstructions: 'Machine wash 40°C. Tumble dry low.',
+    description: 'Elevated basic with double-layered ribbed collar.'
   },
   {
-    name: 'Technical Bomber Jacket',
+    slug: 'striped-baseball-tee-20',
+    name: 'Striped Baseball Tee',
+    category: 'Tees',
+    color: 'White Navy',
+    price: 1099,
+    originalPrice: 1899,
+    badge: 'NEW',
+    images: [
+      'https://images.pexels.com/photos/1760900/pexels-photo-1760900.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/2294342/pexels-photo-2294342.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:9,isSoldOut:false},{size:'M',stock:17,isSoldOut:false},{size:'L',stock:12,isSoldOut:false}],
+    colorVariants: [{name:'White Navy',hex:'#F5F5F5'},{name:'White Red',hex:'#F0EAEA'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Jersey Cotton (180 GSM). Contrast 3/4 sleeves.',
+    careInstructions: 'Machine wash cold. Hang dry.',
+    description: 'Classic baseball tee with contrast 3/4 raglan sleeves.'
+  },
+
+  // ── JACKETS (10) ──────────────────────────────────────────────────────────
+  {
+    slug: 'technical-matte-bomber-jacket-21',
+    name: 'Technical Matte Bomber Jacket',
     category: 'Jackets',
     color: 'Washed Black',
-    price: 18900,
-    originalPrice: 22000,
-    badge: 'Limited',
-    badgeColor: 'var(--primary)',
+    price: 3499,
+    originalPrice: 5999,
+    badge: 'DROP 01',
     images: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuARmvTH6u7FeyWdAlKcRV2iSmOWqimIqVK7TvNs7EsEoF96C0uWUfh6WiwjB23tpGgO_eF2vd6faEeOMv35RikH2miws8kOYSQqvdn1CUSGc-BkNKUw9yVhaxkdllB88qCYUiqqE-QLSWjjVw11EDpSPnLTNPeVKR1KKd0auAsHs3ml1SIln3dM9p6_hl8kDW4qANNQtbNXyDdqS_GW_a90i6X9O0vlX7i6w-mFQrs-LrMrgatzn4uF',
+      'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1032110/pexels-photo-1032110.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
-    sizes: [
-      { size: 'S', stock: 2, isSoldOut: false },
-      { size: 'M', stock: 5, isSoldOut: false },
-      { size: 'L', stock: 4, isSoldOut: false },
-      { size: 'XL', stock: 0, isSoldOut: true },
-    ],
+    sizes: [{size:'S',stock:3,isSoldOut:false},{size:'M',stock:7,isSoldOut:false},{size:'L',stock:5,isSoldOut:false},{size:'XL',stock:2,isSoldOut:false}],
+    colorVariants: [{name:'Washed Black',hex:'#1A1A1A'},{name:'Matte Olive',hex:'#4A5A3A'}],
     isFeatured: true,
     isWinterDrop: true,
     inStock: true,
     stockStatus: 'Low Stock',
-    fabricDetails: 'Hydrophobic Japanese Recycled Nylon Shell with lightweight Thinsulate insulation.',
-    careInstructions: 'Specialist gentle wet clean only.',
-    description: 'Flight jacket DNA refined into minimalist luxury. Features dual two-way Riri zippers and weather-sealed storm cuffs.',
+    fabricDetails: 'Hydrophobic Recycled Nylon Shell (220D). Thinsulate lining.',
+    careInstructions: 'Gentle machine wash 30°C. Air dry.',
+    description: 'Flight jacket DNA for urban environments. Dual Riri zippers.'
   },
   {
-    name: 'Raw Selvedge Denim',
-    category: 'Jeans',
-    color: 'Deep Indigo',
-    price: 14900,
-    originalPrice: null,
-    badge: '14.5oz',
+    slug: 'double-breasted-wool-overcoat-22',
+    name: 'Double-Breasted Wool Overcoat',
+    category: 'Jackets',
+    color: 'Camel Tan',
+    price: 5999,
+    originalPrice: 9999,
+    badge: 'LIMITED',
     images: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCflsrCJ4FMCSj_Kh2vIJ-49HTAOaEooBZXQidjqdRp-IdnUIHjg7Ea_dYD6NFC-5j8K1IQhs5ttiG2eqr6KZyXdZMQV5ZJeT4nN9ffxnJRBOd5m8m_HKGBg93ekINiMZ41mD9BmA_2Q969d9lPzvS8AXLfmUNwLQ0-fdjkML2j8M1s0X9nViJMrJbF7j7gtGm6AS8mSweO3EahcwxPFt2RiaCu7UHrqbaa5ZVhBQKg35U7CDlVkwl_',
+      'https://images.pexels.com/photos/1032110/pexels-photo-1032110.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
-    sizes: [
-      { size: '30', stock: 5, isSoldOut: false },
-      { size: '32', stock: 8, isSoldOut: false },
-      { size: '34', stock: 6, isSoldOut: false },
-      { size: '36', stock: 2, isSoldOut: false },
+    sizes: [{size:'S',stock:2,isSoldOut:false},{size:'M',stock:4,isSoldOut:false},{size:'L',stock:3,isSoldOut:false},{size:'XL',stock:1,isSoldOut:false}],
+    colorVariants: [{name:'Camel Tan',hex:'#C8A97A'},{name:'Charcoal',hex:'#3A3A3A'}],
+    isFeatured: true,
+    isWinterDrop: true,
+    inStock: true,
+    stockStatus: 'Low Stock',
+    fabricDetails: '80% Italian Wool, 20% Cashmere (480 GSM). Satin-lined.',
+    careInstructions: 'Dry clean only.',
+    description: 'Architectural double-breasted overcoat in Italian wool-cashmere.'
+  },
+  {
+    slug: 'quilted-puffer-jacket-23',
+    name: 'Quilted Puffer Jacket',
+    category: 'Jackets',
+    color: 'Matte Black',
+    price: 2999,
+    originalPrice: 4999,
+    badge: '40% OFF',
+    images: [
+      'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1466133/pexels-photo-1466133.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
+    sizes: [{size:'S',stock:6,isSoldOut:false},{size:'M',stock:12,isSoldOut:false},{size:'L',stock:9,isSoldOut:false},{size:'XL',stock:4,isSoldOut:false}],
+    colorVariants: [{name:'Matte Black',hex:'#111111'},{name:'Olive Green',hex:'#4A5A3A'}],
+    isFeatured: true,
+    isWinterDrop: true,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: 'Recycled Nylon Shell. 90/10 Responsible Down (550 Fill).',
+    careInstructions: 'Machine wash 30°C. Tumble dry low with tennis balls.',
+    description: 'Lightweight quilted puffer. Packable into its own chest pocket.'
+  },
+  {
+    slug: 'denim-trucker-jacket-24',
+    name: 'Denim Trucker Jacket',
+    category: 'Jackets',
+    color: 'Mid Wash',
+    price: 2499,
+    originalPrice: 3999,
+    badge: '37% OFF',
+    images: [
+      'https://images.pexels.com/photos/1466133/pexels-photo-1466133.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1032110/pexels-photo-1032110.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:8,isSoldOut:false},{size:'M',stock:14,isSoldOut:false},{size:'L',stock:10,isSoldOut:false},{size:'XL',stock:5,isSoldOut:false}],
+    colorVariants: [{name:'Mid Wash',hex:'#6B8CAE'},{name:'Dark Wash',hex:'#2D4062'}],
     isFeatured: true,
     isWinterDrop: false,
     inStock: true,
     stockStatus: 'In Stock',
-    fabricDetails: '14.5oz Kurabo Mills Japanese Selvedge Denim woven on vintage shuttle looms.',
-    careInstructions: 'Wear raw for 6 months before first cold hand wash with denim detergent.',
-    description: 'Unwashed shuttle-loom denim designed to mold uniquely to the wearer over years of use.',
+    fabricDetails: '100% Selvedge Denim (12oz). Blanket-stitched interior.',
+    careInstructions: 'Cold wash inside-out. Line dry.',
+    description: 'Classic trucker in premium selvedge denim. Ages beautifully.'
   },
   {
-    name: 'Monolith Lug Derby',
-    category: 'Footwear',
-    color: 'Matte Black',
-    price: 21500,
-    originalPrice: null,
-    badge: 'Atelier',
-    images: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAGCcnQ_lQZYjZwKw_4fdayJ8Vg2b_LBOV3aku10uRPEJDfpurL0Soont9haqftelg8LfVX1jcH4SeuOFi5cw1KMoAzCnvrjhcbjqqks_DLXzjVZXpIi2MHCloBp75Sf7kbNQ0HSWzT40quJiPtMaJ6zMg7iYkvFUkMdDdixjc6MB_cAN5q5EznxDmmyjt6Ds7kVMaPomWX8ttdcmOy5UQrWMHfq9OFSg5nuaMLrzlaTBjMOmypfdm',
-    ],
-    sizes: [
-      { size: '40', stock: 3, isSoldOut: false },
-      { size: '41', stock: 6, isSoldOut: false },
-      { size: '42', stock: 8, isSoldOut: false },
-      { size: '43', stock: 5, isSoldOut: false },
-      { size: '44', stock: 2, isSoldOut: false },
-    ],
-    isFeatured: true,
-    isWinterDrop: true,
-    inStock: true,
-    stockStatus: 'In Stock',
-    fabricDetails: 'Full-grain Italian Calfskin Leather with Goodyear welted lightweight Vibram lug sole.',
-    careInstructions: 'Condition with neutral leather balm. Store in cedar shoe trees.',
-    description: 'Chunky architectural silhouette with exaggerated commando tread and hand-burnished edge finishing.',
-  },
-  {
-    name: 'Structured Poplin Overshirt',
-    category: 'Shirts',
-    color: 'Nocturne Black',
-    price: 11900,
-    originalPrice: 15000,
-    badge: 'Drop 01',
-    images: [
-      'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDw6PlIfD7vb_n4u5I_wD4HhFdTcV-UVOCENxio76QfVtj4TtfRRyePIpQIcJigP4x9Wc7TemI-nMXXz6Pt7XngwmTtRuBYdxnhGmoGboojO1aB4qDaF8UBDAqL-EKhubCIg19kp_1Kvw65x8WO4Rzftn8xvR5e0BIIwaGyqj97L00TABLrHE0n7YezXGVCKzCQSEdTRZNm10F1GUVNiBmvJvBz3q8wCtZpserBa9hHWrT6REccVN_4',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuA8K4W-FWh7vCYR_mvxb8wOL-rNOr0a633cUAMpF8eh5QxC614cWcQEpiQSaRejQNnri7CgeDLbrRuYzbZuDbNAM_sJtIPV15Y8BBOKF-Y3EpQ3gHW36ynSnnFZGlzqccRALL8zRwe9P9L2eHAGDs8fdhRUsDXLjGzeIHvXqO8jaB4ybpyYPRq6Vvqc4d92tse7zqKIIhYfdKoqJ3fJc7Qrp8vmN9_ETZ30v2PzbUq4rVOVpYAGd_nk',
-    ],
-    sizes: [
-      { size: 'S', stock: 4, isSoldOut: false },
-      { size: 'M', stock: 10, isSoldOut: false },
-      { size: 'L', stock: 6, isSoldOut: false },
-      { size: 'XL', stock: 0, isSoldOut: true },
-    ],
-    colorVariants: [
-      { name: 'Nocturne Black', hex: '#111111' },
-      { name: 'Deep Charcoal', hex: '#2B2B2B' },
-      { name: 'Slate White', hex: '#EBEBEB' },
-      { name: 'Graphite', hex: '#3E4247' },
-    ],
-    isFeatured: true,
-    isWinterDrop: true,
-    inStock: true,
-    stockStatus: 'Only 4 left',
-    fabricDetails: '100% Japanese High-Density Organic Cotton Poplin (180 GSM). Double-stitched seams with matte black hardware.',
-    careInstructions: 'Dry clean only or delicate machine wash at 30°C inside-out. Do not tumble dry. Cool iron on reverse.',
-    description: 'Precision tailored overshirt featuring an exaggerated camp collar, concealed placket, and side split vents.',
-  },
-  {
-    name: 'Cocoon Tech Overcoat',
+    slug: 'leather-biker-jacket-25',
+    name: 'Leather Biker Jacket',
     category: 'Jackets',
-    color: 'Obsidian Black',
-    price: 29900,
-    originalPrice: 38000,
-    badge: 'Limited Drop',
+    color: 'Jet Black',
+    price: 7999,
+    originalPrice: 12999,
+    badge: '38% OFF',
     images: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBMcWjy3fc8ms2v322i4KsHjjqsF8Aq-MkauMwU7eFgN9eltVE2jd-ie_damkN6PrGmoYwQdT9lHTQfL4lmA9vYBjLiY0J3Ub8LLGwmH4qgRkmOvtfEEX2gL5u-zYEgSpC8HjBWjxRekLABxWoGfPOffgV_u4MrrkdczbPqI8OfLAPNdKlfkqJGo65U2u-qO4SG_rHV_UnwvLyTbsVvNlZLbIgF2RyYYidVi36LVb5GfFM0ZTnuDJjN',
+      'https://images.pexels.com/photos/1032110/pexels-photo-1032110.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
-    sizes: [
-      { size: '46', stock: 2, isSoldOut: false },
-      { size: '48', stock: 4, isSoldOut: false },
-      { size: '50', stock: 3, isSoldOut: false },
-      { size: '52', stock: 1, isSoldOut: false },
-    ],
+    sizes: [{size:'S',stock:2,isSoldOut:false},{size:'M',stock:5,isSoldOut:false},{size:'L',stock:4,isSoldOut:false},{size:'XL',stock:2,isSoldOut:false}],
+    colorVariants: [{name:'Jet Black',hex:'#0A0A0A'},{name:'Deep Brown',hex:'#3E2723'}],
     isFeatured: true,
     isWinterDrop: true,
     inStock: true,
     stockStatus: 'Low Stock',
-    fabricDetails: 'Triple-layer bonded technical wool with breathable membrane.',
-    careInstructions: 'Specialist dry clean only.',
-    description: 'An architectural outerwear masterpiece. Cocoon silhouette cut generously to accommodate layered tailoring beneath.',
+    fabricDetails: 'Full-Grain Vegetable-Tanned Leather. Satin lining.',
+    careInstructions: 'Wipe clean. Condition with leather balm.',
+    description: 'Classic asymmetric moto jacket — gets better with every wear.'
   },
   {
-    name: 'Brushed Mohair Knit',
-    category: 'Knitwear',
-    color: 'Moss Haze',
-    price: 15500,
-    originalPrice: null,
-    badge: 'Atelier Knit',
+    slug: 'coach-windbreaker-jacket-26',
+    name: 'Coach Windbreaker Jacket',
+    category: 'Jackets',
+    color: 'Cobalt Blue',
+    price: 1999,
+    originalPrice: 3499,
+    badge: '43% OFF',
     images: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDcGdhD4ZhQZ3oH5KMNUpJBqde0mkUzM9j4twJPVO21A63Ua1y4VTDOAOACkYyw_jInAlG-EqHBlCnvAcZo6fVekY73Jbek2y9iO1xA9d1Vog4RgiGAGlrr3blonbPBzgPxsZgaIue--6RcwEZXAhdeyqlM33Rs08jPqiftAcBYM-82jrlxXWv5bPyPXoopwRUVdXinW98_SB412MGmNP3RGAYsEK9PM2h6uGbXLYmayNsYHY_RgGje',
+      'https://images.pexels.com/photos/1466133/pexels-photo-1466133.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1032110/pexels-photo-1032110.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
-    sizes: [
-      { size: 'XS', stock: 0, isSoldOut: true },
-      { size: 'S', stock: 3, isSoldOut: false },
-      { size: 'M', stock: 7, isSoldOut: false },
-      { size: 'L', stock: 5, isSoldOut: false },
+    sizes: [{size:'S',stock:10,isSoldOut:false},{size:'M',stock:18,isSoldOut:false},{size:'L',stock:14,isSoldOut:false},{size:'XL',stock:7,isSoldOut:false}],
+    colorVariants: [{name:'Cobalt Blue',hex:'#1A4FAA'},{name:'Black',hex:'#111111'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Nylon Ripstop. Mesh lining. Packable.',
+    careInstructions: 'Machine wash 30°C. Air dry.',
+    description: 'Lightweight ripstop windbreaker with packable design.'
+  },
+  {
+    slug: 'overshirt-field-jacket-27',
+    name: 'Overshirt Field Jacket',
+    category: 'Jackets',
+    color: 'Army Green',
+    price: 2699,
+    originalPrice: 4499,
+    badge: '40% OFF',
+    images: [
+      'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1466133/pexels-photo-1466133.jpeg?auto=compress&cs=tinysrgb&w=600'
     ],
+    sizes: [{size:'S',stock:7,isSoldOut:false},{size:'M',stock:13,isSoldOut:false},{size:'L',stock:10,isSoldOut:false},{size:'XL',stock:5,isSoldOut:false}],
+    colorVariants: [{name:'Army Green',hex:'#4A5A3A'},{name:'Sand',hex:'#C4B48A'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Cotton Canvas (280 GSM). Four flap pockets.',
+    careInstructions: 'Machine wash 40°C. Hang dry.',
+    description: 'Military-inspired field jacket in heavy cotton canvas.'
+  },
+  {
+    slug: 'shearling-collar-jacket-28',
+    name: 'Shearling Collar Jacket',
+    category: 'Jackets',
+    color: 'Chocolate Brown',
+    price: 4999,
+    originalPrice: 7999,
+    badge: 'WINTER',
+    images: [
+      'https://images.pexels.com/photos/1032110/pexels-photo-1032110.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:3,isSoldOut:false},{size:'M',stock:6,isSoldOut:false},{size:'L',stock:5,isSoldOut:false},{size:'XL',stock:2,isSoldOut:false}],
+    colorVariants: [{name:'Chocolate Brown',hex:'#5D3A1A'},{name:'Jet Black',hex:'#0A0A0A'}],
+    isFeatured: true,
+    isWinterDrop: true,
+    inStock: true,
+    stockStatus: 'Low Stock',
+    fabricDetails: 'Suede outer with genuine shearling collar and lining.',
+    careInstructions: 'Specialist leather and suede cleaning.',
+    description: 'Premium suede jacket with genuine shearling collar.'
+  },
+  {
+    slug: 'harrington-varsity-jacket-29',
+    name: 'Harrington Varsity Jacket',
+    category: 'Jackets',
+    color: 'Bottle Green',
+    price: 2299,
+    originalPrice: 3799,
+    badge: '39% OFF',
+    images: [
+      'https://images.pexels.com/photos/1466133/pexels-photo-1466133.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1032110/pexels-photo-1032110.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:5,isSoldOut:false},{size:'M',stock:11,isSoldOut:false},{size:'L',stock:8,isSoldOut:false},{size:'XL',stock:4,isSoldOut:false}],
+    colorVariants: [{name:'Bottle Green',hex:'#1A4A2A'},{name:'Burgundy',hex:'#6A1A2A'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '100% Cotton Harrington shell with tartan lining.',
+    careInstructions: 'Machine wash 30°C. Tumble dry low.',
+    description: 'Iconic Harrington with zip front and tartan lining.'
+  },
+  {
+    slug: 'parka-hooded-winter-jacket-30',
+    name: 'Parka Hooded Winter Jacket',
+    category: 'Jackets',
+    color: 'Khaki Tan',
+    price: 3999,
+    originalPrice: 6499,
+    badge: '38% OFF',
+    images: [
+      'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1466133/pexels-photo-1466133.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:4,isSoldOut:false},{size:'M',stock:9,isSoldOut:false},{size:'L',stock:7,isSoldOut:false},{size:'XL',stock:3,isSoldOut:false}],
+    colorVariants: [{name:'Khaki Tan',hex:'#C4AA7A'},{name:'Army Green',hex:'#4A5A3A'}],
     isFeatured: true,
     isWinterDrop: true,
     inStock: true,
     stockStatus: 'In Stock',
-    fabricDetails: '65% South African Kid Mohair, 30% Polyamide, 5% Wool.',
-    careInstructions: 'Hand wash cold with wool detergent. Dry flat on towel.',
-    description: 'Ultra-soft hand-brushed mohair sweater with intentional slouch and deep ribbed hems.',
+    fabricDetails: 'Water-resistant Nylon outer. Removable fur hood trim.',
+    careInstructions: 'Machine wash 30°C. Tumble dry low.',
+    description: 'Long parka with detachable hood and inner fleece lining.'
   },
+
+  // ── FORMALS (10) ─────────────────────────────────────────────────────────
+  {
+    slug: 'slim-fit-formal-suit-set-31',
+    name: 'Slim Fit Formal Suit Set',
+    category: 'Formals',
+    color: 'Charcoal Grey',
+    price: 7999,
+    originalPrice: 12999,
+    badge: '38% OFF',
+    images: [
+      'https://images.pexels.com/photos/1124468/pexels-photo-1124468.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/2897531/pexels-photo-2897531.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:4,isSoldOut:false},{size:'M',stock:8,isSoldOut:false},{size:'L',stock:6,isSoldOut:false},{size:'XL',stock:3,isSoldOut:false}],
+    colorVariants: [{name:'Charcoal Grey',hex:'#4A4A4A'},{name:'Navy Blue',hex:'#1A2040'},{name:'Black',hex:'#0A0A0A'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: '70% Wool, 30% Polyester. Half-canvas construction.',
+    careInstructions: 'Dry clean only.',
+    description: 'Sharp slim-fit suit set. Italian-inspired tailoring.'
+  },
+  {
+    slug: 'white-formal-shirt-black-trouser-32',
+    name: 'White Formal Shirt + Black Trouser',
+    category: 'Formals',
+    color: 'White and Black',
+    price: 3499,
+    originalPrice: 5999,
+    badge: '41% OFF',
+    images: [
+      'https://images.pexels.com/photos/2897531/pexels-photo-2897531.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1124468/pexels-photo-1124468.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:6,isSoldOut:false},{size:'M',stock:12,isSoldOut:false},{size:'L',stock:9,isSoldOut:false},{size:'XL',stock:4,isSoldOut:false}],
+    colorVariants: [{name:'White and Black',hex:'#FAFAFA'},{name:'Blue and Grey',hex:'#5B7FA6'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: 'Shirt: 100% Egyptian Cotton. Trousers: 65% Poly, 35% Viscose.',
+    careInstructions: 'Dry clean or machine wash shirt 40°C.',
+    description: 'Crisp white dress shirt with slim flat-front black trousers.'
+  },
+  {
+    slug: 'navy-blazer-cream-trouser-33',
+    name: 'Navy Blazer + Cream Trouser',
+    category: 'Formals',
+    color: 'Navy and Cream',
+    price: 6499,
+    originalPrice: 10999,
+    badge: '41% OFF',
+    images: [
+      'https://images.pexels.com/photos/1124468/pexels-photo-1124468.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:3,isSoldOut:false},{size:'M',stock:7,isSoldOut:false},{size:'L',stock:5,isSoldOut:false},{size:'XL',stock:2,isSoldOut:false}],
+    colorVariants: [{name:'Navy and Cream',hex:'#1A2040'},{name:'Black and Grey',hex:'#0A0A0A'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'Low Stock',
+    fabricDetails: 'Blazer: 100% Wool. Trousers: Cotton-Linen Blend.',
+    careInstructions: 'Dry clean blazer. Machine wash trousers 30°C.',
+    description: 'Navy wool blazer paired with relaxed cream linen-blend trousers.'
+  },
+  {
+    slug: 'black-tie-formal-set-34',
+    name: 'Black Tie Formal Set',
+    category: 'Formals',
+    color: 'Jet Black',
+    price: 8999,
+    originalPrice: 14999,
+    badge: '40% OFF',
+    images: [
+      'https://images.pexels.com/photos/2897531/pexels-photo-2897531.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1124468/pexels-photo-1124468.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:2,isSoldOut:false},{size:'M',stock:5,isSoldOut:false},{size:'L',stock:4,isSoldOut:false},{size:'XL',stock:1,isSoldOut:false}],
+    colorVariants: [{name:'Jet Black',hex:'#0A0A0A'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'Low Stock',
+    fabricDetails: 'Tuxedo: Satin peak lapel, 100% Wool. Satin-stripe trousers.',
+    careInstructions: 'Dry clean only. Store in garment bag.',
+    description: 'Complete black-tie tuxedo set with satin peak lapels.'
+  },
+  {
+    slug: 'light-blue-shirt-formal-trousers-35',
+    name: 'Light Blue Shirt + Formal Trousers',
+    category: 'Formals',
+    color: 'Blue and Grey',
+    price: 3999,
+    originalPrice: 6499,
+    badge: '38% OFF',
+    images: [
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/2897531/pexels-photo-2897531.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:7,isSoldOut:false},{size:'M',stock:13,isSoldOut:false},{size:'L',stock:9,isSoldOut:false},{size:'XL',stock:4,isSoldOut:false}],
+    colorVariants: [{name:'Blue and Grey',hex:'#5B7FA6'},{name:'White and Black',hex:'#FAFAFA'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: 'Shirt: Cotton Poplin. Trousers: Wool-Poly stretch.',
+    careInstructions: 'Shirt: Machine wash 40°C. Trousers: Dry clean.',
+    description: 'Pale blue Oxford shirt paired with slim formal grey trousers.'
+  },
+  {
+    slug: 'linen-formal-shirt-chino-set-36',
+    name: 'Linen Formal Shirt + Chino Set',
+    category: 'Formals',
+    color: 'Stone and Navy',
+    price: 4299,
+    originalPrice: 6999,
+    badge: '38% OFF',
+    images: [
+      'https://images.pexels.com/photos/1124468/pexels-photo-1124468.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:5,isSoldOut:false},{size:'M',stock:10,isSoldOut:false},{size:'L',stock:8,isSoldOut:false},{size:'XL',stock:3,isSoldOut:false}],
+    colorVariants: [{name:'Stone and Navy',hex:'#C8B89A'},{name:'White and Khaki',hex:'#FAFAFA'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: 'Shirt: 100% Linen. Trousers: Cotton-Elastane Chino.',
+    careInstructions: 'Machine wash both 30°C. Iron linen damp.',
+    description: 'Breathable linen shirt with slim cotton chinos for garden parties.'
+  },
+  {
+    slug: 'pinstripe-formal-trouser-suit-37',
+    name: 'Pinstripe Formal Trouser Suit',
+    category: 'Formals',
+    color: 'Navy Pinstripe',
+    price: 8499,
+    originalPrice: 13999,
+    badge: '39% OFF',
+    images: [
+      'https://images.pexels.com/photos/2897531/pexels-photo-2897531.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/1124468/pexels-photo-1124468.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:3,isSoldOut:false},{size:'M',stock:6,isSoldOut:false},{size:'L',stock:5,isSoldOut:false},{size:'XL',stock:2,isSoldOut:false}],
+    colorVariants: [{name:'Navy Pinstripe',hex:'#1A2040'},{name:'Charcoal Pinstripe',hex:'#4A4A4A'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'Low Stock',
+    fabricDetails: '100% Super 120s Wool. Canvassed chest.',
+    careInstructions: 'Dry clean only. Store on wide hanger.',
+    description: 'Power-dressing pinstripe two-piece in Super 120s wool.'
+  },
+  {
+    slug: 'smart-formal-shirt-set-38',
+    name: 'Smart Formal Shirt Set',
+    category: 'Formals',
+    color: 'White and Charcoal',
+    price: 2999,
+    originalPrice: 4999,
+    badge: '40% OFF',
+    images: [
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/2897531/pexels-photo-2897531.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:9,isSoldOut:false},{size:'M',stock:16,isSoldOut:false},{size:'L',stock:12,isSoldOut:false},{size:'XL',stock:6,isSoldOut:false}],
+    colorVariants: [{name:'White and Charcoal',hex:'#FAFAFA'},{name:'Blue and Black',hex:'#5B7FA6'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: 'Shirt: Cotton-Linen. Trousers: 100% Cotton Drill.',
+    careInstructions: 'Machine wash 40°C. Iron hot.',
+    description: 'Non-iron cotton shirt with straight-leg cotton drill trousers.'
+  },
+  {
+    slug: 'brown-suit-with-formal-shirt-39',
+    name: 'Brown Suit with Formal Shirt',
+    category: 'Formals',
+    color: 'Tobacco Brown',
+    price: 7499,
+    originalPrice: 11999,
+    badge: '37% OFF',
+    images: [
+      'https://images.pexels.com/photos/1124468/pexels-photo-1124468.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:2,isSoldOut:false},{size:'M',stock:5,isSoldOut:false},{size:'L',stock:4,isSoldOut:false},{size:'XL',stock:1,isSoldOut:false}],
+    colorVariants: [{name:'Tobacco Brown',hex:'#795548'},{name:'Cognac',hex:'#8B4513'}],
+    isFeatured: true,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'Low Stock',
+    fabricDetails: '100% Wool-Cotton Blend. Unlined Italian feel.',
+    careInstructions: 'Dry clean. min-width press with cloth.',
+    description: 'Rich tobacco brown suit with unstructured relaxed Italian feel.'
+  },
+  {
+    slug: 'office-smart-formal-combo-40',
+    name: 'Office Smart Formal Combo',
+    category: 'Formals',
+    color: 'Grey and White',
+    price: 3299,
+    originalPrice: 5499,
+    badge: '40% OFF',
+    images: [
+      'https://images.pexels.com/photos/2897531/pexels-photo-2897531.jpeg?auto=compress&cs=tinysrgb&w=600',
+      'https://images.pexels.com/photos/3768005/pexels-photo-3768005.jpeg?auto=compress&cs=tinysrgb&w=600'
+    ],
+    sizes: [{size:'S',stock:8,isSoldOut:false},{size:'M',stock:14,isSoldOut:false},{size:'L',stock:11,isSoldOut:false},{size:'XL',stock:5,isSoldOut:false}],
+    colorVariants: [{name:'Grey and White',hex:'#9E9E9E'},{name:'Navy and Blue',hex:'#1A2040'}],
+    isFeatured: false,
+    isWinterDrop: false,
+    inStock: true,
+    stockStatus: 'In Stock',
+    fabricDetails: 'Shirt: Non-iron Supima Cotton. Trousers: Stretch Formal 2% Elastane.',
+    careInstructions: 'Machine wash both 40°C. Iron shirt hot.',
+    description: 'Wrinkle-resistant shirt with stretch formal trousers for all-day comfort.'
+  }
 ];
 
 /**
@@ -256,46 +902,28 @@ export const getProducts = async (req, res) => {
   try {
     const { category, isWinterDrop, isFeatured, search, sort } = req.query;
     let query = {};
-
-    if (category && category !== 'All') {
-      query.category = new RegExp(`^${category}$`, 'i');
-    }
-
-    if (isWinterDrop === 'true') {
-      query.isWinterDrop = true;
-    }
-
-    if (isFeatured === 'true') {
-      query.isFeatured = true;
-    }
-
+    if (category && category !== 'All') query.category = new RegExp('^' + category + '$', 'i');
+    if (isWinterDrop === 'true') query.isWinterDrop = true;
+    if (isFeatured === 'true') query.isFeatured = true;
     if (search) {
-      query.$or = [
+      query['$or'] = [
         { name: { $regex: search, $options: 'i' } },
         { category: { $regex: search, $options: 'i' } },
         { color: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
       ];
     }
-
     let sortOptions = { createdAt: -1 };
     if (sort === 'price_asc') sortOptions = { price: 1 };
     if (sort === 'price_desc') sortOptions = { price: -1 };
     if (sort === 'name_asc') sortOptions = { name: 1 };
-
+    
     let products = await Product.find(query).sort(sortOptions);
-
-    // If database is empty, auto-seed initial products
     if (products.length === 0 && Object.keys(query).length === 0) {
       await Product.insertMany(INITIAL_PRODUCTS);
       products = await Product.find().sort(sortOptions);
     }
-
-    res.status(200).json({
-      success: true,
-      count: products.length,
-      data: products,
-    });
+    res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -309,22 +937,28 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    let product;
+    let product = null;
 
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
       product = await Product.findById(id);
-    } else {
+    }
+    if (!product) {
       product = await Product.findOne({ slug: id });
     }
-
+    if (!product && !isNaN(Number(id))) {
+      const idx = parseInt(id, 10) - 1;
+      const all = await Product.find().sort({ createdAt: 1 });
+      if (idx >= 0 && idx < all.length) {
+        product = all[idx];
+      }
+    }
     if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
+      // Fallback lookup from INITIAL_PRODUCTS
+      product = INITIAL_PRODUCTS.find(p => p.slug === id || String(p.id) === String(id)) || INITIAL_PRODUCTS[0];
     }
 
-    res.status(200).json({
-      success: true,
-      data: product,
-    });
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+    res.status(200).json({ success: true, data: product });
   } catch (error) {
     console.error('Error fetching product:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -338,28 +972,12 @@ export const getProductById = async (req, res) => {
 export const createProduct = async (req, res) => {
   try {
     const productData = req.body;
-
-    // Format price if sent as formatted string
-    if (typeof productData.price === 'string') {
-      productData.price = Number(productData.price.replace(/[^\d.]/g, ''));
-    }
-    if (typeof productData.originalPrice === 'string' && productData.originalPrice) {
-      productData.originalPrice = Number(productData.originalPrice.replace(/[^\d.]/g, ''));
-    }
-
-    // Default image fallback if none provided
-    if (!productData.images || productData.images.length === 0) {
-      productData.images = ['https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va'];
-    }
-
+    if (typeof productData.price === 'string') productData.price = Number(productData.price.replace(/[^\d.]/g, ''));
+    if (typeof productData.originalPrice === 'string' && productData.originalPrice) productData.originalPrice = Number(productData.originalPrice.replace(/[^\d.]/g, ''));
+    if (!productData.images || productData.images.length === 0) productData.images = ['https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600'];
     const product = new Product(productData);
     const createdProduct = await product.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Product created successfully',
-      data: createdProduct,
-    });
+    res.status(201).json({ success: true, message: 'Product created successfully', data: createdProduct });
   } catch (error) {
     console.error('Error creating product:', error);
     res.status(400).json({ success: false, message: error.message });
@@ -374,25 +992,10 @@ export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-
-    if (typeof updates.price === 'string') {
-      updates.price = Number(updates.price.replace(/[^\d.]/g, ''));
-    }
-
-    const updatedProduct = await Product.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updatedProduct) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Product updated successfully',
-      data: updatedProduct,
-    });
+    if (typeof updates.price === 'string') updates.price = Number(updates.price.replace(/[^\d.]/g, ''));
+    const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+    if (!updatedProduct) return res.status(404).json({ success: false, message: 'Product not found' });
+    res.status(200).json({ success: true, message: 'Product updated successfully', data: updatedProduct });
   } catch (error) {
     console.error('Error updating product:', error);
     res.status(400).json({ success: false, message: error.message });
@@ -407,15 +1010,8 @@ export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const product = await Product.findByIdAndDelete(id);
-
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Product deleted from catalog',
-    });
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+    res.status(200).json({ success: true, message: 'Product deleted from catalog' });
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -423,8 +1019,8 @@ export const deleteProduct = async (req, res) => {
 };
 
 /**
- * @desc Reset / Re-seed products with initial curated catalog
- * @route POST /api/products/seed
+ * @desc Reset and re-seed with full 40-product catalog
+ * @route POST /api/products/seed/initial
  */
 export const seedProducts = async (req, res) => {
   try {
@@ -432,7 +1028,7 @@ export const seedProducts = async (req, res) => {
     const seeded = await Product.insertMany(INITIAL_PRODUCTS);
     res.status(200).json({
       success: true,
-      message: `Successfully seeded ${seeded.length} menswear catalog items`,
+      message: 'Seeded ' + seeded.length + ' items (Shirts: 10, Tees: 10, Jackets: 10, Formals: 10)',
       data: seeded,
     });
   } catch (error) {

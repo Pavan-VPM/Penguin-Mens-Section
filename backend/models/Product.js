@@ -16,7 +16,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: ['Jackets', 'Shirts', 'Tees', 'Tailoring', 'Jeans', 'Footwear', 'Knitwear', 'Accessories', 'Outerwear'],
+      enum: ['Jackets', 'Shirts', 'Tees', 'Tailoring', 'Jeans', 'Footwear', 'Knitwear', 'Accessories', 'Outerwear', 'Formals'],
       default: 'Shirts',
     },
     color: {
