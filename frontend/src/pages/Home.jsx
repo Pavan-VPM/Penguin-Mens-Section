@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
 import { getProducts, getSiteConfig } from '../services/api'
 import ProductCard from '../components/ProductCard'
 
@@ -16,11 +17,11 @@ const HERO_SLIDES = [
   },
   {
     id: 2,
-    tag: 'WINTER CAPSULE 2025',
-    title: 'ARCHITECTURAL OUTERWEAR',
-    subtitle: 'Double-faced wool overshirts, technical bomber jackets, and cold-weather essentials engineered for urban climates.',
-    cta: 'EXPLORE WINTER DROP',
-    link: '/winter-drop',
+    tag: 'NEW ARRIVALS 2025',
+    title: 'VARSITY & STRUCTURED KNITWEAR',
+    subtitle: 'Oversized varsity pullovers, textured cable knits, and relaxed layered silhouettes crafted for all-season comfort.',
+    cta: 'EXPLORE NEW ARRIVALS',
+    link: '/collection',
     img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1920&auto=format&fit=crop'
   },
   {
@@ -34,19 +35,172 @@ const HERO_SLIDES = [
   }
 ]
 
-// Story categories (Snitch-style circular category navigation)
-const STORY_CATEGORIES = [
-  { name: 'Oversized', img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300&auto=format&fit=crop', category: 'Tees' },
-  { name: 'Luxe Shirts', img: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&auto=format&fit=crop', category: 'Shirts' },
-  { name: 'Cargos & Pants', img: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=300&auto=format&fit=crop', category: 'Tailoring' },
-  { name: 'Winter Drop', img: 'https://images.unsplash.com/photo-1548883354-7622d03aca27?w=300&auto=format&fit=crop', category: 'Jackets' },
-  { name: 'Footwear', img: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=300&auto=format&fit=crop', category: 'Footwear' },
-  { name: 'Jackets', img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&auto=format&fit=crop', category: 'Jackets' },
-  { name: 'Denim', img: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=300&auto=format&fit=crop', category: 'Jeans' },
-  { name: 'Best Sellers', img: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=300&auto=format&fit=crop', category: 'All' },
+// Specific New Arrivals collection matching Souled Store style
+const CURATED_NEW_ARRIVALS = [
+  {
+    id: 'na-1',
+    name: 'TSS Originals: Varsity Vibe',
+    subtitle: 'Oversized Pullovers',
+    category: 'Jackets',
+    badge: 'OVERSIZED FIT',
+    price: 2399,
+    originalPrice: 3499,
+    img: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'na-2',
+    name: 'TSS Originals: Autumn Mosaic',
+    subtitle: 'Men Checks And Stripes Shirts',
+    category: 'Shirts',
+    badge: 'RELAXED FIT',
+    price: 1699,
+    originalPrice: 2499,
+    img: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'na-3',
+    name: 'Spider-Man: Red Spider',
+    subtitle: 'Men Swimwear Shorts',
+    category: 'Tailoring',
+    badge: 'RELAXED FIT',
+    price: 1299,
+    originalPrice: 1999,
+    img: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'na-4',
+    name: 'Solids: Apricot Pop',
+    subtitle: 'Oversized Pullovers',
+    category: 'Jackets',
+    badge: 'OVERSIZED FIT',
+    price: 2299,
+    originalPrice: 3299,
+    img: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'na-5',
+    name: 'Linen Camp Collar Shirt',
+    subtitle: 'Relaxed Pure Linen Shirts',
+    category: 'Shirts',
+    badge: 'RELAXED FIT',
+    price: 1799,
+    originalPrice: 3299,
+    img: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'na-6',
+    name: 'Technical Bomber Jacket',
+    subtitle: 'Structured Urban Outerwear',
+    category: 'Jackets',
+    badge: 'BOX FIT',
+    price: 3499,
+    originalPrice: 5999,
+    img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'na-7',
+    name: 'Heavyweight Boxy Supima Tee',
+    subtitle: '240 GSM Luxury Organic Cotton',
+    category: 'Tees',
+    badge: 'OVERSIZED FIT',
+    price: 1199,
+    originalPrice: 1999,
+    img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'na-8',
+    name: 'Pleated Wide-Leg Trousers',
+    subtitle: 'Contemporary Tailored Pants',
+    category: 'Tailoring',
+    badge: 'REGULAR FIT',
+    price: 2499,
+    originalPrice: 3999,
+    img: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&auto=format&fit=crop&q=80',
+  },
 ]
 
-// 10 clean, open-source product images from Unsplash — curated for menswear
+// Interactive Bento Categories (Represent / Fear of God Style)
+const BENTO_CATEGORIES = [
+  {
+    id: 'bento-1',
+    title: 'Luxe Linen & Poplin Shirts',
+    subtitle: '100% Pure European linen and crisp Japanese poplin tailored with modern camp & resort collars.',
+    tag: 'SIGNATURE ATELIER',
+    count: '10 Styles',
+    spanClass: 'bento-span-8',
+    path: '/collection/shirts',
+    img: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=1200&auto=format&fit=crop&q=80',
+    badge: 'POPULAR EDIT',
+  },
+  {
+    id: 'bento-2',
+    title: 'Heavyweight Box Tees',
+    subtitle: '240 GSM organic Supima cotton with architectural drop-shoulder fit.',
+    tag: 'STREETWEAR',
+    count: '10 Styles',
+    spanClass: 'bento-span-4',
+    path: '/collection/tees',
+    img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
+    badge: 'BESTSELLER',
+  },
+  {
+    id: 'bento-3',
+    title: 'Structured Outerwear',
+    subtitle: 'Technical bombers, wool overshirts and varsity knits.',
+    tag: 'OUTERWEAR',
+    count: '10 Styles',
+    spanClass: 'bento-span-4',
+    path: '/collection/jackets',
+    img: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80',
+    badge: 'NEW SEASON',
+  },
+  {
+    id: 'bento-4',
+    title: 'Pleated Pants & Cargos',
+    subtitle: 'Ergonomic pleated trousers & versatile stretch utility chinos.',
+    tag: 'TAILORING',
+    count: '8 Styles',
+    spanClass: 'bento-span-4',
+    path: '/collection/tailoring',
+    img: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&auto=format&fit=crop&q=80',
+    badge: 'TAILORED FIT',
+  },
+  {
+    id: 'bento-5',
+    title: 'Atelier Suiting & Blazers',
+    subtitle: 'Contemporary bespoke formalwear crafted for modern occasions.',
+    tag: 'FORMALWEAR',
+    count: '10 Styles',
+    spanClass: 'bento-span-4',
+    path: '/collection/formals',
+    img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80',
+    badge: 'BESPOKE',
+  },
+  {
+    id: 'bento-6',
+    title: 'Relaxed Raw & Vintage Denim',
+    subtitle: '14 oz selvedge cotton and loose-fit streetwear denim washes.',
+    tag: 'DENIM CAPSULE',
+    count: '6 Styles',
+    spanClass: 'bento-span-6',
+    path: '/collection/jeans',
+    img: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=800&auto=format&fit=crop&q=80',
+    badge: '14 OZ SELVEDGE',
+  },
+  {
+    id: 'bento-7',
+    title: 'Monolith Footwear & Derbies',
+    subtitle: 'Lug-sole chunky derbies, minimalist trainers and leather footwear.',
+    tag: 'MONOLITH FOOTWEAR',
+    count: '5 Styles',
+    spanClass: 'bento-span-6',
+    path: '/collection/footwear',
+    img: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800&auto=format&fit=crop&q=80',
+    badge: 'LUG SOLE',
+  },
+]
+
+// Fallback products catalog
 const FALLBACK_PRODUCTS = [
   {
     id: 1,
@@ -204,97 +358,101 @@ const CATALOG_TABS = ['All', 'Shirts', 'Tees', 'Jeans', 'Jackets', 'Tailoring', 
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const { isWishlisted, toggleWishlist } = useCart()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [activeTab, setActiveTab] = useState('All')
   const [products, setProducts] = useState(FALLBACK_PRODUCTS)
-  const [siteConfig, setSiteConfig] = useState({
-    showWinterDrop: true,
-    winterDropTitle: 'WINTER DROP 01',
-    winterDropSubtitle: 'Limited capsule — Structured outerwear, heavyweight knitwear & tech bombers. Only 100 units per style.',
-    winterDropCta: 'Shop Winter Drop',
-    winterDropImage: 'https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=1200&auto=format&fit=crop',
-  })
+
+  const newArrivalsTrackRef = useRef(null)
+
+  // Scroll New Arrivals carousel horizontally
+  const scrollNewArrivals = (direction) => {
+    if (newArrivalsTrackRef.current) {
+      const scrollAmount = newArrivalsTrackRef.current.clientWidth * 0.75
+      newArrivalsTrackRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      })
+    }
+  }
 
   // Auto-advance hero carousel
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % HERO_SLIDES.length)
-    }, 5500)
+    }, 6500)
     return () => clearInterval(timer)
   }, [])
 
   // Load products from backend API
   useEffect(() => {
-    async function loadData() {
+    const fetchCatalog = async () => {
       try {
         const res = await getProducts()
-        if (res?.data && res.data.length > 0) {
+        if (res.success && res.data && res.data.length > 0) {
           const formatted = res.data.map(p => ({
             id: p._id || p.id,
             name: p.name,
-            category: p.category || 'Shirts',
-            color: p.color || 'Nocturne Black',
-            price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999,
-            originalPrice: p.originalPrice || Math.round((typeof p.price === 'number' ? p.price : 1999) * 1.65),
-            badge: p.badge || 'NEW',
-            rating: p.rating || '4.9',
-            reviewsCount: p.reviewsCount || 128,
-            images: p.images && p.images.length > 0 ? p.images : [p.img],
+            category: p.category,
+            color: p.color,
+            price: p.price,
+            originalPrice: p.originalPrice,
+            badge: p.badge,
+            isFeatured: p.isFeatured,
+            isWinterDrop: p.isWinterDrop,
+            rating: p.rating || '4.8',
+            reviewsCount: p.reviewsCount || 120,
+            images: p.images && p.images.length > 0 ? p.images : [
+              'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80'
+            ]
           }))
           setProducts(formatted)
         }
       } catch (err) {
-        console.warn('Using rich fallback catalog')
+        console.warn('Using offline mock products on Home page')
       }
     }
-    loadData()
+    fetchCatalog()
   }, [])
 
-  // Load site config (Winter Drop toggle etc.)
-  useEffect(() => {
-    async function loadConfig() {
-      try {
-        const res = await getSiteConfig()
-        if (res?.data) {
-          setSiteConfig(prev => ({ ...prev, ...res.data }))
-        }
-      } catch (err) {
-        // Use defaults
-      }
-    }
-    loadConfig()
-  }, [])
-
+  // Filter products for the bottom catalog section
   const filteredProducts = activeTab === 'All'
     ? products
-    : products.filter(p => p.category.toLowerCase() === activeTab.toLowerCase())
+    : products.filter(p => p.category && p.category.toLowerCase() === activeTab.toLowerCase())
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 40, paddingBottom: 60 }}>
-      {/* ─── 1. HERO CAROUSEL BANNER ────────────────────────────────────────── */}
+    <div className="homepage-container" style={{ display: 'flex', flexDirection: 'column', gap: 36, paddingBottom: 64 }}>
+      {/* ─── 1. HERO CAROUSEL ─────────────────────────────────────────────── */}
       <section className="hero-slider-section">
         {HERO_SLIDES.map((slide, index) => {
           const isActive = index === currentSlide
           return (
             <div
               key={slide.id}
-              className="hero-slide-item"
-              style={{
-                display: isActive ? 'flex' : 'none',
-                animation: isActive ? 'fadeIn 0.5s ease' : 'none'
-              }}
+              className={`hero-slide-item ${isActive ? 'active' : ''}`}
             >
-              <img src={slide.img} alt={slide.title} className="hero-slide-img" />
-              <div className="hero-overlay-gradient" />
+              <img
+                src={slide.img}
+                alt={slide.title}
+                className="hero-slide-bg-img"
+              />
+              <div className="hero-slide-overlay" />
 
-              <div className="content-container">
-                <div className="hero-content-box">
-                  <div className="hero-drop-tag">
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--brand-accent)' }} />
-                    {slide.tag}
-                  </div>
-                  <h1 className="hero-headline">{slide.title}</h1>
-                  <p className="hero-subheadline">{slide.subtitle}</p>
+              <div className="hero-slide-content">
+                <div className="hero-badge-capsule">
+                  <span className="hero-badge-dot" />
+                  <span>{slide.tag}</span>
+                </div>
+
+                <h1 className="hero-title-main">
+                  {slide.title}
+                </h1>
+
+                <p className="hero-subtext">
+                  {slide.subtitle}
+                </p>
+
+                <div className="hero-cta-row">
                   <button
                     onClick={() => navigate(slide.link)}
                     className="hero-cta-btn"
@@ -337,186 +495,145 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── 2. CATEGORY STORIES (Snitch Style Round Avatars) ───────────────── */}
-      <section className="content-container">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
-            Shop By Category
-          </h2>
+      {/* ─── 2. NEW ARRIVALS (Souled Store / Snitch Horizontal Slider) ──────── */}
+      <section className="content-container new-arrivals-section-wrap">
+        <h2 className="new-arrivals-heading-title">NEW ARRIVALS</h2>
+
+        <div className="new-arrivals-slider-wrapper">
+          {/* Left Arrow Button */}
           <button
-            onClick={() => navigate('/collection')}
-            style={{ background: 'none', border: 'none', color: 'var(--brand-accent)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            className="new-arrivals-slider-nav-btn prev-btn"
+            onClick={() => scrollNewArrivals('left')}
+            aria-label="Previous New Arrivals"
+            title="Scroll Left"
           >
-            View All →
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>chevron_left</span>
+          </button>
+
+          {/* Product Cards Track */}
+          <div className="new-arrivals-track no-scrollbar" ref={newArrivalsTrackRef}>
+            {CURATED_NEW_ARRIVALS.map((item) => (
+              <div
+                key={item.id}
+                className="new-arrivals-card"
+                onClick={() => navigate(`/collection`)}
+              >
+                <div className="new-arrivals-media-container">
+                  <img src={item.img} alt={item.name} className="new-arrivals-img" loading="lazy" />
+                  {item.badge && (
+                    <span className="new-arrivals-badge-tag">
+                      {item.badge}
+                    </span>
+                  )}
+                  <button
+                    className={`new-arrivals-wish-btn ${isWishlisted(item.id) ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleWishlist(item.id)
+                    }}
+                    aria-label="Wishlist"
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{
+                        fontSize: 18,
+                        fontVariationSettings: isWishlisted(item.id) ? "'FILL' 1" : "'FILL' 0",
+                        color: isWishlisted(item.id) ? 'var(--brand-accent)' : 'inherit'
+                      }}
+                    >
+                      favorite
+                    </span>
+                  </button>
+                </div>
+                <div className="new-arrivals-details">
+                  <h3 className="new-arrivals-title">{item.name}</h3>
+                  <p className="new-arrivals-subtitle">{item.subtitle}</p>
+                  <div className="new-arrivals-price-row">
+                    <span className="new-arrivals-price-main">₹ {item.price.toLocaleString('en-IN')}</span>
+                    {item.originalPrice && (
+                      <span className="new-arrivals-price-original">₹ {item.originalPrice.toLocaleString('en-IN')}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right Arrow Button */}
+          <button
+            className="new-arrivals-slider-nav-btn next-btn"
+            onClick={() => scrollNewArrivals('right')}
+            aria-label="Next New Arrivals"
+            title="Scroll Right"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>chevron_right</span>
           </button>
         </div>
+      </section>
 
-        <div className="category-stories-wrapper no-scrollbar">
-          {STORY_CATEGORIES.map(story => (
+      {/* ─── 3. INTERACTIVE BENTO GLASSMORPHISM CATEGORIES (Represent Style) ─ */}
+      <section className="content-container bento-glass-section">
+        <div className="bento-header-center">
+          <span className="bento-pill-tag">
+            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--brand-accent)' }} />
+            CURATED CAPSULES
+          </span>
+          <h2 className="new-arrivals-heading-title" style={{ marginBottom: 8 }}>
+            SHOP BY CATEGORY
+          </h2>
+          <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', maxWidth: 540, margin: '0 auto' }}>
+            Precision-engineered silhouettes crafted with architectural drape and modern streetwear proportions.
+          </p>
+        </div>
+
+        <div className="bento-grid-modern">
+          {BENTO_CATEGORIES.map((item) => (
             <div
-              key={story.name}
-              className="story-circle-item"
-              onClick={() => {
-                if (story.category === 'All') navigate('/collection')
-                else if (story.name === 'Winter Drop') navigate('/winter-drop')
-                else navigate(`/collection/${story.category.toLowerCase()}`)
-              }}
+              key={item.id}
+              className={`bento-card-glass ${item.spanClass}`}
+              onClick={() => navigate(item.path)}
             >
-              <div className="story-avatar-ring">
-                <img src={story.img} alt={story.name} className="story-avatar-img" />
+              <img
+                src={item.img}
+                alt={item.title}
+                className="bento-card-bg-img"
+                loading="lazy"
+              />
+              <div className="bento-glass-overlay" />
+
+              {item.badge && (
+                <span className="bento-top-badge">
+                  {item.badge}
+                </span>
+              )}
+
+              {item.count && (
+                <span className="bento-count-badge">
+                  {item.count}
+                </span>
+              )}
+
+              <div className="bento-card-content">
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--brand-accent)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                  {item.tag}
+                </span>
+                <h3 className="bento-category-title">{item.title}</h3>
+                {item.subtitle && (
+                  <p className="bento-category-subtitle">{item.subtitle}</p>
+                )}
+                <div className="bento-explore-cta">
+                  <span className="bento-explore-cta-pill">
+                    Explore Collection
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_forward</span>
+                  </span>
+                </div>
               </div>
-              <span className="story-label-text">{story.name}</span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ─── 3. WINTER DROP PROMO BANNER (Admin-controlled toggle) ─────────── */}
-      {siteConfig.showWinterDrop && (
-        <section className="content-container">
-          <div style={{
-            position: 'relative',
-            borderRadius: 'var(--radius-md)',
-            overflow: 'hidden',
-            minHeight: 160,
-            display: 'flex',
-            alignItems: 'center',
-            backgroundColor: '#0a0a0c',
-            boxShadow: 'var(--shadow-md)',
-          }}>
-            {siteConfig.winterDropImage && (
-              <img
-                src={siteConfig.winterDropImage}
-                alt="Winter Drop"
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
-              />
-            )}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%)' }} />
-
-            <div style={{ position: 'relative', zIndex: 1, padding: '24px 28px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16, width: '100%' }}>
-              <div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, backgroundColor: 'var(--brand-accent)', color: '#fff', padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', marginBottom: 10 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#fff' }} />
-                  LIMITED CAPSULE
-                </div>
-                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(18px, 4vw, 26px)', fontWeight: 900, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '-0.01em', margin: '0 0 6px' }}>
-                  {siteConfig.winterDropTitle || 'WINTER DROP 01'}
-                </h2>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', maxWidth: 460, lineHeight: 1.5, margin: 0 }}>
-                  {siteConfig.winterDropSubtitle || 'Limited capsule — Only 100 units per style.'}
-                </p>
-              </div>
-              <button
-                onClick={() => navigate('/winter-drop')}
-                className="btn-solid-accent"
-                style={{ height: 44, padding: '0 24px', fontSize: 12, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}
-              >
-                {siteConfig.winterDropCta || 'Shop Drop'}
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ─── 4. SIGNATURE BENTO COLLECTIONS (Snitch Showcase Style) ─────────── */}
-      <section className="content-container">
-        <div className="section-header-wrap">
-          <span className="section-tag-pill">CURATED COLLECTIONS</span>
-          <h2 className="section-main-title">EXPLORE THE EDITS</h2>
-          <p className="section-sub-desc">Handcrafted wardrobe capsules designed for comfort, luxury drape, and streetwear presence.</p>
-        </div>
-
-        <div className="bento-collection-grid">
-          {/* Main Large Bento Tile */}
-          <div
-            className="bento-card-tile"
-            onClick={() => navigate('/collection/shirts')}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop"
-              alt="Luxe Linen & Poplin"
-              className="bento-tile-img"
-            />
-            <div className="bento-tile-overlay" />
-            <div className="bento-tile-content">
-              <span className="bento-tile-tag">SIGNATURE ATELIER</span>
-              <h3 className="bento-tile-title">Luxe Linen & Poplin Shirts</h3>
-              <p style={{ fontSize: 13, opacity: 0.9 }}>Ultra-breathable Japanese poplin crafted for tropical versatility.</p>
-            </div>
-          </div>
-
-          {/* Compact Bento Tile 1 */}
-          <div
-            className="bento-card-tile"
-            onClick={() => navigate('/winter-drop')}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800&auto=format&fit=crop"
-              alt="Winter Outerwear"
-              className="bento-tile-img"
-            />
-            <div className="bento-tile-overlay" />
-            <div className="bento-tile-content">
-              <span className="bento-tile-tag">WINTER 2025</span>
-              <h3 className="bento-tile-title">Structured Outerwear</h3>
-            </div>
-          </div>
-
-          {/* Compact Bento Tile 2 */}
-          <div
-            className="bento-card-tile"
-            onClick={() => navigate('/collection/shirts')}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop"
-              alt="Oversized Heavyweight"
-              className="bento-tile-img"
-            />
-            <div className="bento-tile-overlay" />
-            <div className="bento-tile-content">
-              <span className="bento-tile-tag">STREETWEAR</span>
-              <h3 className="bento-tile-title">Heavyweight Boxy Tees</h3>
-            </div>
-          </div>
-
-          {/* Compact Bento Tile 3 */}
-          <div
-            className="bento-card-tile"
-            onClick={() => navigate('/collection/shirts')}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?q=80&w=800&auto=format&fit=crop"
-              alt="Pleated Trousers"
-              className="bento-tile-img"
-            />
-            <div className="bento-tile-overlay" />
-            <div className="bento-tile-content">
-              <span className="bento-tile-tag">TAILORING</span>
-              <h3 className="bento-tile-title">Pleated & Cargo Trousers</h3>
-            </div>
-          </div>
-
-          {/* Compact Bento Tile 4 */}
-          <div
-            className="bento-card-tile"
-            onClick={() => navigate('/collection/shirts')}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=800&auto=format&fit=crop"
-              alt="Monolith Derbies"
-              className="bento-tile-img"
-            />
-            <div className="bento-tile-overlay" />
-            <div className="bento-tile-content">
-              <span className="bento-tile-tag">FOOTWEAR</span>
-              <h3 className="bento-tile-title">Lug-Sole Monolith Footwear</h3>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── 5. PRODUCT CATALOG & TABS (Bestsellers & New Arrivals) ─────────── */}
+      {/* ─── 5. PRODUCT CATALOG & TABS ─────────────────────────────────────── */}
       <section className="content-container">
         <div className="section-header-wrap">
           <span className="section-tag-pill">TRENDING NOW</span>
@@ -567,52 +684,6 @@ export default function HomePage() {
             <span>Explore Entire Catalog ({products.length} Items)</span>
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
           </button>
-        </div>
-      </section>
-
-      {/* ─── 6. EDITORIAL CAMPAIGN SECTION ─────────────────────────────────── */}
-      <section className="content-container">
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          borderRadius: 'var(--radius-lg)',
-          overflow: 'hidden',
-          backgroundColor: 'var(--bg-secondary)',
-          border: '1px solid var(--border-light)'
-        }}>
-          <div style={{ position: 'relative', minHeight: 380 }}>
-            <img
-              src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1200&auto=format&fit=crop"
-              alt="Editorial Campaign"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
-
-          <div style={{ padding: '40px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16 }}>
-            <span className="section-tag-pill">THE PENGUIN PHILOSOPHY</span>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.2 }}>
-              REDEFINE YOUR EVERYDAY SILHOUETTE
-            </h2>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              We reject fleeting trends in favor of timeless structural forms. Each Penguin garment is engineered using high-density organic textiles, reinforced stress seams, and thoughtful ergonomic proportions.
-            </p>
-            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-              <button
-                onClick={() => navigate('/winter-drop')}
-                className="btn-solid-accent"
-                style={{ height: 44, fontSize: 12 }}
-              >
-                Shop Drop 01
-              </button>
-              <button
-                onClick={() => navigate('/collection/shirts')}
-                className="btn-outline"
-                style={{ height: 44, fontSize: 12 }}
-              >
-                Learn More
-              </button>
-            </div>
-          </div>
         </div>
       </section>
     </div>

@@ -9,8 +9,8 @@ export default function BottomNav() {
 
   const NAV_ITEMS = [
     { icon: 'home', label: 'Home', path: '/' },
-    { icon: 'grid_view', label: 'Shop', path: '/collection/shirts' },
-    { icon: 'local_fire_department', label: 'Drops', path: '/winter-drop', badge: 'HOT' },
+    { icon: 'grid_view', label: 'Shop', path: '/collection' },
+    { icon: 'auto_awesome', label: 'New', path: '/collection', badge: 'NEW' },
     { icon: 'favorite', label: 'Wishlist', path: '/wishlist', count: wishlist.length },
     { icon: 'shopping_bag', label: 'Bag', path: '/cart', count: cartCount },
   ]

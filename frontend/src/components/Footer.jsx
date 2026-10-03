@@ -60,7 +60,7 @@ export default function Footer() {
               Shop Categories
             </h4>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--text-secondary)' }}>
-              <li><button onClick={() => navigate('/winter-drop')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>New Arrivals (Drop 01)</button></li>
+              <li><button onClick={() => navigate('/collection')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>New Arrivals</button></li>
               <li><button onClick={() => navigate('/collection/shirts')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Luxe Shirts</button></li>
               <li><button onClick={() => navigate('/collection/tees')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Oversized T-Shirts</button></li>
               <li><button onClick={() => navigate('/collection/jackets')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Jackets & Outerwear</button></li>

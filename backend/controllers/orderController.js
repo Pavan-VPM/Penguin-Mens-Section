@@ -74,6 +74,16 @@ const INITIAL_ORDERS = [
   },
 ];
 
+import mongoose from 'mongoose';
+
+// In-Memory store fallback for orders
+let inMemoryOrders = INITIAL_ORDERS.map((ord, idx) => ({
+  ...ord,
+  _id: `mock_order_${idx + 1}`,
+  createdAt: new Date(Date.now() - (idx + 1) * 86400000).toISOString(),
+  updatedAt: new Date().toISOString(),
+}));
+
 /**
  * @desc Create new customer order
  * @route POST /api/orders
@@ -88,7 +98,41 @@ export const createOrder = async (req, res) => {
 
     const orderNumber = `PGN-FW25-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const order = new Order({
+    if (mongoose.connection.readyState === 1) {
+      const order = new Order({
+        orderNumber,
+        customer: customer || {
+          name: 'Guest Client',
+          email: 'client@atelier.com',
+          phone: '+91 98765 43210',
+          address: 'Bespoke Delivery Address',
+          city: 'Mumbai',
+          postalCode: '400001',
+          country: 'India',
+        },
+        items,
+        subtotal: subtotal || items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0),
+        discount: discount || 0,
+        tax: tax || 0,
+        totalAmount: totalAmount || subtotal,
+        paymentMethod: paymentMethod || 'upi',
+        paymentStatus: 'paid',
+        orderStatus: 'Processing',
+        courier: 'DHL Express',
+        trackingNumber: `DHL-${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+      });
+
+      const savedOrder = await order.save();
+      return res.status(201).json({
+        success: true,
+        message: 'Order created successfully',
+        data: savedOrder,
+      });
+    }
+
+    // In-memory fallback
+    const mockOrder = {
+      _id: `mock_order_${Date.now()}`,
       orderNumber,
       customer: customer || {
         name: 'Guest Client',
@@ -109,14 +153,16 @@ export const createOrder = async (req, res) => {
       orderStatus: 'Processing',
       courier: 'DHL Express',
       trackingNumber: `DHL-${Math.floor(1000000000 + Math.random() * 9000000000)}`,
-    });
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    const savedOrder = await order.save();
+    inMemoryOrders.unshift(mockOrder);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: 'Order created successfully',
-      data: savedOrder,
+      message: 'Order created successfully (In-Memory)',
+      data: mockOrder,
     });
   } catch (error) {
     console.error('Error creating order:', error);
@@ -130,17 +176,23 @@ export const createOrder = async (req, res) => {
  */
 export const getAllOrders = async (req, res) => {
   try {
-    let orders = await Order.find().sort({ createdAt: -1 });
-
-    if (orders.length === 0) {
-      await Order.insertMany(INITIAL_ORDERS);
-      orders = await Order.find().sort({ createdAt: -1 });
+    if (mongoose.connection.readyState === 1) {
+      let orders = await Order.find().sort({ createdAt: -1 });
+      if (orders.length === 0) {
+        await Order.insertMany(INITIAL_ORDERS);
+        orders = await Order.find().sort({ createdAt: -1 });
+      }
+      return res.status(200).json({
+        success: true,
+        count: orders.length,
+        data: orders,
+      });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      count: orders.length,
-      data: orders,
+      count: inMemoryOrders.length,
+      data: inMemoryOrders,
     });
   } catch (error) {
     console.error('Error fetching orders:', error);
@@ -157,20 +209,42 @@ export const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { orderStatus, trackingNumber, courier, paymentStatus } = req.body;
 
-    const order = await Order.findByIdAndUpdate(
-      id,
-      { orderStatus, trackingNumber, courier, paymentStatus },
-      { new: true }
-    );
+    if (mongoose.connection.readyState === 1) {
+      const order = await Order.findByIdAndUpdate(
+        id,
+        { orderStatus, trackingNumber, courier, paymentStatus },
+        { new: true }
+      );
 
-    if (!order) {
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Order updated successfully',
+        data: order,
+      });
+    }
+
+    const orderIdx = inMemoryOrders.findIndex(o => o._id === id || o.orderNumber === id);
+    if (orderIdx === -1) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    res.status(200).json({
+    inMemoryOrders[orderIdx] = {
+      ...inMemoryOrders[orderIdx],
+      ...(orderStatus && { orderStatus }),
+      ...(trackingNumber && { trackingNumber }),
+      ...(courier && { courier }),
+      ...(paymentStatus && { paymentStatus }),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return res.status(200).json({
       success: true,
-      message: 'Order updated successfully',
-      data: order,
+      message: 'Order updated successfully (In-Memory)',
+      data: inMemoryOrders[orderIdx],
     });
   } catch (error) {
     console.error('Error updating order:', error);

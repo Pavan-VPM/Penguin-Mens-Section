@@ -34,10 +34,13 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/penguin_mens_store';
 
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 2000,
+    connectTimeoutMS: 2000,
+  })
   .then(() => console.log('🍃 MongoDB connected successfully!'))
   .catch((err) => {
-    console.warn('⚠️ MongoDB connection error (using in-memory fallback if needed):', err.message);
+    console.warn('⚠️ MongoDB connection unavailable. Backend will operate seamlessly in resilient In-Memory Mode.');
   });
 
 // API Health Check

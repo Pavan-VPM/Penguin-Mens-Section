@@ -894,6 +894,16 @@ export const INITIAL_PRODUCTS = [
   }
 ];
 
+import mongoose from 'mongoose';
+
+// In-Memory store fallback for offline database environments
+let inMemoryProducts = INITIAL_PRODUCTS.map((prod, index) => ({
+  ...prod,
+  _id: `mock_prod_${index + 1}`,
+  createdAt: new Date(Date.now() - index * 3600000).toISOString(),
+  updatedAt: new Date().toISOString(),
+}));
+
 /**
  * @desc Get all products with filtering, searching, and sorting
  * @route GET /api/products
@@ -901,29 +911,59 @@ export const INITIAL_PRODUCTS = [
 export const getProducts = async (req, res) => {
   try {
     const { category, isWinterDrop, isFeatured, search, sort } = req.query;
-    let query = {};
-    if (category && category !== 'All') query.category = new RegExp('^' + category + '$', 'i');
-    if (isWinterDrop === 'true') query.isWinterDrop = true;
-    if (isFeatured === 'true') query.isFeatured = true;
+
+    if (mongoose.connection.readyState === 1) {
+      let query = {};
+      if (category && category !== 'All') query.category = new RegExp('^' + category + '$', 'i');
+      if (isWinterDrop === 'true') query.isWinterDrop = true;
+      if (isFeatured === 'true') query.isFeatured = true;
+      if (search) {
+        query['$or'] = [
+          { name: { $regex: search, $options: 'i' } },
+          { category: { $regex: search, $options: 'i' } },
+          { color: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
+        ];
+      }
+      let sortOptions = { createdAt: -1 };
+      if (sort === 'price_asc') sortOptions = { price: 1 };
+      if (sort === 'price_desc') sortOptions = { price: -1 };
+      if (sort === 'name_asc') sortOptions = { name: 1 };
+      
+      let products = await Product.find(query).sort(sortOptions);
+      if (products.length === 0 && Object.keys(query).length === 0) {
+        await Product.insertMany(INITIAL_PRODUCTS);
+        products = await Product.find().sort(sortOptions);
+      }
+      return res.status(200).json({ success: true, count: products.length, data: products });
+    }
+
+    // In-memory fallback
+    let filtered = [...inMemoryProducts];
+    if (category && category !== 'All') {
+      filtered = filtered.filter(p => p.category && p.category.toLowerCase() === category.toLowerCase());
+    }
+    if (isWinterDrop === 'true') {
+      filtered = filtered.filter(p => p.isWinterDrop === true);
+    }
+    if (isFeatured === 'true') {
+      filtered = filtered.filter(p => p.isFeatured === true);
+    }
     if (search) {
-      query['$or'] = [
-        { name: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },
-        { color: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
+      const q = search.toLowerCase();
+      filtered = filtered.filter(p =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.category && p.category.toLowerCase().includes(q)) ||
+        (p.color && p.color.toLowerCase().includes(q)) ||
+        (p.description && p.description.toLowerCase().includes(q))
+      );
     }
-    let sortOptions = { createdAt: -1 };
-    if (sort === 'price_asc') sortOptions = { price: 1 };
-    if (sort === 'price_desc') sortOptions = { price: -1 };
-    if (sort === 'name_asc') sortOptions = { name: 1 };
-    
-    let products = await Product.find(query).sort(sortOptions);
-    if (products.length === 0 && Object.keys(query).length === 0) {
-      await Product.insertMany(INITIAL_PRODUCTS);
-      products = await Product.find().sort(sortOptions);
-    }
-    res.status(200).json({ success: true, count: products.length, data: products });
+
+    if (sort === 'price_asc') filtered.sort((a, b) => a.price - b.price);
+    else if (sort === 'price_desc') filtered.sort((a, b) => b.price - a.price);
+    else if (sort === 'name_asc') filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    return res.status(200).json({ success: true, count: filtered.length, data: filtered });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -937,28 +977,43 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    let product = null;
 
-    if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
-      product = await Product.findById(id);
+    if (mongoose.connection.readyState === 1) {
+      let product = null;
+      if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
+        product = await Product.findById(id);
+      }
+      if (!product) {
+        product = await Product.findOne({ slug: id });
+      }
+      if (!product && !isNaN(Number(id))) {
+        const idx = parseInt(id, 10) - 1;
+        const all = await Product.find().sort({ createdAt: 1 });
+        if (idx >= 0 && idx < all.length) {
+          product = all[idx];
+        }
+      }
+      if (!product) {
+        product = INITIAL_PRODUCTS.find(p => p.slug === id || String(p.id) === String(id));
+      }
+      if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+      return res.status(200).json({ success: true, data: product });
     }
-    if (!product) {
-      product = await Product.findOne({ slug: id });
-    }
+
+    // In-memory fallback
+    let product = inMemoryProducts.find(
+      p => p._id === id || p.slug === id || String(p.id) === String(id)
+    );
     if (!product && !isNaN(Number(id))) {
       const idx = parseInt(id, 10) - 1;
-      const all = await Product.find().sort({ createdAt: 1 });
-      if (idx >= 0 && idx < all.length) {
-        product = all[idx];
+      if (idx >= 0 && idx < inMemoryProducts.length) {
+        product = inMemoryProducts[idx];
       }
     }
-    if (!product) {
-      // Fallback lookup from INITIAL_PRODUCTS
-      product = INITIAL_PRODUCTS.find(p => p.slug === id || String(p.id) === String(id)) || INITIAL_PRODUCTS[0];
-    }
+    if (!product) product = inMemoryProducts[0];
 
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-    res.status(200).json({ success: true, data: product });
+    return res.status(200).json({ success: true, data: product });
   } catch (error) {
     console.error('Error fetching product:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -975,9 +1030,22 @@ export const createProduct = async (req, res) => {
     if (typeof productData.price === 'string') productData.price = Number(productData.price.replace(/[^\d.]/g, ''));
     if (typeof productData.originalPrice === 'string' && productData.originalPrice) productData.originalPrice = Number(productData.originalPrice.replace(/[^\d.]/g, ''));
     if (!productData.images || productData.images.length === 0) productData.images = ['https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600'];
-    const product = new Product(productData);
-    const createdProduct = await product.save();
-    res.status(201).json({ success: true, message: 'Product created successfully', data: createdProduct });
+
+    if (mongoose.connection.readyState === 1) {
+      const product = new Product(productData);
+      const createdProduct = await product.save();
+      return res.status(201).json({ success: true, message: 'Product created successfully', data: createdProduct });
+    }
+
+    const createdProduct = {
+      ...productData,
+      _id: `mock_prod_${Date.now()}`,
+      slug: productData.slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : `item-${Date.now()}`),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    inMemoryProducts.unshift(createdProduct);
+    return res.status(201).json({ success: true, message: 'Product created successfully (In-Memory)', data: createdProduct });
   } catch (error) {
     console.error('Error creating product:', error);
     res.status(400).json({ success: false, message: error.message });
@@ -993,9 +1061,19 @@ export const updateProduct = async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     if (typeof updates.price === 'string') updates.price = Number(updates.price.replace(/[^\d.]/g, ''));
-    const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
-    if (!updatedProduct) return res.status(404).json({ success: false, message: 'Product not found' });
-    res.status(200).json({ success: true, message: 'Product updated successfully', data: updatedProduct });
+
+    if (mongoose.connection.readyState === 1) {
+      const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+      if (!updatedProduct) return res.status(404).json({ success: false, message: 'Product not found' });
+      return res.status(200).json({ success: true, message: 'Product updated successfully', data: updatedProduct });
+    }
+
+    const index = inMemoryProducts.findIndex(p => p._id === id || p.slug === id);
+    if (index === -1) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    inMemoryProducts[index] = { ...inMemoryProducts[index], ...updates, updatedAt: new Date().toISOString() };
+    return res.status(200).json({ success: true, message: 'Product updated successfully', data: inMemoryProducts[index] });
   } catch (error) {
     console.error('Error updating product:', error);
     res.status(400).json({ success: false, message: error.message });
@@ -1009,9 +1087,19 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await Product.findByIdAndDelete(id);
-    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-    res.status(200).json({ success: true, message: 'Product deleted from catalog' });
+
+    if (mongoose.connection.readyState === 1) {
+      const product = await Product.findByIdAndDelete(id);
+      if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+      return res.status(200).json({ success: true, message: 'Product deleted from catalog' });
+    }
+
+    const initialLength = inMemoryProducts.length;
+    inMemoryProducts = inMemoryProducts.filter(p => p._id !== id && p.slug !== id);
+    if (inMemoryProducts.length === initialLength) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    return res.status(200).json({ success: true, message: 'Product deleted from catalog' });
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -1024,12 +1112,26 @@ export const deleteProduct = async (req, res) => {
  */
 export const seedProducts = async (req, res) => {
   try {
-    await Product.deleteMany({});
-    const seeded = await Product.insertMany(INITIAL_PRODUCTS);
-    res.status(200).json({
+    if (mongoose.connection.readyState === 1) {
+      await Product.deleteMany({});
+      const seeded = await Product.insertMany(INITIAL_PRODUCTS);
+      return res.status(200).json({
+        success: true,
+        message: 'Seeded ' + seeded.length + ' items in MongoDB',
+        data: seeded,
+      });
+    }
+
+    inMemoryProducts = INITIAL_PRODUCTS.map((prod, index) => ({
+      ...prod,
+      _id: `mock_prod_${index + 1}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+    return res.status(200).json({
       success: true,
-      message: 'Seeded ' + seeded.length + ' items (Shirts: 10, Tees: 10, Jackets: 10, Formals: 10)',
-      data: seeded,
+      message: 'Seeded ' + inMemoryProducts.length + ' items (In-Memory Store)',
+      data: inMemoryProducts,
     });
   } catch (error) {
     console.error('Error seeding products:', error);

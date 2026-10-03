@@ -8,12 +8,12 @@ import brandLogoDark from '../assets/logo-dark.png'
 import brandLogoLight from '../assets/logo-light.png'
 
 const MAIN_NAV_LINKS = [
-  { label: 'New Arrivals', path: '/winter-drop', badge: 'NEW' },
+  { label: 'New Arrivals', path: '/collection', badge: 'NEW' },
   { label: 'Shirts', path: '/collection/shirts' },
   { label: 'T-Shirts & Tops', path: '/collection/tees' },
   { label: 'Jackets & Outerwear', path: '/collection/jackets' },
   { label: 'Formalwear & Suits', path: '/collection/formals' },
-  { label: 'Winter Drop', path: '/winter-drop', badge: 'HOT' },
+  { label: 'All Products', path: '/collection' },
   { label: 'Wishlist', path: '/wishlist' },
 ]
 

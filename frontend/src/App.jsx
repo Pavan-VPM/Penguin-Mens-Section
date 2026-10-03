@@ -5,7 +5,6 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import BottomNav from './components/BottomNav'
 import HomePage from './pages/Home'
-import WinterDropPage from './pages/WinterDrop'
 import CollectionPage from './pages/Collection'
 import ProductDetailPage from './pages/ProductDetail'
 import CartPage from './pages/Cart'
@@ -57,7 +56,7 @@ export default function App() {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/winter-drop" element={<WinterDropPage />} />
+              <Route path="/winter-drop" element={<Navigate to="/collection" replace />} />
               <Route path="/collection" element={<CollectionPage />} />
               <Route path="/collection/:category" element={<CollectionPage />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />

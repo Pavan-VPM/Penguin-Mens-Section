@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 
 const generateToken = (id) => {
@@ -37,11 +38,33 @@ export const adminLogin = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
+    const defaultAdminEmail = process.env.ADMIN_EMAIL || 'admin@penguin.com';
+    const defaultAdminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    if (mongoose.connection.readyState !== 1) {
+      if (email === defaultAdminEmail && password === defaultAdminPassword) {
+        const token = jwt.sign({ id: 'admin_offline_id', role: 'admin' }, process.env.JWT_SECRET || 'penguin_default_secret', {
+          expiresIn: '30d',
+        });
+        return res.status(200).json({
+          success: true,
+          token,
+          user: {
+            id: 'admin_offline_id',
+            name: 'Atelier Administrator',
+            email: defaultAdminEmail,
+            role: 'admin',
+          },
+        });
+      }
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
     let user = await User.findOne({ email });
 
     if (!user) {
       // Auto-create default admin if first time
-      if (email === process.env.ADMIN_EMAIL || email === 'admin@penguin.com') {
+      if (email === defaultAdminEmail) {
         user = await User.create({
           name: 'Atelier Administrator',
           email: email,
