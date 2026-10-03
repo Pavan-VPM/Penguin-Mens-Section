@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useTheme } from '../context/ThemeContext'
-import AnnouncementBar from './AnnouncementBar'
+
 import QuickCartDrawer from './QuickCartDrawer'
 import brandLogoDark from '../assets/logo-dark.png'
 import brandLogoLight from '../assets/logo-light.png'
@@ -56,16 +56,14 @@ export default function Header() {
 
   return (
     <>
-      {/* Top Announcement Ticker */}
-      <AnnouncementBar />
 
       {/* Main Sticky Header */}
       <header className={`app-header ${isScrolled ? 'scrolled' : ''}`}>
         <div className="content-container">
-          <div className="header-main-row">
-            {/* Left: Menu Toggle & Brand Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {/* Menu Drawer Trigger */}
+          <div className="header-main-row" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
+
+            {/* Left: Menu Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               <button
                 className="header-icon-btn"
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -74,56 +72,49 @@ export default function Header() {
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 24 }}>menu</span>
               </button>
-
-              {/* Brand Logo */}
-              <div className="brand-logo-wrap" onClick={() => navigate('/')}>
-                <img
-                  src={brandLogo}
-                  alt="PENGUIN Menswear"
-                  style={{ height: 44, width: 'auto', objectFit: 'contain' }}
-                />
-              </div>
             </div>
 
-            {/* Right: Search, Wishlist, Bag, Theme, Account */}
-            <div className="header-actions">
-              {/* Desktop Search Input Box */}
-              <form onSubmit={handleSearchSubmit} className="header-search-box">
-                <span 
-                  className="material-symbols-outlined" 
-                  style={{ position: 'absolute', left: 12, top: 10, fontSize: 20, color: 'var(--text-muted)' }}
-                >
-                  search
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search shirts, jackets, tees..."
-                  className="header-search-input"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </form>
+            {/* Center: Brand Logo */}
+            <div className="brand-logo-wrap" onClick={() => navigate('/')} style={{ display: 'flex', justifyContent: 'center' }}>
+              <img
+                src={brandLogo}
+                alt="PENGUIN Menswear"
+                style={{ height: 44, width: 'auto', objectFit: 'contain' }}
+              />
+            </div>
 
-              {/* Mobile Search Icon */}
+            {/* Right: Icons */}
+            <div className="header-actions" style={{ justifyContent: 'flex-end' }}>
+
+              {/* Search Icon */}
               <button
-                className="header-icon-btn search-icon-mobile"
+                className="header-icon-btn"
                 onClick={() => navigate('/search')}
                 aria-label="Search"
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 22 }}>search</span>
               </button>
 
-              {/* Wishlist Icon */}
+              {/* Account Icon (Shown in Mobile & Desktop) */}
               <button
                 className="header-icon-btn"
+                onClick={() => navigate('/account')}
+                aria-label="Account"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>person</span>
+              </button>
+
+              {/* Wishlist Icon (Desktop only) */}
+              <button
+                className="header-icon-btn desktop-only"
                 onClick={() => navigate('/wishlist')}
                 aria-label="Wishlist"
               >
-                <span 
-                  className="material-symbols-outlined" 
-                  style={{ 
-                    fontSize: 22, 
-                    fontVariationSettings: wishlist.length > 0 ? "'FILL' 1" : "'FILL' 0" 
+                <span
+                  className="material-symbols-outlined"
+                  style={{
+                    fontSize: 22,
+                    fontVariationSettings: wishlist.length > 0 ? "'FILL' 1" : "'FILL' 0"
                   }}
                 >
                   favorite
@@ -133,9 +124,9 @@ export default function Header() {
                 )}
               </button>
 
-              {/* Shopping Bag Icon with Quick Drawer */}
+              {/* Shopping Bag Icon with Quick Drawer (Desktop only) */}
               <button
-                className="header-icon-btn"
+                className="header-icon-btn desktop-only"
                 onClick={() => setIsCartDrawerOpen(true)}
                 aria-label="Open Shopping Bag"
               >
@@ -145,9 +136,9 @@ export default function Header() {
                 )}
               </button>
 
-              {/* Theme Switcher Toggle */}
+              {/* Theme Switcher Toggle (Desktop only) */}
               <button
-                className="header-icon-btn"
+                className="header-icon-btn desktop-only"
                 onClick={toggleTheme}
                 title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
                 aria-label="Toggle Theme"
@@ -160,6 +151,7 @@ export default function Header() {
           </div>
         </div>
       </header>
+
 
       {/* Mobile Slide-Out Drawer Navigation */}
       {isMobileMenuOpen && (

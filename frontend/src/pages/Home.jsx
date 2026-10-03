@@ -200,6 +200,19 @@ const BENTO_CATEGORIES = [
   },
 ]
 
+// Minimal Clean Mobile Categories (Snitch Style)
+const MOBILE_CATEGORIES = [
+  { id: 'shirts', title: 'SHIRTS', path: '/collection/shirts', img: '/categories/shirts.png' },
+  { id: 'trousers', title: 'TROUSERS', path: '/collection/tailoring', img: '/categories/trousers.png' },
+  { id: 'tshirts', title: 'T-SHIRTS', path: '/collection/tees', img: '/categories/tshirts.png' },
+  { id: 'jeans', title: 'JEANS', path: '/collection/jeans', img: '/categories/jeans.png' },
+  { id: 'cargos', title: 'CARGOS', path: '/collection/tailoring', img: '/categories/cargos.png' },
+  { id: 'polos', title: 'POLOS', path: '/collection/shirts', img: '/categories/polos.png' },
+  { id: 'outerwear', title: 'OUTERWEAR', path: '/collection/jackets', img: '/categories/outerwear.png' },
+  { id: 'plussize', title: 'PLUS SIZE', path: '/collection', badge: '3XL TO 6XL', img: '/categories/plussize.png' },
+  { id: 'shoes', title: 'SHOES', path: '/collection/footwear', badge: 'JUST LAUNCHED', img: '/categories/shoes.png' },
+]
+
 // Fallback products catalog
 const FALLBACK_PRODUCTS = [
   {
@@ -439,18 +452,11 @@ export default function HomePage() {
               <div className="hero-slide-overlay" />
 
               <div className="hero-slide-content">
-                <div className="hero-badge-capsule">
-                  <span className="hero-badge-dot" />
-                  <span>{slide.tag}</span>
-                </div>
+
 
                 <h1 className="hero-title-main">
                   {slide.title}
                 </h1>
-
-                <p className="hero-subtext">
-                  {slide.subtitle}
-                </p>
 
                 <div className="hero-cta-row">
                   <button
@@ -458,7 +464,7 @@ export default function HomePage() {
                     className="hero-cta-btn"
                   >
                     <span>{slide.cta}</span>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
                   </button>
                 </div>
               </div>
@@ -550,9 +556,6 @@ export default function HomePage() {
                   <p className="new-arrivals-subtitle">{item.subtitle}</p>
                   <div className="new-arrivals-price-row">
                     <span className="new-arrivals-price-main">₹ {item.price.toLocaleString('en-IN')}</span>
-                    {item.originalPrice && (
-                      <span className="new-arrivals-price-original">₹ {item.originalPrice.toLocaleString('en-IN')}</span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -571,19 +574,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── 3. INTERACTIVE BENTO GLASSMORPHISM CATEGORIES (Represent Style) ─ */}
-      <section className="content-container bento-glass-section">
+      {/* ─── 3. CATEGORIES: DESKTOP BENTO & MOBILE CLEAN MINIMAL GRID ─ */}
+      <section className="content-container bento-glass-section desktop-only">
         <div className="bento-header-center">
-          <span className="bento-pill-tag">
-            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--brand-accent)' }} />
-            CURATED CAPSULES
-          </span>
-          <h2 className="new-arrivals-heading-title" style={{ marginBottom: 8 }}>
+          <h2 className="new-arrivals-heading-title">
             SHOP BY CATEGORY
           </h2>
-          <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', maxWidth: 540, margin: '0 auto' }}>
-            Precision-engineered silhouettes crafted with architectural drape and modern streetwear proportions.
-          </p>
         </div>
 
         <div className="bento-grid-modern">
@@ -633,34 +629,62 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── 5. PRODUCT CATALOG & TABS ─────────────────────────────────────── */}
-      <section className="content-container">
-        <div className="section-header-wrap">
-          <span className="section-tag-pill">TRENDING NOW</span>
-          <h2 className="section-main-title">BESTSELLERS & FRESH DROPS</h2>
-          <p className="section-sub-desc">Discover the season's most sought-after garments, loved by over 50,000+ men across India.</p>
+      {/* ─── 3b. MINIMAL CLEAN CATEGORIES GRID (Mobile View) ────────────── */}
+      <section className="mobile-category-clean-section mobile-only">
+        <div className="mobile-category-header">
+          <div className="mobile-category-pretitle">SHOP BY</div>
+          <h2 className="mobile-category-main-title">CATEGORY</h2>
+          <div className="mobile-category-accent-bar" />
         </div>
 
-        {/* Filter Category Chips */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, overflowX: 'auto', paddingBottom: 16 }} className="no-scrollbar">
+        <div className="mobile-category-grid">
+          {MOBILE_CATEGORIES.map((cat) => (
+            <div
+              key={cat.id}
+              className="mobile-category-cell"
+              onClick={() => navigate(cat.path)}
+            >
+              <div className="mobile-category-cell-top">
+                <span className="mobile-category-cell-title">{cat.title}</span>
+                {cat.badge && (
+                  <span className="mobile-category-cell-badge">{cat.badge}</span>
+                )}
+              </div>
+              <div className="mobile-category-cell-img-wrap">
+                <img
+                  src={cat.img}
+                  alt={cat.title}
+                  className="mobile-category-cell-img"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mobile-category-footer">
+          <button
+            className="mobile-category-shop-all-btn"
+            onClick={() => navigate('/collection')}
+          >
+            SHOP ALL
+          </button>
+        </div>
+      </section>
+
+      {/* ─── 5. PRODUCT CATALOG & TABS ─────────────────────────────────────── */}
+      <section className="content-container">
+        <h2 className="new-arrivals-heading-title" style={{ margin: '28px 0 20px' }}>
+          BESTSELLERS
+        </h2>
+
+        {/* Filter Category Tabs — minimal, no scroll */}
+        <div className="catalog-filter-tabs">
           {CATALOG_TABS.map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '8px 20px',
-                borderRadius: 999,
-                border: activeTab === tab ? '1.5px solid var(--brand-primary)' : '1px solid var(--border-light)',
-                backgroundColor: activeTab === tab ? 'var(--brand-primary)' : 'var(--bg-card)',
-                color: activeTab === tab ? 'var(--text-inverse)' : 'var(--text-primary)',
-                fontSize: 12,
-                fontWeight: 800,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease'
-              }}
+              className={`catalog-filter-tab ${activeTab === tab ? 'active' : ''}`}
             >
               {tab}
             </button>

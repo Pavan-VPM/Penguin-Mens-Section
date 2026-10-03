@@ -117,23 +117,10 @@ export default function ProductCard({ product, onQuickView }) {
 
       {/* Info Wrap */}
       <div className="product-info-wrap">
-        <div className="product-brand-subtitle">PENGUIN • {category}</div>
+        <div className="product-brand-subtitle">{category}</div>
         <h3 className="product-title-text" title={name}>{name}</h3>
-        
         <div className="product-price-row">
           <span className="price-current">{formattedPrice}</span>
-          <span className="price-original">{formattedOriginalPrice}</span>
-          {discountPercent > 0 && (
-            <span className="price-discount-tag">{discountPercent}% OFF</span>
-          )}
-        </div>
-
-        <div className="product-rating-row">
-          <span className="material-symbols-outlined rating-star-icon" style={{ fontVariationSettings: "'FILL' 1" }}>
-            star
-          </span>
-          <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{rating}</span>
-          <span>({reviewsCount})</span>
         </div>
       </div>
     </div>

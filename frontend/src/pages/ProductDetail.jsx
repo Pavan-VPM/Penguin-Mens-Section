@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { getProductById, getProducts } from '../services/api'
@@ -11,21 +11,20 @@ const DEFAULT_IMAGES = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDnR9S4fgMwiQA96pWo4DRRnR4yoqrORLPBRtU1exX8jFx4Mf2lu4FZb0To4JX24dcoEh-GbRf-FaR0s39tPIiS-Wq0OsNB6EjKqSxhQGXr6jGjGplvjbLYbTqyJxLhFFwdTcx8VHcX7jpv4b6tEmXM8HrtLl5wfKDkseOPqLDMKvkLxq7qflNN9MqLaF67Kxj_tJ08uRdK6jSUxDaYDhtHlAB-7Gx5TOqStb4NoD1G01OK9YFRlnEY'
 ]
 
-const SIZES = ['S', 'M', 'L', 'XL', 'XXL']
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
 export default function ProductDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const { addToCart, isWishlisted, toggleWishlist } = useCart()
+  const imgStackRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
-  const [activeImageIdx, setActiveImageIdx] = useState(0)
   const [selectedSize, setSelectedSize] = useState('M')
-  const [pincode, setPincode] = useState('')
-  const [pincodeChecked, setPincodeChecked] = useState(false)
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false)
-  const [copiedCoupon, setCopiedCoupon] = useState(null)
-  const [openAccordion, setOpenAccordion] = useState('details')
+  const [openAccordion, setOpenAccordion] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
+  const [activeIdx, setActiveIdx] = useState(0)
 
   const [product, setProduct] = useState({
     id: id || 1,
@@ -33,504 +32,367 @@ export default function ProductDetailPage() {
     category: 'Shirts',
     color: 'Nocturne Black',
     price: 1999,
-    originalPrice: 3499,
-    badge: '43% OFF',
-    rating: '4.9',
-    reviewsCount: 312,
     images: DEFAULT_IMAGES,
     description: 'A contemporary relaxed overshirt crafted from 100% Japanese high-density organic cotton poplin. Features an exaggerated camp collar, concealed matte buttons, and side split vents.',
     fabricCare: '100% High-Density Organic Cotton (180 GSM). Cold machine wash delicate, iron on low reverse.',
-    deliveryInfo: 'Dispatched within 24 hours. Estimated delivery 2-4 business days across India.'
+    deliveryInfo: 'Dispatched within 24 hours. 7-Day Doorstep Returns & Exchanges.'
   })
 
-  // Load product from API
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   useEffect(() => {
     async function loadData() {
       try {
-        const [pRes, allRes] = await Promise.all([
-          getProductById(id),
-          getProducts()
-        ])
-
+        const [pRes, allRes] = await Promise.all([getProductById(id), getProducts()])
         if (pRes?.data) {
           const p = pRes.data
           const rawP = typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999
           setProduct({
-            id: p._id || p.id,
-            name: p.name,
-            category: p.category || 'Shirts',
-            color: p.color || 'Nocturne Black',
+            id: p._id || p.id, name: p.name,
+            category: p.category || 'Shirts', color: p.color || 'Nocturne Black',
             price: rawP,
-            originalPrice: p.originalPrice || Math.round(rawP * 1.65),
-            badge: p.badge || 'NEW',
-            rating: p.rating || '4.9',
-            reviewsCount: p.reviewsCount || 148,
             images: p.images && p.images.length > 0 ? p.images : DEFAULT_IMAGES,
-            description: p.description || 'Precision tailored garment featuring architectural silhouettes and breathable cotton.',
+            description: p.description || 'Precision tailored garment.',
             fabricCare: p.fabricDetails || '100% High-Density Organic Cotton. Cold machine wash.',
             deliveryInfo: 'Dispatched within 24 hours. 7-Day Doorstep Returns & Exchanges.'
           })
         }
-
         if (allRes?.data && allRes.data.length > 0) {
-          const formatted = allRes.data
-            .filter(item => String(item._id || item.id) !== String(id))
-            .slice(0, 4)
-            .map(item => ({
-              id: item._id || item.id,
-              name: item.name,
-              category: item.category || 'Shirts',
-              color: item.color || 'Nocturne Black',
-              price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^\d.]/g, '')) || 1999,
-              originalPrice: item.originalPrice || Math.round(1999 * 1.65),
-              badge: item.badge || 'POPULAR',
-              rating: item.rating || '4.8',
-              reviewsCount: 120,
-              images: item.images || [item.img]
-            }))
-          setRelatedProducts(formatted)
+          setRelatedProducts(
+            allRes.data.filter(item => String(item._id || item.id) !== String(id)).slice(0, 4)
+              .map(item => ({
+                id: item._id || item.id, name: item.name,
+                category: item.category || 'Shirts', color: item.color || 'Nocturne Black',
+                price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^\d.]/g, '')) || 1999,
+                images: item.images || [item.img]
+              }))
+          )
         }
-      } catch (err) {
-        console.warn('Using fallback PDP data')
-      }
+      } catch (err) { console.warn('Using fallback PDP data') }
     }
     loadData()
     window.scrollTo(0, 0)
   }, [id])
 
-  const discountPercent = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  // Desktop: IntersectionObserver for dot sync
+  useEffect(() => {
+    if (isMobile) return
+    const container = imgStackRef.current
+    if (!container) return
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) setActiveIdx(parseInt(e.target.dataset.idx)) }),
+      { root: container, threshold: 0.5 }
+    )
+    container.querySelectorAll('.pdp-img-slide').forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [product.images, isMobile])
+
+  // Desktop: auto-scroll
+  useEffect(() => {
+    if (isMobile) return
+    const container = imgStackRef.current
+    if (!container || product.images.length <= 1) return
+    const timer = setInterval(() => {
+      setActiveIdx(prev => {
+        const next = (prev + 1) % product.images.length
+        container.scrollTo({ top: next * container.clientHeight, behavior: 'smooth' })
+        return next
+      })
+    }, 6000)
+    return () => clearInterval(timer)
+  }, [product.images, isMobile])
+
   const isFav = isWishlisted(product.id)
+  const handleAddToCart = () =>
+    addToCart({ id: product.id, name: product.name, price: product.price, color: product.color, img: product.images[0] }, selectedSize)
+  const handleBuyNow = () => { handleAddToCart(); navigate('/checkout') }
 
-  const handleAddToCart = () => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      color: product.color,
-      badge: product.badge,
-      img: product.images[0]
-    }, selectedSize)
-  }
+  // Mobile: prev/next arrow nav
+  const goPrev = () => setActiveIdx(p => (p - 1 + product.images.length) % product.images.length)
+  const goNext = () => setActiveIdx(p => (p + 1) % product.images.length)
 
-  const handleBuyNow = () => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      color: product.color,
-      badge: product.badge,
-      img: product.images[0]
-    }, selectedSize)
-    navigate('/checkout')
-  }
+  /* ─── MOBILE LAYOUT ─────────────────────────────────────────────────── */
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: 80 }}>
 
-  const handleCopyCoupon = (code) => {
-    navigator.clipboard.writeText(code)
-    setCopiedCoupon(code)
-    setTimeout(() => setCopiedCoupon(null), 2500)
-  }
+        {/* Image Viewer */}
+        <div style={{ position: 'relative', width: '100%', height: '62vw', minHeight: 300, backgroundColor: 'var(--bg-secondary)', overflow: 'hidden' }}>
+          <img
+            src={product.images[activeIdx]}
+            alt={product.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 0.3s ease' }}
+          />
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: 80 }}>
-      {/* ─── Breadcrumbs ───────────────────────────────────────────────────── */}
-      <div className="content-container" style={{ padding: '16px 0 8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>Home</button>
-          <span>/</span>
-          <button onClick={() => navigate('/collection/shirts')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>{product.category}</button>
-          <span>/</span>
-          <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{product.name}</span>
-        </div>
-      </div>
-
-      {/* ─── Main 2-Column Split PDP ───────────────────────────────────────── */}
-      <div className="content-container">
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr',
-          gap: 32,
-          marginTop: 8
-        }}>
-          <div className="pdp-layout-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: 40,
-            alignItems: 'start'
-          }}>
-            {/* Left Column: Gallery */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Main Image Display */}
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: '3 / 4',
-                borderRadius: 'var(--radius-md)',
-                overflow: 'hidden',
-                backgroundColor: 'var(--bg-secondary)',
-                border: '1px solid var(--border-light)'
+          {/* Prev / Next Arrows */}
+          {product.images.length > 1 && (
+            <>
+              <button onClick={goPrev} style={{
+                position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.85)',
+                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
               }}>
-                <img
-                  src={product.images[activeImageIdx] || product.images[0]}
-                  alt={product.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>chevron_left</span>
+              </button>
+              <button onClick={goNext} style={{
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.85)',
+                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>chevron_right</span>
+              </button>
+            </>
+          )}
 
-                {/* Floating Wishlist Heart */}
+          {/* Wishlist */}
+          <button onClick={() => toggleWishlist(product.id)} style={{
+            position: 'absolute', top: 12, right: 12,
+            width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.88)',
+            border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: isFav ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+          </button>
+
+          {/* Dot indicators */}
+          {product.images.length > 1 && (
+            <div style={{ position: 'absolute', bottom: 10, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 5 }}>
+              {product.images.map((_, idx) => (
+                <div key={idx} onClick={() => setActiveIdx(idx)} style={{
+                  width: idx === activeIdx ? 16 : 6, height: 6, borderRadius: 999,
+                  backgroundColor: idx === activeIdx ? '#fff' : 'rgba(255,255,255,0.5)',
+                  transition: 'all 0.3s ease', cursor: 'pointer'
+                }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div style={{ padding: '16px 16px 0' }}>
+          <h1 style={{ fontSize: 17, fontWeight: 500, color: 'var(--text-primary)', margin: '0 0 6px', lineHeight: 1.3 }}>
+            {product.name}
+          </h1>
+          <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
+            ₹{product.price.toLocaleString('en-IN')}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>
+            *MRP Inclusive of all taxes
+          </div>
+
+          {/* Color label + image thumbnails */}
+          {product.images.length > 1 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Selected Color · <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{product.color}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }} className="no-scrollbar">
+                {product.images.map((img, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => setActiveIdx(idx)}
+                    style={{
+                      width: 64, height: 80, flexShrink: 0, borderRadius: 4, overflow: 'hidden', cursor: 'pointer',
+                      border: activeIdx === idx ? '2px solid var(--text-primary)' : '1.5px solid var(--border-light)'
+                    }}
+                  >
+                    <img src={img} alt={`Color ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Size selector */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Select Size</span>
+              <button onClick={() => setIsSizeGuideOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
+                Size Guide
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }} className="no-scrollbar">
+              {SIZES.map(sz => (
                 <button
-                  onClick={() => toggleWishlist(product.id)}
+                  key={sz}
+                  onClick={() => setSelectedSize(sz)}
                   style={{
-                    position: 'absolute',
-                    top: 14,
-                    right: 14,
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(0,0,0,0.08)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: isFav ? 'var(--brand-accent)' : '#111111'
+                    minWidth: 52, height: 40, flexShrink: 0, borderRadius: 2,
+                    border: selectedSize === sz ? '1.5px solid var(--text-primary)' : '1px solid var(--border-light)',
+                    backgroundColor: selectedSize === sz ? 'var(--text-primary)' : 'transparent',
+                    color: selectedSize === sz ? 'var(--text-inverse)' : 'var(--text-primary)',
+                    fontSize: 12, fontWeight: 500, cursor: 'pointer'
                   }}
                 >
-                  <span
-                    className="material-symbols-outlined"
-                    style={{
-                      fontSize: 22,
-                      fontVariationSettings: isFav ? "'FILL' 1" : "'FILL' 0"
-                    }}
-                  >
-                    favorite
-                  </span>
+                  {sz}
                 </button>
-              </div>
-
-              {/* Thumbnails Row */}
-              {product.images.length > 1 && (
-                <div style={{ display: 'flex', gap: 10, overflowX: 'auto' }} className="no-scrollbar">
-                  {product.images.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveImageIdx(idx)}
-                      style={{
-                        width: 74,
-                        height: 96,
-                        borderRadius: 'var(--radius-xs)',
-                        overflow: 'hidden',
-                        border: activeImageIdx === idx ? '2px solid var(--brand-primary)' : '1px solid var(--border-light)',
-                        padding: 0,
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        backgroundColor: 'var(--bg-secondary)'
-                      }}
-                    >
-                      <img src={img} alt={`Thumb ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </button>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
+          </div>
 
-            {/* Right Column: Product Info & Actions */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {/* Title & Brand */}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  PENGUIN • {product.category}
-                </div>
-                <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', marginTop: 4, textTransform: 'uppercase' }}>
-                  {product.name}
-                </h1>
-
-                {/* Rating Badge */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    backgroundColor: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-light)',
-                    padding: '4px 10px',
-                    borderRadius: 999,
-                    fontSize: 12,
-                    fontWeight: 800
-                  }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#f59e0b', fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span>{product.rating}</span>
-                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>({product.reviewsCount} Reviews)</span>
-                  </div>
-                  <span style={{ fontSize: 12, color: 'var(--brand-green)', fontWeight: 700 }}>• In Stock</span>
-                </div>
-              </div>
-
-              {/* Pricing */}
-              <div style={{ padding: '16px 0', borderTop: '1px solid var(--border-light)', borderBottom: '1px solid var(--border-light)' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                  <span style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)' }}>
-                    ₹{product.price.toLocaleString('en-IN')}
-                  </span>
-                  <span style={{ fontSize: 18, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                    ₹{product.originalPrice.toLocaleString('en-IN')}
-                  </span>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--brand-accent)', backgroundColor: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: 4 }}>
-                    {discountPercent}% OFF
-                  </span>
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                  Inclusive of all taxes. Free express shipping on this order.
-                </div>
-              </div>
-
-              {/* Color Swatch */}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', marginBottom: 8 }}>
-                  Color: <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{product.color}</span>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    backgroundColor: '#1a1a1a',
-                    border: '2px solid var(--brand-accent)',
-                    padding: 2,
-                    cursor: 'pointer'
-                  }} />
-                  <div style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    backgroundColor: '#e5e5e5',
-                    border: '1px solid var(--border-light)',
-                    cursor: 'pointer'
-                  }} />
-                </div>
-              </div>
-
-              {/* Size Selector */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase' }}>
-                    Select Size
-                  </div>
-                  <button
-                    onClick={() => setIsSizeGuideOpen(true)}
-                    style={{ background: 'none', border: 'none', color: 'var(--brand-accent)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>straighten</span>
-                    Size Guide
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {SIZES.map(sz => (
-                    <button
-                      key={sz}
-                      onClick={() => setSelectedSize(sz)}
-                      style={{
-                        minWidth: 54,
-                        height: 44,
-                        borderRadius: 'var(--radius-xs)',
-                        border: selectedSize === sz ? '2px solid var(--brand-primary)' : '1px solid var(--border-light)',
-                        backgroundColor: selectedSize === sz ? 'var(--brand-primary)' : 'var(--bg-card)',
-                        color: selectedSize === sz ? 'var(--text-inverse)' : 'var(--text-primary)',
-                        fontSize: 13,
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-
-                <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>local_fire_department</span>
-                  Hurry! Only 3 units remaining in Size {selectedSize}
-                </div>
-              </div>
-
-              {/* Action Buttons: Add to Bag & Buy Now */}
-              <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+          {/* Accordions */}
+          <div style={{ borderTop: '1px solid var(--border-light)' }}>
+            {[
+              { key: 'details', label: 'Product Details', content: product.description },
+              { key: 'care', label: 'Fabric & Care', content: product.fabricCare },
+            ].map(acc => (
+              <div key={acc.key} style={{ borderBottom: '1px solid var(--border-light)' }}>
                 <button
-                  onClick={handleAddToCart}
-                  className="btn-solid-primary"
-                  style={{ flex: 1, height: 50, fontSize: 13, fontWeight: 900 }}
+                  onClick={() => setOpenAccordion(openAccordion === acc.key ? null : acc.key)}
+                  style={{
+                    width: '100%', padding: '13px 0', display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center', background: 'none', border: 'none', fontSize: 12, fontWeight: 600,
+                    textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer', color: 'var(--text-primary)'
+                  }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>shopping_bag</span>
-                  <span>ADD TO BAG</span>
+                  <span>{acc.label}</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-muted)' }}>
+                    {openAccordion === acc.key ? 'remove' : 'add'}
+                  </span>
                 </button>
-                <button
-                  onClick={handleBuyNow}
-                  className="btn-solid-accent"
-                  style={{ flex: 1, height: 50, fontSize: 13, fontWeight: 900 }}
-                >
-                  <span>BUY NOW</span>
-                </button>
-              </div>
-
-              {/* Pincode Estimator */}
-              <div style={{
-                padding: 16,
-                backgroundColor: 'var(--bg-secondary)',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-light)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10
-              }}>
-                <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase' }}>
-                  Delivery & COD Availability
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    placeholder="Enter 6-Digit Pincode"
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                    style={{
-                      flex: 1,
-                      height: 40,
-                      padding: '0 12px',
-                      borderRadius: 4,
-                      border: '1px solid var(--border-light)',
-                      backgroundColor: 'var(--bg-card)',
-                      color: 'var(--text-primary)',
-                      fontSize: 13,
-                      outline: 'none'
-                    }}
-                  />
-                  <button
-                    onClick={() => { if (pincode.length === 6) setPincodeChecked(true); }}
-                    style={{
-                      height: 40,
-                      padding: '0 18px',
-                      backgroundColor: 'var(--brand-primary)',
-                      color: 'var(--text-inverse)',
-                      border: 'none',
-                      borderRadius: 4,
-                      fontSize: 12,
-                      fontWeight: 800,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Check
-                  </button>
-                </div>
-                {pincodeChecked && (
-                  <div style={{ fontSize: 12, color: 'var(--brand-green)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>bolt</span>
-                    Express Delivery by <strong>Thursday</strong> • Cash On Delivery Available
+                {openAccordion === acc.key && (
+                  <div style={{ paddingBottom: 12, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                    {acc.content}
                   </div>
                 )}
               </div>
+            ))}
+          </div>
+        </div>
 
-              {/* Coupons & Promo Offers */}
-              <div style={{
-                padding: 16,
-                backgroundColor: 'var(--bg-secondary)',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px dashed var(--border-light)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8
-              }}>
-                <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: 'var(--brand-accent)' }}>
-                  Active Offers & Coupons
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-card)', padding: '10px 12px', borderRadius: 4, border: '1px solid var(--border-light)' }}>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 800 }}>PENGUIN500</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Get ₹500 OFF on orders over ₹2,499</div>
-                  </div>
-                  <button
-                    onClick={() => handleCopyCoupon('PENGUIN500')}
-                    style={{ background: 'none', border: 'none', color: 'var(--brand-accent)', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
-                  >
-                    {copiedCoupon === 'PENGUIN500' ? 'COPIED!' : 'COPY CODE'}
-                  </button>
-                </div>
-              </div>
+        {/* Sticky ADD button */}
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+          backgroundColor: 'var(--surface)', borderTop: '1px solid var(--border-light)',
+          padding: '10px 16px', display: 'flex', gap: 10
+        }}>
+          <button
+            onClick={handleAddToCart}
+            style={{
+              flex: 1, height: 48, backgroundColor: 'var(--text-primary)', color: 'var(--text-inverse)',
+              border: 'none', fontSize: 13, fontWeight: 600, letterSpacing: '0.08em', cursor: 'pointer'
+            }}
+          >
+            ADD +
+          </button>
+          <button
+            onClick={handleBuyNow}
+            style={{
+              flex: 1, height: 48, backgroundColor: 'transparent', color: 'var(--text-primary)',
+              border: '1px solid var(--border-light)', fontSize: 13, fontWeight: 600, cursor: 'pointer'
+            }}
+          >
+            Buy Now
+          </button>
+        </div>
 
-              {/* Accordions */}
-              <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid var(--border-light)', marginTop: 8 }}>
-                {/* Details */}
-                <div style={{ borderBottom: '1px solid var(--border-light)' }}>
-                  <button
-                    onClick={() => setOpenAccordion(openAccordion === 'details' ? null : 'details')}
-                    style={{ width: '100%', padding: '16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer', color: 'var(--text-primary)' }}
-                  >
-                    <span>Product Specifications</span>
-                    <span className="material-symbols-outlined">{openAccordion === 'details' ? 'expand_less' : 'expand_more'}</span>
-                  </button>
-                  {openAccordion === 'details' && (
-                    <div style={{ paddingBottom: 16, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                      {product.description}
-                    </div>
-                  )}
-                </div>
+        <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} />
+      </div>
+    )
+  }
 
-                {/* Fabric & Care */}
-                <div style={{ borderBottom: '1px solid var(--border-light)' }}>
-                  <button
-                    onClick={() => setOpenAccordion(openAccordion === 'care' ? null : 'care')}
-                    style={{ width: '100%', padding: '16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer', color: 'var(--text-primary)' }}
-                  >
-                    <span>Fabric & Wash Care</span>
-                    <span className="material-symbols-outlined">{openAccordion === 'care' ? 'expand_less' : 'expand_more'}</span>
-                  </button>
-                  {openAccordion === 'care' && (
-                    <div style={{ paddingBottom: 16, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                      {product.fabricCare}
-                    </div>
-                  )}
-                </div>
+  /* ─── DESKTOP LAYOUT ────────────────────────────────────────────────── */
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: 80 }}>
 
-                {/* Returns & Exchanges */}
-                <div style={{ borderBottom: '1px solid var(--border-light)' }}>
-                  <button
-                    onClick={() => setOpenAccordion(openAccordion === 'returns' ? null : 'returns')}
-                    style={{ width: '100%', padding: '16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer', color: 'var(--text-primary)' }}
-                  >
-                    <span>7 Days Easy Return & Exchange</span>
-                    <span className="material-symbols-outlined">{openAccordion === 'returns' ? 'expand_less' : 'expand_more'}</span>
-                  </button>
-                  {openAccordion === 'returns' && (
-                    <div style={{ paddingBottom: 16, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                      {product.deliveryInfo} We offer free doorstep reverse pickup and immediate exchange or refund to original payment source.
-                    </div>
-                  )}
-                </div>
-              </div>
+      {/* Breadcrumbs */}
+      <div className="content-container" style={{ padding: '14px 0 6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--text-muted)' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>Home</button>
+          <span>/</span>
+          <button onClick={() => navigate('/collection')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>{product.category}</button>
+          <span>/</span>
+          <span style={{ color: 'var(--text-primary)' }}>{product.name}</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'start' }}>
+
+        {/* LEFT: Auto-scrolling image stack */}
+        <div ref={imgStackRef} style={{ height: '90vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', position: 'sticky', top: 0, scrollbarWidth: 'none' }} className="no-scrollbar">
+          {product.images.map((img, idx) => (
+            <div key={idx} data-idx={idx} className="pdp-img-slide" style={{ height: '90vh', scrollSnapAlign: 'start', position: 'relative', backgroundColor: 'var(--bg-secondary)' }}>
+              <img src={img} alt={`${product.name} ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              {idx === 0 && (
+                <button onClick={() => toggleWishlist(product.id)} style={{
+                  position: 'absolute', top: 16, right: 16, width: 38, height: 38, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.88)', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(6px)'
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: isFav ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                </button>
+              )}
             </div>
+          ))}
+          {product.images.length > 1 && (
+            <div style={{ position: 'sticky', bottom: 20, display: 'flex', justifyContent: 'center', gap: 6, marginTop: -28 }}>
+              {product.images.map((_, idx) => (
+                <div key={idx} style={{ width: idx === activeIdx ? 18 : 6, height: 6, borderRadius: 999, backgroundColor: idx === activeIdx ? 'var(--text-primary)' : 'rgba(0,0,0,0.18)', transition: 'all 0.3s ease' }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: Info */}
+        <div style={{ padding: 'clamp(24px, 4vw, 48px)', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8 }}>{product.category}</div>
+            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(20px, 2.2vw, 26px)', fontWeight: 300, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', lineHeight: 1.25, margin: 0 }}>{product.name}</h1>
+          </div>
+          <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20 }}>
+            <span style={{ fontSize: 18, fontWeight: 500, color: 'var(--text-primary)' }}>₹{product.price.toLocaleString('en-IN')}</span>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Inclusive of all taxes · Free shipping</div>
+          </div>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>Size — {selectedSize}</span>
+              <button onClick={() => setIsSizeGuideOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>Size Guide</button>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {SIZES.map(sz => (
+                <button key={sz} onClick={() => setSelectedSize(sz)} style={{
+                  minWidth: 48, height: 40, borderRadius: 2,
+                  border: selectedSize === sz ? '1.5px solid var(--text-primary)' : '1px solid var(--border-light)',
+                  backgroundColor: selectedSize === sz ? 'var(--text-primary)' : 'transparent',
+                  color: selectedSize === sz ? 'var(--text-inverse)' : 'var(--text-primary)',
+                  fontSize: 12, fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s ease'
+                }}>{sz}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={handleAddToCart} style={{ width: '100%', height: 48, backgroundColor: 'var(--text-primary)', color: 'var(--text-inverse)', border: 'none', fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}>Add to Bag</button>
+            <button onClick={handleBuyNow} style={{ width: '100%', height: 48, backgroundColor: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}>Buy Now</button>
+          </div>
+          <div style={{ borderTop: '1px solid var(--border-light)' }}>
+            {[
+              { key: 'details', label: 'Product Details', content: product.description },
+              { key: 'care', label: 'Fabric & Care', content: product.fabricCare },
+            ].map(acc => (
+              <div key={acc.key} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                <button onClick={() => setOpenAccordion(openAccordion === acc.key ? null : acc.key)} style={{ width: '100%', padding: '14px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                  <span>{acc.label}</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-muted)' }}>{openAccordion === acc.key ? 'remove' : 'add'}</span>
+                </button>
+                {openAccordion === acc.key && <div style={{ paddingBottom: 14, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{acc.content}</div>}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* ─── You Might Also Like ────────────────────────────────────────────── */}
       {relatedProducts.length > 0 && (
         <div className="content-container" style={{ marginTop: 60 }}>
-          <div className="section-header-wrap">
-            <span className="section-tag-pill">COMPLETE THE LOOK</span>
-            <h2 className="section-main-title">YOU MIGHT ALSO LIKE</h2>
-          </div>
-          <div className="product-grid-home">
-            {relatedProducts.map(p => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
+          <h2 style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--text-muted)', margin: '0 0 24px' }}>You Might Also Like</h2>
+          <div className="product-grid-home">{relatedProducts.map(p => <ProductCard key={p.id} product={p} />)}</div>
         </div>
       )}
 
-      {/* Size Guide Modal */}
-      <SizeGuideModal
-        isOpen={isSizeGuideOpen}
-        onClose={() => setIsSizeGuideOpen(false)}
-      />
+      <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} />
     </div>
   )
 }
+
