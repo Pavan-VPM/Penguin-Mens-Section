@@ -202,15 +202,15 @@ const BENTO_CATEGORIES = [
 
 // Minimal Clean Mobile Categories (Snitch Style)
 const MOBILE_CATEGORIES = [
-  { id: 'shirts', title: 'SHIRTS', path: '/collection/shirts', img: '/categories/shirts.png' },
-  { id: 'trousers', title: 'TROUSERS', path: '/collection/tailoring', img: '/categories/trousers.png' },
-  { id: 'tshirts', title: 'T-SHIRTS', path: '/collection/tees', img: '/categories/tshirts.png' },
-  { id: 'jeans', title: 'JEANS', path: '/collection/jeans', img: '/categories/jeans.png' },
-  { id: 'cargos', title: 'CARGOS', path: '/collection/tailoring', img: '/categories/cargos.png' },
-  { id: 'polos', title: 'POLOS', path: '/collection/shirts', img: '/categories/polos.png' },
-  { id: 'outerwear', title: 'OUTERWEAR', path: '/collection/jackets', img: '/categories/outerwear.png' },
-  { id: 'plussize', title: 'PLUS SIZE', path: '/collection', badge: '3XL TO 6XL', img: '/categories/plussize.png' },
-  { id: 'shoes', title: 'SHOES', path: '/collection/footwear', badge: 'JUST LAUNCHED', img: '/categories/shoes.png' },
+  { id: 'shirts',    title: 'SHIRTS',     path: '/collection/shirts',   img: '/categories/shirts.png' },
+  { id: 'trousers', title: 'TROUSERS',   path: '/collection/tailoring', img: '/categories/trousers.png' },
+  { id: 'tshirts',  title: 'T-SHIRTS',   path: '/collection/tees',      img: '/categories/tshirts.png' },
+  { id: 'jeans',    title: 'JEANS',      path: '/collection/jeans',     img: '/categories/jeans.png' },
+  { id: 'cargos',   title: 'CARGOS',     path: '/collection/tailoring', img: '/categories/cargos.png' },
+  { id: 'polos',    title: 'POLOS',      path: '/collection/shirts',    img: '/categories/polos.png' },
+  { id: 'outerwear',title: 'OUTERWEAR',  path: '/collection/jackets',   img: '/categories/outerwear.png' },
+  { id: 'plussize', title: 'PLUS SIZE',  path: '/collection',           img: '/categories/plussize.png', badge: '3XL TO 6XL' },
+  { id: 'shoes',    title: 'SHOES',      path: '/collection/footwear',  img: '/categories/shoes.png', badge: 'JUST LAUNCHED' },
 ]
 
 // Fallback products catalog

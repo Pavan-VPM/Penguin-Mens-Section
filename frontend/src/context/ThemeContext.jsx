@@ -1,27 +1,19 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useEffect } from 'react'
 
 const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('penguin_theme') || 'dark'
-    } catch {
-      return 'dark'
-    }
-  })
+  const theme = 'light'
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.setAttribute('data-theme', 'light')
     try {
-      localStorage.setItem('penguin_theme', theme)
+      localStorage.removeItem('penguin_theme')
     } catch (e) {}
-  }, [theme])
-
-  const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'))
+  }, [])
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme }}>
       {children}
     </ThemeContext.Provider>
   )

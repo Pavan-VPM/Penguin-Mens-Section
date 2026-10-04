@@ -13,6 +13,61 @@ const DEFAULT_IMAGES = [
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
+const DEFAULT_SUGGESTIONS = [
+  {
+    id: 101,
+    name: 'Pleated Tailored Trousers',
+    category: 'Trousers',
+    color: 'Olive Khaki',
+    price: 2499,
+    originalPrice: 3999,
+    badge: 'NEW',
+    images: [
+      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 102,
+    name: 'Heavyweight Minimalist Tee',
+    category: 'T-Shirts',
+    color: 'Chalk White',
+    price: 1299,
+    originalPrice: 1999,
+    badge: 'BESTSELLER',
+    images: [
+      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 103,
+    name: 'Relaxed Tailored Wool Blazer',
+    category: 'Outerwear',
+    color: 'Charcoal Black',
+    price: 4999,
+    originalPrice: 7999,
+    badge: 'BESPOKE',
+    images: [
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=600&auto=format&fit=crop&q=80',
+    ]
+  },
+  {
+    id: 104,
+    name: 'Monolith Derby Leather Shoes',
+    category: 'Footwear',
+    color: 'Onyx Black',
+    price: 3499,
+    originalPrice: 5499,
+    badge: 'TRENDING',
+    images: [
+      'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80',
+    ]
+  }
+]
+
 export default function ProductDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -23,7 +78,7 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState('M')
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false)
   const [openAccordion, setOpenAccordion] = useState(null)
-  const [relatedProducts, setRelatedProducts] = useState([])
+  const [relatedProducts, setRelatedProducts] = useState(DEFAULT_SUGGESTIONS)
   const [activeIdx, setActiveIdx] = useState(0)
 
   const [product, setProduct] = useState({
@@ -62,17 +117,35 @@ export default function ProductDetailPage() {
           })
         }
         if (allRes?.data && allRes.data.length > 0) {
-          setRelatedProducts(
-            allRes.data.filter(item => String(item._id || item.id) !== String(id)).slice(0, 4)
-              .map(item => ({
-                id: item._id || item.id, name: item.name,
-                category: item.category || 'Shirts', color: item.color || 'Nocturne Black',
-                price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^\d.]/g, '')) || 1999,
-                images: item.images || [item.img]
-              }))
-          )
+          const fetchedFiltered = allRes.data
+            .filter(item => String(item._id || item.id) !== String(id))
+            .map(item => ({
+              id: item._id || item.id,
+              name: item.name,
+              category: item.category || 'Shirts',
+              color: item.color || 'Nocturne Black',
+              price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^\d.]/g, '')) || 1999,
+              originalPrice: item.originalPrice,
+              badge: item.badge,
+              images: item.images && item.images.length > 0 ? item.images : [item.img || DEFAULT_IMAGES[0]]
+            }))
+          
+          if (fetchedFiltered.length > 0) {
+            // Fill up to 4 items from fallback if less than 4
+            const combined = [...fetchedFiltered]
+            for (const def of DEFAULT_SUGGESTIONS) {
+              if (combined.length >= 4) break
+              if (!combined.some(c => String(c.id) === String(def.id) || String(def.id) === String(id))) {
+                combined.push(def)
+              }
+            }
+            setRelatedProducts(combined.slice(0, 4))
+          }
         }
-      } catch (err) { console.warn('Using fallback PDP data') }
+      } catch (err) {
+        console.warn('Using fallback PDP data')
+        setRelatedProducts(DEFAULT_SUGGESTIONS.filter(item => String(item.id) !== String(id)))
+      }
     }
     loadData()
     window.scrollTo(0, 0)
@@ -261,6 +334,22 @@ export default function ProductDetailPage() {
               </div>
             ))}
           </div>
+
+          {/* Mobile Suggestions */}
+          {relatedProducts.length > 0 && (
+            <section className="pdp-suggestions-section">
+              <div className="pdp-suggestions-header">
+                <span className="pdp-suggestions-subtitle">RECOMMENDED PAIRINGS</span>
+                <h2 className="pdp-suggestions-title">YOU MIGHT ALSO LIKE</h2>
+                <div className="pdp-suggestions-divider" />
+              </div>
+              <div className="pdp-suggestions-grid">
+                {relatedProducts.map(p => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Sticky ADD button */}
@@ -384,10 +473,21 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
+      {/* Desktop Suggestions */}
       {relatedProducts.length > 0 && (
-        <div className="content-container" style={{ marginTop: 60 }}>
-          <h2 style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--text-muted)', margin: '0 0 24px' }}>You Might Also Like</h2>
-          <div className="product-grid-home">{relatedProducts.map(p => <ProductCard key={p.id} product={p} />)}</div>
+        <div className="content-container">
+          <section className="pdp-suggestions-section">
+            <div className="pdp-suggestions-header">
+              <span className="pdp-suggestions-subtitle">RECOMMENDED PAIRINGS</span>
+              <h2 className="pdp-suggestions-title">YOU MIGHT ALSO LIKE</h2>
+              <div className="pdp-suggestions-divider" />
+            </div>
+            <div className="pdp-suggestions-grid">
+              {relatedProducts.map(p => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
         </div>
       )}
 

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { useTheme } from '../context/ThemeContext'
 
 import QuickCartDrawer from './QuickCartDrawer'
 import brandLogoDark from '../assets/logo-dark.png'
-import brandLogoLight from '../assets/logo-light.png'
 
 const MAIN_NAV_LINKS = [
   { label: 'New Arrivals', path: '/collection', badge: 'NEW' },
@@ -20,7 +18,6 @@ const MAIN_NAV_LINKS = [
 export default function Header() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { theme, toggleTheme } = useTheme()
   const { cartCount, wishlist } = useCart()
 
   const [isScrolled, setIsScrolled] = useState(false)
@@ -28,7 +25,7 @@ export default function Header() {
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const brandLogo = theme === 'light' ? brandLogoDark : brandLogoLight
+  const brandLogo = brandLogoDark
 
   // Handle scroll shadow
   useEffect(() => {
@@ -63,14 +60,14 @@ export default function Header() {
           <div className="header-main-row" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
 
             {/* Left: Menu Toggle */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div className="header-left-group">
               <button
                 className="header-icon-btn"
                 onClick={() => setIsMobileMenuOpen(true)}
                 aria-label="Open Navigation Menu"
                 title="Open Menu"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>menu</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>menu</span>
               </button>
             </div>
 
@@ -83,7 +80,7 @@ export default function Header() {
               />
             </div>
 
-            {/* Right: Icons */}
+            {/* Right: Search, Wishlist, Cart, Profile */}
             <div className="header-actions" style={{ justifyContent: 'flex-end' }}>
 
               {/* Search Icon */}
@@ -93,15 +90,6 @@ export default function Header() {
                 aria-label="Search"
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 22 }}>search</span>
-              </button>
-
-              {/* Account Icon (Shown in Mobile & Desktop) */}
-              <button
-                className="header-icon-btn"
-                onClick={() => navigate('/account')}
-                aria-label="Account"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>person</span>
               </button>
 
               {/* Wishlist Icon (Desktop only) */}
@@ -124,9 +112,9 @@ export default function Header() {
                 )}
               </button>
 
-              {/* Shopping Bag Icon with Quick Drawer (Desktop only) */}
+              {/* Shopping Bag Icon with Quick Drawer */}
               <button
-                className="header-icon-btn desktop-only"
+                className="header-icon-btn"
                 onClick={() => setIsCartDrawerOpen(true)}
                 aria-label="Open Shopping Bag"
               >
@@ -136,17 +124,15 @@ export default function Header() {
                 )}
               </button>
 
-              {/* Theme Switcher Toggle (Desktop only) */}
+              {/* Profile — right corner */}
               <button
-                className="header-icon-btn desktop-only"
-                onClick={toggleTheme}
-                title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-                aria-label="Toggle Theme"
+                className="header-icon-btn"
+                onClick={() => navigate('/account')}
+                aria-label="Account"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                  {theme === 'dark' ? 'light_mode' : 'dark_mode'}
-                </span>
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>person</span>
               </button>
+
             </div>
           </div>
         </div>

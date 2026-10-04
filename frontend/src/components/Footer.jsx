@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
-import brandLogoDark from '../assets/logo 2.png'
 import brandLogoLight from '../assets/logo-light.png'
 
 export default function Footer() {
   const navigate = useNavigate()
-  const { theme } = useTheme()
-  const brandLogo = theme === 'light' ? brandLogoLight : brandLogoDark
+  const brandLogo = brandLogoLight
 
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
@@ -39,19 +36,15 @@ export default function Footer() {
           borderBottom: '1px solid var(--border-light)'
         }}>
           {/* Brand Col */}
-          <div style={{ gridColumn: 'span 1', maxWidth: 340 }}>
+          <div style={{ gridColumn: 'span 1', maxWidth: 300 }}>
             <img
               src={brandLogo}
               alt="PENGUIN"
-              style={{ height: 40, width: 'auto', objectFit: 'contain', marginBottom: 14 }}
+              style={{ height: 42, width: 'auto', objectFit: 'contain', marginBottom: 12 }}
             />
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
-              PENGUIN is India's contemporary menswear label engineering modern architectural silhouettes, breathable Japanese textiles, and effortless streetwear fits.
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+              Contemporary menswear crafted with modern silhouettes and precision tailoring.
             </p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-accent)' }}>#PenguinMen</span>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>• Over 50,000+ happy customers</span>
-            </div>
           </div>
 
           {/* Quick Links */}
