@@ -202,15 +202,15 @@ const BENTO_CATEGORIES = [
 
 // Minimal Clean Mobile Categories (Snitch Style)
 const MOBILE_CATEGORIES = [
-  { id: 'shirts',    title: 'SHIRTS',     path: '/collection/shirts',   img: '/categories/shirts.png' },
-  { id: 'trousers', title: 'TROUSERS',   path: '/collection/tailoring', img: '/categories/trousers.png' },
-  { id: 'tshirts',  title: 'T-SHIRTS',   path: '/collection/tees',      img: '/categories/tshirts.png' },
-  { id: 'jeans',    title: 'JEANS',      path: '/collection/jeans',     img: '/categories/jeans.png' },
-  { id: 'cargos',   title: 'CARGOS',     path: '/collection/tailoring', img: '/categories/cargos.png' },
-  { id: 'polos',    title: 'POLOS',      path: '/collection/shirts',    img: '/categories/polos.png' },
-  { id: 'outerwear',title: 'OUTERWEAR',  path: '/collection/jackets',   img: '/categories/outerwear.png' },
-  { id: 'plussize', title: 'PLUS SIZE',  path: '/collection',           img: '/categories/plussize.png', badge: '3XL TO 6XL' },
-  { id: 'shoes',    title: 'SHOES',      path: '/collection/footwear',  img: '/categories/shoes.png', badge: 'JUST LAUNCHED' },
+  { id: 'shirts',      title: 'SHIRTS',      path: '/collection/shirts',    img: '/categories/shirts.png' },
+  { id: 'trousers',    title: 'TROUSERS',    path: '/collection/tailoring', img: '/categories/trousers.png' },
+  { id: 'tshirts',     title: 'T-SHIRTS',    path: '/collection/tees',      img: '/categories/tshirts.png' },
+  { id: 'jeans',       title: 'JEANS',       path: '/collection/jeans',     img: '/categories/jeans.png' },
+  { id: 'cargos',      title: 'CARGOS',      path: '/collection/tailoring', img: '/categories/cargos.png' },
+  { id: 'polos',       title: 'POLOS',       path: '/collection/shirts',    img: '/categories/polos.png' },
+  { id: 'outerwear',   title: 'OUTERWEAR',   path: '/collection/jackets',   img: '/categories/outerwear.png' },
+  { id: 'plussize',    title: 'PLUS SIZE',   path: '/collection',           img: '/categories/plussize.png' },
+  { id: 'accessories', title: 'ACCESSORIES', path: '/collection',           img: '/categories/accessories.png' },
 ]
 
 // Fallback products catalog
@@ -237,7 +237,7 @@ const FALLBACK_PRODUCTS = [
     color: 'Ivory White',
     price: 1799,
     originalPrice: 3299,
-    badge: '45% OFF',
+    badge: 'BESTSELLER',
     rating: '4.8',
     reviewsCount: 387,
     images: [
@@ -252,7 +252,7 @@ const FALLBACK_PRODUCTS = [
     color: 'Deep Indigo',
     price: 2299,
     originalPrice: 3999,
-    badge: '42% OFF',
+    badge: 'NEW',
     rating: '4.7',
     reviewsCount: 296,
     images: [
@@ -282,7 +282,7 @@ const FALLBACK_PRODUCTS = [
     color: 'Slate Grey',
     price: 1999,
     originalPrice: 3499,
-    badge: '43% OFF',
+    badge: 'TAILORED',
     rating: '4.8',
     reviewsCount: 241,
     images: [
@@ -297,7 +297,7 @@ const FALLBACK_PRODUCTS = [
     color: 'Charcoal Black',
     price: 4999,
     originalPrice: 8499,
-    badge: '41% OFF',
+    badge: 'BESPOKE',
     rating: '4.9',
     reviewsCount: 178,
     images: [
@@ -327,7 +327,7 @@ const FALLBACK_PRODUCTS = [
     color: 'Military Khaki',
     price: 2499,
     originalPrice: 4199,
-    badge: '40% OFF',
+    badge: 'STREETWEAR',
     rating: '4.8',
     reviewsCount: 203,
     images: [
@@ -357,7 +357,7 @@ const FALLBACK_PRODUCTS = [
     color: 'Sky Blue',
     price: 1599,
     originalPrice: 2799,
-    badge: '43% OFF',
+    badge: 'ESSENTIAL',
     rating: '4.8',
     reviewsCount: 319,
     images: [
@@ -642,13 +642,10 @@ export default function HomePage() {
             <div
               key={cat.id}
               className="mobile-category-cell"
-              onClick={() => navigate(cat.path)}
+              onClick={() => navigate('/collection')}
             >
               <div className="mobile-category-cell-top">
                 <span className="mobile-category-cell-title">{cat.title}</span>
-                {cat.badge && (
-                  <span className="mobile-category-cell-badge">{cat.badge}</span>
-                )}
               </div>
               <div className="mobile-category-cell-img-wrap">
                 <img

@@ -112,9 +112,9 @@ export default function Header() {
                 )}
               </button>
 
-              {/* Shopping Bag Icon with Quick Drawer */}
+              {/* Shopping Bag Icon with Quick Drawer (Desktop only) */}
               <button
-                className="header-icon-btn"
+                className="header-icon-btn desktop-only"
                 onClick={() => setIsCartDrawerOpen(true)}
                 aria-label="Open Shopping Bag"
               >

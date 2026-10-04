@@ -12,7 +12,7 @@ const FALLBACK_PRODUCTS = [
     color: 'Nocturne Black',
     price: 1999,
     originalPrice: 3499,
-    badge: '43% OFF',
+    badge: 'NEW',
     rating: '4.9',
     reviewsCount: 312,
     images: [

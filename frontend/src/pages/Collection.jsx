@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getProducts } from '../services/api'
 import ProductCard from '../components/ProductCard'
 
-const CATEGORIES = ['All', 'Shirts', 'Tees', 'Jackets', 'Formals', 'Tailoring', 'Jeans', 'Footwear']
+const CATEGORIES = ['All', 'Shirts', 'Tees', 'Jackets', 'Formals', 'Tailoring', 'Jeans', 'Footwear', 'Accessories']
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL']
 const SORT_OPTIONS = [
   { label: 'Popularity', value: 'popular' },
@@ -21,7 +21,7 @@ const FALLBACK_COLLECTION = [
     color: 'Nocturne Black',
     price: 1999,
     originalPrice: 3499,
-    badge: '43% OFF',
+    badge: 'NEW',
     rating: '4.9',
     reviewsCount: 312,
     images: [
@@ -51,7 +51,7 @@ const FALLBACK_COLLECTION = [
     color: 'Slate Grey',
     price: 2499,
     originalPrice: 4299,
-    badge: '42% OFF',
+    badge: 'TAILORED',
     rating: '4.9',
     reviewsCount: 184,
     images: [
@@ -81,7 +81,7 @@ const FALLBACK_COLLECTION = [
     color: 'Deep Indigo',
     price: 2799,
     originalPrice: 4599,
-    badge: '39% OFF',
+    badge: 'SELVEDGE',
     rating: '4.8',
     reviewsCount: 167,
     images: [
@@ -111,7 +111,7 @@ const FALLBACK_COLLECTION = [
     color: 'Slate White',
     price: 1899,
     originalPrice: 3299,
-    badge: '42% OFF',
+    badge: 'ESSENTIAL',
     rating: '4.8',
     reviewsCount: 219,
     images: [

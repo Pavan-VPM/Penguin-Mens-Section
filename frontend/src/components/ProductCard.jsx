@@ -21,13 +21,11 @@ export default function ProductCard({ product, onQuickView }) {
   
   // Original MRP calculation (default ~40-50% higher for discount strike effect like Snitch / Souled Store)
   const originalPrice = product.originalPrice || Math.round(rawPrice * 1.65)
-  const formattedOriginalPrice = `₹${originalPrice.toLocaleString('en-IN')}`
-  const discountPercent = Math.round(((originalPrice - rawPrice) / originalPrice) * 100)
-
   const mainImg = product.images?.[0] || product.img || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va'
   const hoverImg = product.images?.[1] || product.hoverImg || product.images?.[0] || mainImg
 
-  const badge = product.badge || (discountPercent > 35 ? `${discountPercent}% OFF` : 'NEW')
+  // Exclude any discount/percentage OFF badges for a minimal luxury look
+  const badge = product.badge && !product.badge.includes('OFF') && !product.badge.includes('%') ? product.badge : null
   const rating = product.rating || '4.8'
   const reviewsCount = product.reviewsCount || 148
 
