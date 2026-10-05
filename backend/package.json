@@ -6,8 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
     "dev": "nodemon server.js",
     "db:push": "prisma db push",
+    "db:deploy": "prisma db push && node scripts/seedPostgres.js",
     "db:seed": "node scripts/seedPostgres.js",
     "studio": "prisma studio"
   },
@@ -21,11 +24,11 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.4.0",
+    "prisma": "^6.19.3",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14",
-    "prisma": "^6.19.3"
+    "nodemon": "^3.1.14"
   }
 }

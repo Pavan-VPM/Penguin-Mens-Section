@@ -21,10 +21,30 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-// Middlewares
+// CORS configuration supporting Vercel, localhost, and custom domains
+const allowedOrigins = [
+  CLIENT_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://localhost:5001',
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [CLIENT_URL, 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        /\.vercel\.app$/.test(origin) ||
+        origin === CLIENT_URL
+      ) {
+        return callback(null, true);
+      }
+      // Allow during development or fallback
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
