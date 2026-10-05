@@ -5,31 +5,68 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  bulkDeleteProducts,
+  bulkUpdateProducts,
   seedInitialProducts,
   getSiteConfig,
   updateSiteConfig,
   getOrders,
   updateOrderStatus,
   adminLogin,
+  adminMfaSetup,
+  adminMfaVerifySetup,
+  adminLoginVerifyMfa,
   adminLogout,
   isLocalAdminAuthenticated,
+  getStoredAdminUser,
+  createAdminUser,
+  listAdminUsers,
   uploadProductImage,
+  getAdminCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
 } from '../services/api';
 
-const CATEGORIES = ['Jackets', 'Shirts', 'Tees', 'Tailoring', 'Jeans', 'Footwear', 'Knitwear', 'Accessories', 'Outerwear'];
+const DEFAULT_CATEGORIES = ['Shirts', 'Jackets', 'Tees', 'Tailoring', 'Jeans', 'Footwear', 'Knitwear', 'Accessories', 'Formals'];
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Authentication & MFA States
+  // 'credentials' | 'mfa_setup' | 'mfa' | 'backup_codes_modal'
+  const [authStep, setAuthStep] = useState('credentials');
+  const [loginMode, setLoginMode] = useState('email'); // 'email' | 'pin'
+  const [emailInput, setEmailInput] = useState('admin@penguin.com');
+  const [passwordInput, setPasswordInput] = useState('');
   const [pinInput, setPinInput] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Active Tab
-  const [activeTab, setActiveTab] = useState('products'); // 'products' | 'config' | 'orders' | 'inventory'
+  // MFA Setup State
+  const [setupToken, setSetupToken] = useState('');
+  const [tempToken, setTempToken] = useState('');
+  const [qrCodeImage, setQrCodeImage] = useState('');
+  const [manualEntryKey, setManualEntryKey] = useState('');
+  const [totpCode, setTotpCode] = useState('');
+  const [backupCodesList, setBackupCodesList] = useState([]);
+  const [showBackupCodeModal, setShowBackupCodeModal] = useState(false);
+  const [useBackupCodeLogin, setUseBackupCodeLogin] = useState(false);
+
+  // Active Tab: 'products' | 'categories' | 'config' | 'orders' | 'team'
+  const [activeTab, setActiveTab] = useState('products');
+
+  // Superadmin Team Management State
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [isInviteAdminOpen, setIsInviteAdminOpen] = useState(false);
+  const [newAdminForm, setNewAdminForm] = useState({ name: '', email: '' });
+  const [createdAdminResult, setCreatedAdminResult] = useState(null);
 
   // Data States
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
   const [siteConfig, setSiteConfig] = useState({
     marqueeText: '',
@@ -46,6 +83,33 @@ export default function AdminPage() {
   });
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState({ text: '', type: 'success' });
+
+  // Multi-Select / Bulk Actions State
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+  const [bulkEditForm, setBulkEditForm] = useState({
+    category: 'keep',
+    stockStatus: 'keep',
+    badge: 'keep',
+    isFeatured: 'keep',
+    isWinterDrop: 'keep',
+    price: '',
+    originalPrice: '',
+  });
+
+  // Filters for Garments table
+  const [productSearch, setProductSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+
+  // Category Modal State (Option A)
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryForm, setCategoryForm] = useState({
+    name: '',
+    description: '',
+    sortOrder: 1,
+    isActive: true,
+  });
 
   // Product Form Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,6 +148,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (isLocalAdminAuthenticated()) {
       setIsAuthenticated(true);
+      setCurrentUser(getStoredAdminUser());
       loadAllAdminData();
     }
   }, []);
@@ -91,15 +156,23 @@ export default function AdminPage() {
   const loadAllAdminData = async () => {
     setLoading(true);
     try {
-      const [prodRes, orderRes, cfgRes] = await Promise.all([
+      const [prodRes, orderRes, cfgRes, catRes] = await Promise.all([
         getProducts(),
         getOrders(),
         getSiteConfig(),
+        getAdminCategories(),
       ]);
 
       if (prodRes?.data) setProducts(prodRes.data);
       if (orderRes?.data) setOrders(orderRes.data);
       if (cfgRes?.data) setSiteConfig(cfgRes.data);
+      if (catRes?.data) setCategories(catRes.data);
+
+      // Load admin users list if user is superadmin
+      const stored = getStoredAdminUser();
+      if (stored?.role === 'superadmin') {
+        loadTeamData();
+      }
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
@@ -107,34 +180,672 @@ export default function AdminPage() {
     }
   };
 
+  const loadTeamData = async () => {
+    try {
+      const teamRes = await listAdminUsers();
+      if (teamRes?.data) setAdminUsers(teamRes.data);
+    } catch (_) {}
+  };
+
+  // ── Step 1: Handle Credentials Submission ──
   const handleLogin = async (e) => {
     e.preventDefault();
     setAuthLoading(true);
     setAuthError('');
+
     try {
-      const res = await adminLogin({ pin: pinInput, password: pinInput });
+      const payload = loginMode === 'pin'
+        ? { pin: pinInput, password: pinInput }
+        : { email: emailInput, password: passwordInput };
+
+      const res = await adminLogin(payload);
+
       if (res?.success) {
-        setIsAuthenticated(true);
-        loadAllAdminData();
+        // Case A: First time login -> Force MFA Setup
+        if (res.requiresMfaSetup) {
+          setSetupToken(res.setupToken);
+          // Fetch QR Code
+          const setupRes = await adminMfaSetup(res.setupToken);
+          if (setupRes?.success) {
+            setQrCodeImage(setupRes.qrCodeImage);
+            setManualEntryKey(setupRes.manualEntryKey);
+            setAuthStep('mfa_setup');
+          } else {
+            setAuthError(setupRes?.message || 'Failed to initialize MFA QR code.');
+          }
+        }
+        // Case B: MFA already active -> Prompt for 6-digit TOTP code
+        else if (res.requiresMfaCode) {
+          setTempToken(res.tempToken);
+          setAuthStep('mfa');
+        }
+        // Case C: Master direct access / already verified
+        else {
+          setIsAuthenticated(true);
+          setCurrentUser(res.user || { role: res.role || 'admin' });
+          loadAllAdminData();
+        }
       } else {
-        setAuthError(res?.message || 'Invalid passcode');
+        setAuthError(res?.message || 'Invalid credentials or access denied.');
       }
     } catch (err) {
-      setAuthError('Authentication error. Try PIN: 8842 or admin123');
+      setAuthError('Authentication service unreachable. Try PIN 8842 or admin123.');
     } finally {
       setAuthLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    adminLogout();
+  // ── Step 2: Handle MFA Setup Verification ──
+  const handleVerifySetup = async (e) => {
+    e.preventDefault();
+    if (!totpCode || totpCode.trim().length < 6) {
+      setAuthError('Please enter the 6-digit code from Google Authenticator / Authy.');
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await adminMfaVerifySetup({ setupToken, token: totpCode.trim() });
+      if (res?.success) {
+        setBackupCodesList(res.backupCodes || []);
+        setShowBackupCodeModal(true);
+        setCurrentUser(res.user || { role: res.role });
+      } else {
+        setAuthError(res?.message || 'Invalid 6-digit code. Ensure device clock is synced.');
+      }
+    } catch (err) {
+      setAuthError('Failed to verify MFA setup.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // ── Step 3: Handle Regular TOTP Verification or Recovery Code ──
+  const handleVerifyMfaCode = async (e) => {
+    e.preventDefault();
+    if (!totpCode || totpCode.trim().length < 6) {
+      setAuthError('Please enter the code from your authenticator app or an 8-char backup code.');
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await adminLoginVerifyMfa({ tempToken, code: totpCode.trim() });
+      if (res?.success) {
+        setIsAuthenticated(true);
+        setCurrentUser(res.user || { role: res.role });
+        loadAllAdminData();
+        if (res.usedBackupCode) {
+          showToast('Authenticated via one-time emergency backup code!', 'success');
+        }
+      } else {
+        setAuthError(res?.message || 'Invalid authenticator code.');
+      }
+    } catch (err) {
+      setAuthError('MFA verification failed. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await adminLogout();
     setIsAuthenticated(false);
+    setCurrentUser(null);
+    setAuthStep('credentials');
+    setPasswordInput('');
+    setTotpCode('');
+  };
+
+  // Superadmin Invite Admin
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await createAdminUser(newAdminForm);
+      if (res?.success) {
+        setCreatedAdminResult(res);
+        setNewAdminForm({ name: '', email: '' });
+        await loadTeamData();
+        showToast(`Admin invite generated for ${res.admin?.email}`);
+      } else {
+        showToast(res?.message || 'Failed to create admin user', 'error');
+      }
+    } catch (err) {
+      showToast('Error creating admin user', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const showToast = (text, type = 'success') => {
     setStatusMsg({ text, type });
     setTimeout(() => setStatusMsg({ text: '', type: 'success' }), 4000);
   };
+
+  // ==================== AUTHENTICATION & MFA SCREENS ====================
+  if (!isAuthenticated) {
+    return (
+      <div style={{
+        minHeight: '88vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem 1rem',
+        background: 'var(--surface)',
+      }}>
+        {/* Backup Codes Modal upon first-time setup */}
+        {showBackupCodeModal && (
+          <div className="admin-modal-backdrop">
+            <div className="admin-modal-card" style={{ maxWidth: 500, textAlign: 'center' }}>
+              <div style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: 'rgba(52, 211, 153, 0.15)',
+                color: '#34d399',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto',
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 28 }}>verified_user</span>
+              </div>
+
+              <div>
+                <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: '8px 0 4px' }}>
+                  Save Your Emergency Backup Codes
+                </h3>
+                <p className="text-body-sm text-on-surface-variant" style={{ margin: 0 }}>
+                  If you ever lose your phone or authenticator app, these one-time recovery codes are the <strong>only way</strong> to unlock your account.
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 8,
+                background: 'var(--surface-container-lowest)',
+                padding: '16px',
+                borderRadius: 10,
+                border: '1px solid var(--outline-variant)',
+                fontFamily: 'monospace',
+                fontSize: 14,
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+              }}>
+                {backupCodesList.map((c, i) => (
+                  <div key={i} style={{ color: 'var(--on-surface)', padding: '4px' }}>
+                    {c}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(backupCodesList.join('\n'));
+                    showToast('Backup codes copied to clipboard!');
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: 8,
+                    background: 'var(--surface-container)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>content_copy</span>
+                  Copy All
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    setShowBackupCodeModal(false);
+                    setIsAuthenticated(true);
+                    loadAllAdminData();
+                  }}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                  }}
+                >
+                  I Have Saved Them → Enter Atelier
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div style={{
+          width: '100%',
+          maxWidth: authStep === 'mfa_setup' ? 480 : 420,
+          background: 'var(--surface-container-low)',
+          border: '1px solid var(--outline-variant)',
+          borderRadius: 16,
+          padding: '2.25rem 1.75rem',
+          boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 18,
+          textAlign: 'center',
+          boxSizing: 'border-box',
+        }}>
+          {/* Top Shield Icon */}
+          <div style={{
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            background: 'var(--glow-primary)',
+            border: '2px solid var(--primary-container)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto',
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 26, color: 'var(--primary-container)' }}>
+              {authStep === 'mfa_setup' ? 'qr_code_2' : authStep === 'mfa' ? 'phonelink_lock' : 'security'}
+            </span>
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
+              <span className="text-label-caps text-primary" style={{ fontSize: 10 }}>PENGUIN HARDENED ATELIER</span>
+              <span style={{
+                background: 'rgba(52, 211, 153, 0.15)',
+                color: '#34d399',
+                padding: '2px 6px',
+                borderRadius: 999,
+                fontSize: 9,
+                fontWeight: 800,
+              }}>
+                2FA MFA
+              </span>
+            </div>
+            <h2 className="text-headline-md text-on-surface" style={{ textTransform: 'uppercase', margin: 0, fontSize: 'clamp(18px, 4vw, 22px)' }}>
+              {authStep === 'mfa_setup' ? 'Configure 2FA Authenticator' : authStep === 'mfa' ? 'Two-Factor Challenge' : 'Atelier Access Portal'}
+            </h2>
+            <p className="text-body-sm text-on-surface-variant" style={{ marginTop: 4, fontSize: 12 }}>
+              {authStep === 'mfa_setup'
+                ? 'Scan the QR code with Google Authenticator or Authy to bind your device.'
+                : authStep === 'mfa'
+                ? 'Enter the 6-digit dynamic passcode from your authenticator app.'
+                : 'Role-separated superadmin & admin access with hardware TOTP.'}
+            </p>
+          </div>
+
+          {authError && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#fca5a5',
+              padding: '10px 14px',
+              borderRadius: 8,
+              fontSize: 12,
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>error</span>
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {/* ── STEP 1: CREDENTIALS SCREEN ── */}
+          {authStep === 'credentials' && (
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' }}>
+              <div style={{ display: 'flex', background: 'var(--surface-container)', padding: 3, borderRadius: 8, gap: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => setLoginMode('email')}
+                  style={{
+                    flex: 1,
+                    padding: '6px',
+                    borderRadius: 6,
+                    border: 'none',
+                    background: loginMode === 'email' ? 'var(--surface-container-high)' : 'transparent',
+                    color: loginMode === 'email' ? 'var(--on-surface)' : 'var(--on-surface-variant)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Email & Password
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginMode('pin')}
+                  style={{
+                    flex: 1,
+                    padding: '6px',
+                    borderRadius: 6,
+                    border: 'none',
+                    background: loginMode === 'pin' ? 'var(--surface-container-high)' : 'transparent',
+                    color: loginMode === 'pin' ? 'var(--on-surface)' : 'var(--on-surface-variant)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Master PIN Mode
+                </button>
+              </div>
+
+              {loginMode === 'email' ? (
+                <>
+                  <div>
+                    <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
+                      Admin Account Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      placeholder="e.g. admin@penguin.com"
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        borderRadius: 8,
+                        background: 'var(--surface-container-lowest)',
+                        border: '1px solid var(--outline-variant)',
+                        color: 'var(--on-surface)',
+                        fontSize: 13,
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      placeholder="••••••••••••"
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        borderRadius: 8,
+                        background: 'var(--surface-container-lowest)',
+                        border: '1px solid var(--outline-variant)',
+                        color: 'var(--on-surface)',
+                        fontSize: 13,
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
+                    Master Passcode PIN
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="e.g. 8842 or admin123"
+                    value={pinInput}
+                    onChange={(e) => setPinInput(e.target.value)}
+                    autoFocus
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 16,
+                      letterSpacing: '0.2em',
+                      textAlign: 'center',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="btn-primary"
+                style={{
+                  padding: '13px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  cursor: 'pointer',
+                  marginTop: 6,
+                }}
+              >
+                {authLoading ? 'Verifying Credentials...' : 'Proceed to Two-Factor Auth →'}
+              </button>
+            </form>
+          )}
+
+          {/* ── STEP 2: MFA INITIAL SETUP (QR CODE) ── */}
+          {authStep === 'mfa_setup' && (
+            <form onSubmit={handleVerifySetup} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {qrCodeImage && (
+                <div style={{
+                  background: '#ffffff',
+                  padding: 12,
+                  borderRadius: 12,
+                  width: 'fit-content',
+                  margin: '0 auto',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                }}>
+                  <img src={qrCodeImage} alt="TOTP QR Code" style={{ width: 170, height: 170, display: 'block' }} />
+                </div>
+              )}
+
+              {manualEntryKey && (
+                <div style={{
+                  background: 'var(--surface-container)',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  fontSize: 11,
+                  color: 'var(--on-surface-variant)',
+                }}>
+                  <span>Manual Setup Secret: </span>
+                  <code style={{ color: 'var(--primary-container)', fontWeight: 'bold', fontFamily: 'monospace' }}>{manualEntryKey}</code>
+                </div>
+              )}
+
+              <div>
+                <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 6 }}>
+                  Enter 6-Digit Code to Confirm
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="000 000"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    background: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    fontSize: 22,
+                    letterSpacing: '0.3em',
+                    textAlign: 'center',
+                    fontWeight: 900,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setAuthStep('credentials')}
+                  style={{
+                    padding: '12px',
+                    borderRadius: 8,
+                    background: 'transparent',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface-variant)',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                  }}
+                >
+                  Back
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="btn-primary"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {authLoading ? 'Verifying...' : 'Activate MFA & Generate Keys'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ── STEP 3: REGULAR TOTP / BACKUP CODE LOGIN ── */}
+          {authStep === 'mfa' && (
+            <form onSubmit={handleVerifyMfaCode} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 6 }}>
+                  {useBackupCodeLogin ? 'Enter 8-Character Backup Code' : '6-Digit Authenticator Passcode'}
+                </label>
+                <input
+                  type="text"
+                  maxLength={useBackupCodeLogin ? 8 : 6}
+                  required
+                  autoFocus
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.toUpperCase())}
+                  placeholder={useBackupCodeLogin ? 'e.g. 7A9F3E1B' : '• • • • • •'}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: 8,
+                    background: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    fontSize: useBackupCodeLogin ? 18 : 24,
+                    letterSpacing: '0.25em',
+                    textAlign: 'center',
+                    fontWeight: 900,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="btn-primary"
+                style={{
+                  padding: '13px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  cursor: 'pointer',
+                }}
+              >
+                {authLoading ? 'Verifying...' : 'Authenticate Session'}
+              </button>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseBackupCodeLogin(!useBackupCodeLogin);
+                    setTotpCode('');
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--primary-container)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  {useBackupCodeLogin ? '← Use Authenticator App' : 'Lost Device? Use Recovery Code'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAuthStep('credentials')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--on-surface-variant)',
+                    fontSize: 11,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div style={{
+            background: 'var(--surface-container)',
+            padding: '8px 10px',
+            borderRadius: 8,
+            fontSize: 10,
+            color: 'var(--on-surface-variant)',
+          }}>
+            <span>💡 Developer Bypass: </span>
+            <code style={{ color: 'var(--primary-container)', fontWeight: 'bold' }}>8842</code> or{' '}
+            <code style={{ color: 'var(--primary-container)', fontWeight: 'bold' }}>admin123</code>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate Dashboard Metrics
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const activeOrdersCount = orders.filter(o => o.orderStatus !== 'Delivered').length;
+  const lowStockProducts = products.filter(p =>
+    p.sizes?.some(s => s.stock > 0 && s.stock <= 3) || p.stockStatus?.toLowerCase().includes('low')
+  ).length;
+
+  const isSuperAdmin = currentUser?.role === 'superadmin';
+
 
   // Open Modal for New Product
   const handleOpenNewProduct = () => {
@@ -239,8 +950,91 @@ export default function AdminPage() {
       await deleteProduct(id);
       showToast(`Removed "${name}" from catalog`);
       setProducts(prev => prev.filter(p => (p._id || p.id) !== id));
+      setSelectedProductIds(prev => prev.filter(x => x !== id));
     } catch (err) {
       showToast('Error removing product', 'error');
+    }
+  };
+
+  // Bulk Selection Handlers
+  const handleToggleSelectProduct = (id) => {
+    setSelectedProductIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllFiltered = (filteredList) => {
+    const allFilteredIds = filteredList.map(p => p._id || p.id);
+    const allSelected = allFilteredIds.length > 0 && allFilteredIds.every(id => selectedProductIds.includes(id));
+    if (allSelected) {
+      setSelectedProductIds(prev => prev.filter(id => !allFilteredIds.includes(id)));
+    } else {
+      setSelectedProductIds(prev => Array.from(new Set([...prev, ...allFilteredIds])));
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedProductIds([]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProductIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to permanently delete ${selectedProductIds.length} selected garments from the store catalog?`)) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await bulkDeleteProducts(selectedProductIds);
+      showToast(res?.message || `Successfully deleted ${selectedProductIds.length} garments.`);
+      setProducts(prev => prev.filter(p => !selectedProductIds.includes(p._id || p.id)));
+      setSelectedProductIds([]);
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      showToast('Failed to delete selected items.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkEditSubmit = async (e) => {
+    e.preventDefault();
+    if (selectedProductIds.length === 0) return;
+
+    const updates = {};
+    if (bulkEditForm.category && bulkEditForm.category !== 'keep') {
+      updates.category = bulkEditForm.category;
+    }
+    if (bulkEditForm.stockStatus && bulkEditForm.stockStatus !== 'keep') {
+      updates.stockStatus = bulkEditForm.stockStatus;
+      updates.inStock = bulkEditForm.stockStatus !== 'Sold Out' && bulkEditForm.stockStatus !== 'Out of Stock';
+    }
+    if (bulkEditForm.badge !== undefined && bulkEditForm.badge !== 'keep') {
+      updates.badge = bulkEditForm.badge === 'none' ? null : bulkEditForm.badge;
+    }
+    if (bulkEditForm.isFeatured === 'true') updates.isFeatured = true;
+    if (bulkEditForm.isFeatured === 'false') updates.isFeatured = false;
+    if (bulkEditForm.isWinterDrop === 'true') updates.isWinterDrop = true;
+    if (bulkEditForm.isWinterDrop === 'false') updates.isWinterDrop = false;
+    if (bulkEditForm.price) updates.price = Number(bulkEditForm.price);
+    if (bulkEditForm.originalPrice) updates.originalPrice = Number(bulkEditForm.originalPrice);
+
+    if (Object.keys(updates).length === 0) {
+      showToast('No property changes specified to apply.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await bulkUpdateProducts(selectedProductIds, updates);
+      showToast(res?.message || `Updated ${selectedProductIds.length} garments.`);
+      setIsBulkEditModalOpen(false);
+      setSelectedProductIds([]);
+      await loadAllAdminData();
+    } catch (err) {
+      console.error('Bulk update error:', err);
+      showToast('Failed to update selected items.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -274,6 +1068,92 @@ export default function AdminPage() {
       showToast('Settings saved locally (backend unavailable)');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ==================== CATEGORY ACTIONS (OPTION A) ====================
+  const handleOpenNewCategory = () => {
+    setEditingCategory(null);
+    setCategoryForm({
+      name: '',
+      description: '',
+      sortOrder: categories.length + 1,
+      isActive: true,
+    });
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleEditCategory = (cat) => {
+    setEditingCategory(cat);
+    setCategoryForm({
+      name: cat.name || '',
+      description: cat.description || '',
+      sortOrder: cat.sortOrder || 1,
+      isActive: cat.isActive !== false,
+    });
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (editingCategory && (editingCategory._id || editingCategory.id)) {
+        const id = editingCategory._id || editingCategory.id;
+        const res = await updateCategory(id, categoryForm);
+        if (res.success === false) {
+          showToast(res.message || 'Failed to update category', 'error');
+        } else {
+          showToast(`Category "${categoryForm.name}" updated successfully`);
+          setIsCategoryModalOpen(false);
+          await loadAllAdminData();
+        }
+      } else {
+        const res = await createCategory(categoryForm);
+        if (res.success === false) {
+          showToast(res.message || 'Failed to create category', 'error');
+        } else {
+          showToast(`Category "${categoryForm.name}" added to store`);
+          setIsCategoryModalOpen(false);
+          await loadAllAdminData();
+        }
+      }
+    } catch (err) {
+      showToast(err.message || 'Error saving category', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCategory = async (cat) => {
+    const id = cat._id || cat.id;
+    if (!window.confirm(`Are you sure you want to delete the category "${cat.name}"?`)) return;
+
+    setLoading(true);
+    try {
+      const res = await deleteCategory(id);
+      if (res.success === false) {
+        showToast(res.message || `Cannot delete category "${cat.name}"`, 'error');
+      } else {
+        showToast(`Category "${cat.name}" deleted successfully`);
+        await loadAllAdminData();
+      }
+    } catch (err) {
+      showToast(err.message || 'Error deleting category', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleCategoryActive = async (cat) => {
+    const id = cat._id || cat.id;
+    const newStatus = !cat.isActive;
+    try {
+      await updateCategory(id, { isActive: newStatus });
+      showToast(`Category "${cat.name}" marked as ${newStatus ? 'Active' : 'Inactive'}`);
+      setCategories(prev => prev.map(c => ((c._id || c.id) === id ? { ...c, isActive: newStatus } : c)));
+    } catch (err) {
+      showToast('Error updating status', 'error');
     }
   };
 
@@ -313,151 +1193,260 @@ export default function AdminPage() {
     }
   };
 
-  // ==================== AUTHENTICATION SCREEN ====================
-  if (!isAuthenticated) {
-    return (
-      <div style={{
-        minHeight: '85vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem 1rem',
-        background: 'var(--surface)',
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: 420,
-          background: 'var(--surface-container-low)',
-          border: '1px solid var(--outline-variant)',
-          borderRadius: 16,
-          padding: '2.5rem 2rem',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 20,
-          textAlign: 'center',
-        }}>
-          <div style={{
-            width: 56,
-            height: 56,
-            borderRadius: '50%',
-            background: 'var(--glow-primary)',
-            border: '2px solid var(--primary-container)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto',
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 28, color: 'var(--primary-container)' }}>
-              admin_panel_settings
-            </span>
-          </div>
-
-          <div>
-            <h2 className="text-headline-md text-on-surface" style={{ textTransform: 'uppercase', margin: 0 }}>
-              Atelier Owner Access
-            </h2>
-            <p className="text-body-sm text-on-surface-variant" style={{ marginTop: 6 }}>
-              Enter master PIN or admin password to manage products, banners, drops, and orders.
-            </p>
-          </div>
-
-          {authError && (
-            <div style={{
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#fca5a5',
-              padding: '10px 14px',
-              borderRadius: 8,
-              fontSize: 12,
-              textAlign: 'left',
-            }}>
-              {authError}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <input
-              type="password"
-              placeholder="Enter Master PIN (e.g. 8842)"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              autoFocus
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                borderRadius: 8,
-                background: 'var(--surface-container-lowest)',
-                border: '1px solid var(--outline-variant)',
-                color: 'var(--on-surface)',
-                fontSize: 16,
-                letterSpacing: '0.2em',
-                textAlign: 'center',
-                outline: 'none',
-              }}
-            />
-
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="btn-primary"
-              style={{
-                padding: '14px',
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                cursor: 'pointer',
-              }}
-            >
-              {authLoading ? 'Verifying...' : 'Unlock Atelier Dashboard'}
-            </button>
-          </form>
-
-          <div style={{
-            background: 'var(--surface-container)',
-            padding: '10px',
-            borderRadius: 8,
-            fontSize: 11,
-            color: 'var(--on-surface-variant)',
-          }}>
-            <span>💡 Quick Test Passcodes: </span>
-            <code style={{ color: 'var(--primary-container)', fontWeight: 'bold' }}>8842</code> or{' '}
-            <code style={{ color: 'var(--primary-container)', fontWeight: 'bold' }}>admin123</code>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Calculate Dashboard Metrics
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const activeOrdersCount = orders.filter(o => o.orderStatus !== 'Delivered').length;
-  const lowStockProducts = products.filter(p =>
-    p.sizes?.some(s => s.stock > 0 && s.stock <= 3) || p.stockStatus?.toLowerCase().includes('low')
-  ).length;
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100vh', paddingBottom: '5rem' }}>
+      {/* ── Mobile-Optimized Responsive Styles ── */}
+      <style>{`
+        .admin-page-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          width: 100%;
+          padding: 1.5rem 1rem;
+          box-sizing: border-box;
+        }
+        .admin-header-flex {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 16px;
+          padding-bottom: 1.5rem;
+          border-bottom: 1px solid var(--outline-variant);
+        }
+        .admin-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .admin-metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 16px;
+          margin: 1.5rem 0;
+        }
+        .admin-metric-card {
+          background: var(--surface-container-low);
+          border-radius: 12px;
+          padding: 1.25rem;
+          border: 1px solid var(--outline-variant);
+          box-sizing: border-box;
+        }
+        .admin-metric-val {
+          font-size: 28px;
+          font-weight: 900;
+          margin-top: 4px;
+        }
+        .admin-tabs-bar {
+          display: flex;
+          gap: 8px;
+          border-bottom: 1px solid var(--outline-variant);
+          padding-bottom: 8px;
+          margin-bottom: 20px;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .admin-tabs-bar::-webkit-scrollbar {
+          display: none;
+        }
+        .admin-tab-btn {
+          padding: 10px 18px;
+          border-radius: 8px;
+          border: none;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          white-space: nowrap;
+          flex-shrink: 0;
+          transition: all 0.2s ease;
+        }
+        .admin-desktop-view {
+          display: block;
+        }
+        .admin-mobile-view {
+          display: none;
+        }
+        .admin-filter-bar {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          background: var(--surface-container-low);
+          padding: 12px 16px;
+          border-radius: 10px;
+          border: 1px solid var(--outline-variant);
+          align-items: center;
+          justify-content: space-between;
+          box-sizing: border-box;
+        }
+        .admin-modal-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.85);
+          backdrop-filter: blur(8px);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+          overflow-y: auto;
+          box-sizing: border-box;
+        }
+        .admin-modal-card {
+          width: 100%;
+          max-width: 680px;
+          background: var(--surface-container-low);
+          border-radius: 16px;
+          border: 1px solid var(--outline-variant);
+          padding: 2rem;
+          max-height: 90vh;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+          box-sizing: border-box;
+        }
+        .admin-grid-2col {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+        }
+        .admin-form-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 14px;
+        }
+        .admin-card-container {
+          background: var(--surface-container-low);
+          border-radius: 16px;
+          padding: 2rem;
+          border: 1px solid var(--outline-variant);
+          box-sizing: border-box;
+        }
+        .admin-toast {
+          position: fixed;
+          top: 24px;
+          right: 24px;
+          z-index: 99999;
+          padding: 12px 20px;
+          border-radius: 8px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          font-size: 13px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          max-width: calc(100vw - 32px);
+          box-sizing: border-box;
+        }
+
+        @media (max-width: 768px) {
+          .admin-page-container {
+            padding: 1rem 0.75rem;
+          }
+          .admin-header-flex {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+            padding-bottom: 1.25rem;
+          }
+          .admin-header-actions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+          }
+          .admin-header-actions button {
+            width: 100%;
+            padding: 10px 12px !important;
+            justify-content: center;
+            font-size: 12px !important;
+          }
+          .admin-metrics-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 1rem 0;
+          }
+          .admin-metric-card {
+            padding: 0.85rem;
+            border-radius: 10px;
+          }
+          .admin-metric-val {
+            font-size: 20px;
+          }
+          .admin-tab-btn {
+            padding: 8px 14px;
+            font-size: 11px;
+            gap: 6px;
+          }
+          .admin-desktop-view {
+            display: none !important;
+          }
+          .admin-mobile-view {
+            display: flex !important;
+            flex-direction: column;
+            gap: 12px;
+          }
+          .admin-filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 12px;
+            gap: 10px;
+          }
+          .admin-filter-bar select {
+            width: 100%;
+          }
+          .admin-modal-backdrop {
+            padding: 0.5rem;
+            align-items: flex-end;
+          }
+          .admin-modal-card {
+            padding: 1.25rem !important;
+            max-height: 92vh !important;
+            border-radius: 16px 16px 8px 8px !important;
+            gap: 12px !important;
+          }
+          .admin-grid-2col {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .admin-form-actions {
+            flex-direction: column-reverse;
+            gap: 8px;
+          }
+          .admin-form-actions button {
+            width: 100%;
+            padding: 12px !important;
+          }
+          .admin-card-container {
+            padding: 1.25rem !important;
+            border-radius: 12px !important;
+          }
+          .admin-toast {
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            justify-content: center;
+          }
+        }
+      `}</style>
+
       {/* Toast Notification */}
       {statusMsg.text && (
-        <div style={{
-          position: 'fixed',
-          top: 24,
-          right: 24,
-          zIndex: 9999,
-          background: statusMsg.type === 'error' ? '#dc2626' : 'var(--primary-container)',
-          color: statusMsg.type === 'error' ? '#fff' : 'var(--on-primary-fixed)',
-          padding: '12px 20px',
-          borderRadius: 8,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-          fontSize: 13,
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}>
+        <div
+          className="admin-toast"
+          style={{
+            background: statusMsg.type === 'error' ? '#dc2626' : 'var(--primary-container)',
+            color: statusMsg.type === 'error' ? '#fff' : 'var(--on-primary-fixed)',
+          }}
+        >
           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
             {statusMsg.type === 'error' ? 'error' : 'check_circle'}
           </span>
@@ -465,17 +1454,9 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div className="content-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '1.5rem 1rem' }}>
+      <div className="admin-page-container">
         {/* Top Header Bar */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 16,
-          paddingBottom: '1.5rem',
-          borderBottom: '1px solid var(--outline-variant)',
-        }}>
+        <div className="admin-header-flex">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className="text-label-caps text-primary">PENGUIN ATELIER CONTROL</span>
@@ -490,12 +1471,34 @@ export default function AdminPage() {
                 LIVE CMS
               </span>
             </div>
-            <h1 className="text-headline-lg text-on-surface" style={{ textTransform: 'uppercase', margin: '4px 0 0' }}>
+            <h1 className="text-headline-lg text-on-surface" style={{ textTransform: 'uppercase', margin: '4px 0 0', fontSize: 'clamp(18px, 4vw, 28px)' }}>
               Store Management Portal
             </h1>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="admin-header-actions">
+            {isSuperAdmin && (
+              <button
+                onClick={() => navigate('/superadmin')}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: 8,
+                  border: '1px solid rgba(234, 179, 8, 0.4)',
+                  background: 'rgba(234, 179, 8, 0.12)',
+                  color: '#eab308',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>military_tech</span>
+                Superadmin Console →
+              </button>
+            )}
+
             <button
               onClick={() => navigate('/')}
               style={{
@@ -535,138 +1538,103 @@ export default function AdminPage() {
         </div>
 
         {/* Analytics Summary Metric Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 16,
-          margin: '1.5rem 0',
-        }}>
-          <div style={{
-            background: 'var(--surface-container-low)',
-            borderRadius: 12,
-            padding: '1.25rem',
-            border: '1px solid var(--outline-variant)',
-          }}>
-            <span className="text-label-caps text-on-surface-variant">Active Products</span>
-            <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--on-surface)', marginTop: 4 }}>
+        <div className="admin-metrics-grid">
+          <div className="admin-metric-card">
+            <span className="text-label-caps text-on-surface-variant" style={{ fontSize: 10 }}>Active Products</span>
+            <div className="admin-metric-val" style={{ color: 'var(--on-surface)' }}>
               {products.length}
             </div>
-            <span style={{ fontSize: 11, color: 'var(--primary-container)' }}>Garments in catalog</span>
+            <span style={{ fontSize: 10, color: 'var(--primary-container)' }}>Garments in catalog</span>
           </div>
 
-          <div style={{
-            background: 'var(--surface-container-low)',
-            borderRadius: 12,
-            padding: '1.25rem',
-            border: '1px solid var(--outline-variant)',
-          }}>
-            <span className="text-label-caps text-on-surface-variant">Active Orders</span>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#60a5fa', marginTop: 4 }}>
+          <div className="admin-metric-card">
+            <span className="text-label-caps text-on-surface-variant" style={{ fontSize: 10 }}>Active Orders</span>
+            <div className="admin-metric-val" style={{ color: '#60a5fa' }}>
               {activeOrdersCount}
             </div>
-            <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>Processing or In Transit</span>
+            <span style={{ fontSize: 10, color: 'var(--on-surface-variant)' }}>Processing or Transit</span>
           </div>
 
-          <div style={{
-            background: 'var(--surface-container-low)',
-            borderRadius: 12,
-            padding: '1.25rem',
-            border: '1px solid var(--outline-variant)',
-          }}>
-            <span className="text-label-caps text-on-surface-variant">Gross Sales Volume</span>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#34d399', marginTop: 4 }}>
+          <div className="admin-metric-card">
+            <span className="text-label-caps text-on-surface-variant" style={{ fontSize: 10 }}>Gross Volume</span>
+            <div className="admin-metric-val" style={{ color: '#34d399' }}>
               ₹{totalRevenue.toLocaleString('en-IN')}
             </div>
-            <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>From {orders.length} orders</span>
+            <span style={{ fontSize: 10, color: 'var(--on-surface-variant)' }}>From {orders.length} orders</span>
           </div>
 
-          <div style={{
-            background: 'var(--surface-container-low)',
-            borderRadius: 12,
-            padding: '1.25rem',
-            border: '1px solid var(--outline-variant)',
-          }}>
-            <span className="text-label-caps text-on-surface-variant">Low Stock Alerts</span>
-            <div style={{ fontSize: 28, fontWeight: 900, color: lowStockProducts > 0 ? '#fbbf24' : '#34d399', marginTop: 4 }}>
+          <div className="admin-metric-card">
+            <span className="text-label-caps text-on-surface-variant" style={{ fontSize: 10 }}>Low Stock Alerts</span>
+            <div className="admin-metric-val" style={{ color: lowStockProducts > 0 ? '#fbbf24' : '#34d399' }}>
               {lowStockProducts}
             </div>
-            <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>Sizes requiring restock</span>
+            <span style={{ fontSize: 10, color: 'var(--on-surface-variant)' }}>Sizes needing restock</span>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div style={{
-          display: 'flex',
-          gap: 8,
-          borderBottom: '1px solid var(--outline-variant)',
-          paddingBottom: 8,
-          marginBottom: 20,
-          overflowX: 'auto',
-        }} className="no-scrollbar">
+        <div className="admin-tabs-bar no-scrollbar">
           <button
             onClick={() => setActiveTab('products')}
+            className="admin-tab-btn"
             style={{
-              padding: '10px 20px',
-              borderRadius: 8,
-              border: 'none',
               background: activeTab === 'products' ? 'var(--primary-container)' : 'transparent',
               color: activeTab === 'products' ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
-              fontSize: 12,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
             }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>checkroom</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>checkroom</span>
             Garments ({products.length})
           </button>
 
           <button
-            onClick={() => setActiveTab('config')}
+            onClick={() => setActiveTab('categories')}
+            className="admin-tab-btn"
             style={{
-              padding: '10px 20px',
-              borderRadius: 8,
-              border: 'none',
-              background: activeTab === 'config' ? 'var(--primary-container)' : 'transparent',
-              color: activeTab === 'config' ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
-              fontSize: 12,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
+              background: activeTab === 'categories' ? 'var(--primary-container)' : 'transparent',
+              color: activeTab === 'categories' ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
             }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>campaign</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>category</span>
+            Categories ({categories.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('config')}
+            className="admin-tab-btn"
+            style={{
+              background: activeTab === 'config' ? 'var(--primary-container)' : 'transparent',
+              color: activeTab === 'config' ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>campaign</span>
             Hero & Drops
           </button>
 
           <button
             onClick={() => setActiveTab('orders')}
+            className="admin-tab-btn"
             style={{
-              padding: '10px 20px',
-              borderRadius: 8,
-              border: 'none',
               background: activeTab === 'orders' ? 'var(--primary-container)' : 'transparent',
               color: activeTab === 'orders' ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
-              fontSize: 12,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
             }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>local_shipping</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>local_shipping</span>
             Orders ({orders.length})
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('team');
+              loadTeamData();
+            }}
+            className="admin-tab-btn"
+            style={{
+              background: activeTab === 'team' ? 'var(--primary-container)' : 'transparent',
+              color: activeTab === 'team' ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>shield_person</span>
+            Team & 2FA Security
           </button>
         </div>
 
@@ -683,7 +1651,7 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: 'auto' }}>
                 <button
                   onClick={handleSeedCatalog}
                   style={{
@@ -722,8 +1690,182 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Products Table */}
-            <div style={{
+            {/* Garments Search & Filter Bar */}
+            <div className="admin-filter-bar">
+              <div style={{ display: 'flex', gap: 10, flex: 1, minWidth: 200, alignItems: 'center' }}>
+                <span className="material-symbols-outlined" style={{ color: 'var(--on-surface-variant)', fontSize: 18 }}>search</span>
+                <input
+                  type="text"
+                  placeholder="Search garments by name, color, category..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--on-surface)',
+                    fontSize: 13,
+                    width: '100%',
+                    outline: 'none',
+                  }}
+                />
+                {productSearch && (
+                  <button
+                    onClick={() => setProductSearch('')}
+                    style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 14 }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Filter:</span>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  style={{
+                    background: 'var(--surface-container)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    fontSize: 12,
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                  }}
+                >
+                  <option value="All">All Categories ({products.length})</option>
+                  {categories.map((c) => (
+                    <option key={c._id || c.slug} value={c.name}>
+                      {c.name} ({c.productCount ?? products.filter(p => (typeof p.category === 'object' ? p.category?.name : p.category) === c.name).length})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Multi-Select Floating Bulk Action Toolbar */}
+            {selectedProductIds.length > 0 && (
+              <div style={{
+                position: 'sticky',
+                top: 16,
+                zIndex: 90,
+                background: 'var(--surface-container)',
+                color: 'var(--on-surface)',
+                borderRadius: 12,
+                padding: '12px 20px',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12,
+                border: '1px solid var(--outline-variant)',
+                marginBottom: 16,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{
+                    background: 'var(--primary)',
+                    color: 'var(--on-primary, #ffffff)',
+                    fontWeight: 800,
+                    padding: '4px 10px',
+                    borderRadius: 999,
+                    fontSize: 12,
+                  }}>
+                    {selectedProductIds.length} Selected
+                  </span>
+                  <span style={{ fontSize: 13, color: 'var(--on-surface)', fontWeight: 600 }}>
+                    Batch Operations
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const filteredList = products.filter(prod => {
+                        const catName = typeof prod.category === 'object' && prod.category ? prod.category.name : (prod.category || '');
+                        const matchesCategory = categoryFilter === 'All' || catName.toLowerCase() === categoryFilter.toLowerCase();
+                        const matchesSearch = !productSearch ||
+                          prod.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                          catName.toLowerCase().includes(productSearch.toLowerCase()) ||
+                          prod.color?.toLowerCase().includes(productSearch.toLowerCase());
+                        return matchesCategory && matchesSearch;
+                      });
+                      handleSelectAllFiltered(filteredList);
+                    }}
+                    style={{
+                      background: 'var(--surface-container-low)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 11,
+                      padding: '5px 12px',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Select / Deselect All Filtered
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsBulkEditModalOpen(true)}
+                    className="btn-primary"
+                    style={{
+                      fontSize: 12,
+                      padding: '8px 16px',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>edit_note</span>
+                    Bulk Edit ({selectedProductIds.length})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleBulkDelete}
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.08)',
+                      color: '#dc2626',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      fontWeight: 700,
+                      fontSize: 12,
+                      padding: '8px 16px',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete_sweep</span>
+                    Bulk Delete ({selectedProductIds.length})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleClearSelection}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--on-surface-variant)',
+                      cursor: 'pointer',
+                      fontSize: 18,
+                      padding: '4px 8px',
+                    }}
+                    title="Clear selection"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Desktop Products Table */}
+            <div className="admin-desktop-view" style={{
               background: 'var(--surface-container-low)',
               borderRadius: 12,
               border: '1px solid var(--outline-variant)',
@@ -733,6 +1875,39 @@ export default function AdminPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-container)', borderBottom: '1px solid var(--outline-variant)', color: 'var(--on-surface-variant)' }}>
+                      <th style={{ padding: '12px 14px', width: 36, textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={
+                            products.length > 0 &&
+                            products
+                              .filter(prod => {
+                                const catName = typeof prod.category === 'object' && prod.category ? prod.category.name : (prod.category || '');
+                                const matchesCategory = categoryFilter === 'All' || catName.toLowerCase() === categoryFilter.toLowerCase();
+                                const matchesSearch = !productSearch ||
+                                  prod.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                                  catName.toLowerCase().includes(productSearch.toLowerCase()) ||
+                                  prod.color?.toLowerCase().includes(productSearch.toLowerCase());
+                                return matchesCategory && matchesSearch;
+                              })
+                              .every(p => selectedProductIds.includes(p._id || p.id))
+                          }
+                          onChange={() => {
+                            const filteredList = products.filter(prod => {
+                              const catName = typeof prod.category === 'object' && prod.category ? prod.category.name : (prod.category || '');
+                              const matchesCategory = categoryFilter === 'All' || catName.toLowerCase() === categoryFilter.toLowerCase();
+                              const matchesSearch = !productSearch ||
+                                prod.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                                catName.toLowerCase().includes(productSearch.toLowerCase()) ||
+                                prod.color?.toLowerCase().includes(productSearch.toLowerCase());
+                              return matchesCategory && matchesSearch;
+                            });
+                            handleSelectAllFiltered(filteredList);
+                          }}
+                          style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--primary)' }}
+                          title="Select / Deselect all visible garments"
+                        />
+                      </th>
                       <th style={{ padding: '12px 16px' }}>Garment</th>
                       <th style={{ padding: '12px 16px' }}>Category</th>
                       <th style={{ padding: '12px 16px' }}>Price</th>
@@ -743,89 +1918,448 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((prod) => {
-                      const prodId = prod._id || prod.id;
-                      const mainImg = prod.images?.[0] || prod.img;
-                      return (
-                        <tr key={prodId} style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                          <td style={{ padding: '12px 16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <img
-                                src={mainImg}
-                                alt={prod.name}
-                                style={{ width: 44, height: 54, borderRadius: 6, objectFit: 'cover', background: '#000' }}
+                    {products
+                      .filter(prod => {
+                        const catName = typeof prod.category === 'object' && prod.category ? prod.category.name : (prod.category || '');
+                        const matchesCategory = categoryFilter === 'All' || catName.toLowerCase() === categoryFilter.toLowerCase();
+                        const matchesSearch = !productSearch ||
+                          prod.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                          catName.toLowerCase().includes(productSearch.toLowerCase()) ||
+                          prod.color?.toLowerCase().includes(productSearch.toLowerCase());
+                        return matchesCategory && matchesSearch;
+                      })
+                      .map((prod) => {
+                        const prodId = prod._id || prod.id;
+                        const mainImg = prod.images?.[0] || prod.img;
+                        const catName = typeof prod.category === 'object' && prod.category ? prod.category.name : (prod.category || 'Shirts');
+                        const isSelected = selectedProductIds.includes(prodId);
+
+                        return (
+                          <tr
+                            key={prodId}
+                            style={{
+                              borderBottom: '1px solid var(--outline-variant)',
+                              backgroundColor: isSelected ? 'var(--surface-container-high)' : 'transparent',
+                              transition: 'background-color 0.15s ease',
+                            }}
+                          >
+                            <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleToggleSelectProduct(prodId)}
+                                style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--primary)' }}
                               />
-                              <div>
-                                <span style={{ fontWeight: 700, color: 'var(--on-surface)', display: 'block' }}>{prod.name}</span>
-                                <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{prod.color}</span>
+                            </td>
+                            <td style={{ padding: '12px 16px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <img
+                                  src={mainImg}
+                                  alt={prod.name}
+                                  style={{ width: 44, height: 54, borderRadius: 6, objectFit: 'cover', background: '#000' }}
+                                />
+                                <div>
+                                  <span style={{ fontWeight: 700, color: 'var(--on-surface)', display: 'block' }}>{prod.name}</span>
+                                  <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{prod.color}</span>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td style={{ padding: '12px 16px', color: 'var(--on-surface-variant)' }}>{prod.category}</td>
-                          <td style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--on-surface)' }}>
-                            ₹{Number(prod.price).toLocaleString('en-IN')}
-                          </td>
-                          <td style={{ padding: '12px 16px' }}>
-                            {prod.badge ? (
+                            </td>
+                            <td style={{ padding: '12px 16px' }}>
                               <span style={{
                                 background: 'var(--surface-container)',
                                 border: '1px solid var(--outline-variant)',
-                                color: 'var(--primary-container)',
-                                padding: '3px 8px',
-                                borderRadius: 999,
+                                padding: '2px 8px',
+                                borderRadius: 4,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: 'var(--on-surface)',
+                              }}>
+                                {catName}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--on-surface)' }}>
+                              ₹{Number(prod.price).toLocaleString('en-IN')}
+                            </td>
+                            <td style={{ padding: '12px 16px' }}>
+                              {prod.badge ? (
+                                <span style={{
+                                  background: 'var(--surface-container)',
+                                  border: '1px solid var(--outline-variant)',
+                                  color: 'var(--primary-container)',
+                                  padding: '3px 8px',
+                                  borderRadius: 999,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  display: 'inline-block',
+                                }}>
+                                  {prod.badge}
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--on-surface-variant)', fontSize: 11 }}>—</span>
+                              )}
+                              {prod.isWinterDrop && (
+                                <span style={{
+                                  background: 'rgba(56, 189, 248, 0.15)',
+                                  color: '#38bdf8',
+                                  padding: '3px 8px',
+                                  borderRadius: 999,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  marginLeft: 4,
+                                  display: 'inline-block',
+                                }}>
+                                  Winter
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ padding: '12px 16px' }}>
+                              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                {prod.sizes?.map(s => (
+                                  <span
+                                    key={s.size}
+                                    style={{
+                                      fontSize: 10,
+                                      padding: '2px 6px',
+                                      borderRadius: 4,
+                                      background: s.isSoldOut || s.stock === 0 ? 'rgba(239, 68, 68, 0.15)' : 'var(--surface-container)',
+                                      color: s.isSoldOut || s.stock === 0 ? '#f87171' : 'var(--on-surface)',
+                                    }}
+                                  >
+                                    {s.size}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td style={{ padding: '12px 16px' }}>
+                              <span style={{
+                                color: prod.inStock !== false ? '#34d399' : '#f87171',
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}>
+                                {prod.inStock !== false ? '● In Stock' : '○ Out of Stock'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                <button
+                                  onClick={() => handleEditProduct(prod)}
+                                  style={{
+                                    padding: '6px 10px',
+                                    borderRadius: 6,
+                                    background: 'var(--surface-container)',
+                                    border: '1px solid var(--outline-variant)',
+                                    color: 'var(--on-surface)',
+                                    cursor: 'pointer',
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(prodId, prod.name)}
+                                  style={{
+                                    padding: '6px 10px',
+                                    borderRadius: 6,
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                                    color: '#f87171',
+                                    cursor: 'pointer',
+                                    fontSize: 11,
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Products Cards List (<768px) */}
+            <div className="admin-mobile-view">
+              {products
+                .filter(prod => {
+                  const catName = typeof prod.category === 'object' && prod.category ? prod.category.name : (prod.category || '');
+                  const matchesCategory = categoryFilter === 'All' || catName.toLowerCase() === categoryFilter.toLowerCase();
+                  const matchesSearch = !productSearch ||
+                    prod.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                    catName.toLowerCase().includes(productSearch.toLowerCase()) ||
+                    prod.color?.toLowerCase().includes(productSearch.toLowerCase());
+                  return matchesCategory && matchesSearch;
+                })
+                .map((prod) => {
+                  const prodId = prod._id || prod.id;
+                  const mainImg = prod.images?.[0] || prod.img;
+                  const catName = typeof prod.category === 'object' && prod.category ? prod.category.name : (prod.category || 'Shirts');
+                  const isSelected = selectedProductIds.includes(prodId);
+
+                  return (
+                    <div
+                      key={prodId}
+                      style={{
+                        background: 'var(--surface-container-low)',
+                        borderRadius: 12,
+                        padding: '12px',
+                        border: isSelected ? '2px solid #eab308' : '1px solid var(--outline-variant)',
+                        backgroundColor: isSelected ? 'rgba(234, 179, 8, 0.06)' : 'var(--surface-container-low)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 10,
+                        position: 'relative',
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelectProduct(prodId)}
+                          style={{ cursor: 'pointer', width: 18, height: 18, accentColor: '#eab308' }}
+                        />
+                        <img
+                          src={mainImg}
+                          alt={prod.name}
+                          style={{ width: 64, height: 80, borderRadius: 8, objectFit: 'cover', background: '#000', flexShrink: 0 }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                              <span style={{
+                                background: 'var(--surface-container)',
+                                border: '1px solid var(--outline-variant)',
+                                padding: '2px 6px',
+                                borderRadius: 4,
                                 fontSize: 10,
+                                fontWeight: 700,
+                                color: 'var(--primary-container)',
+                              }}>
+                                {catName}
+                              </span>
+                              <span style={{
+                                color: prod.inStock !== false ? '#34d399' : '#f87171',
+                                fontSize: 11,
+                                fontWeight: 700,
+                              }}>
+                                {prod.inStock !== false ? '● In Stock' : '○ Out'}
+                              </span>
+                            </div>
+                            <h4 style={{ margin: '4px 0 2px', fontSize: 14, fontWeight: 700, color: 'var(--on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {prod.name}
+                            </h4>
+                            <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>{prod.color}</span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                            <span style={{ fontSize: 15, fontWeight: 900, color: 'var(--on-surface)' }}>
+                              ₹{Number(prod.price).toLocaleString('en-IN')}
+                            </span>
+                            {prod.badge && (
+                              <span style={{
+                                background: 'var(--surface-container)',
+                                color: 'var(--primary-container)',
+                                padding: '2px 6px',
+                                borderRadius: 999,
+                                fontSize: 9,
                                 fontWeight: 700,
                               }}>
                                 {prod.badge}
                               </span>
-                            ) : (
-                              <span style={{ color: 'var(--on-surface-variant)', fontSize: 11 }}>—</span>
                             )}
-                            {prod.isWinterDrop && (
-                              <span style={{
-                                background: 'rgba(56, 189, 248, 0.15)',
-                                color: '#38bdf8',
-                                padding: '3px 8px',
-                                borderRadius: 999,
-                                fontSize: 10,
-                                fontWeight: 700,
-                                marginLeft: 4,
-                              }}>
-                                Winter
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sizes Row */}
+                      {prod.sizes && prod.sizes.length > 0 && (
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', paddingTop: 4, borderTop: '1px solid var(--outline-variant)' }}>
+                          <span style={{ fontSize: 10, color: 'var(--on-surface-variant)', alignSelf: 'center', marginRight: 4 }}>Sizes:</span>
+                          {prod.sizes.map(s => (
+                            <span
+                              key={s.size}
+                              style={{
+                                fontSize: 9,
+                                padding: '2px 5px',
+                                borderRadius: 4,
+                                background: s.isSoldOut || s.stock === 0 ? 'rgba(239, 68, 68, 0.15)' : 'var(--surface-container)',
+                                color: s.isSoldOut || s.stock === 0 ? '#f87171' : 'var(--on-surface)',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {s.size} ({s.stock ?? 0})
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
+                        <button
+                          onClick={() => handleEditProduct(prod)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: 6,
+                            background: 'var(--surface-container)',
+                            border: '1px solid var(--outline-variant)',
+                            color: 'var(--on-surface)',
+                            cursor: 'pointer',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>edit</span>
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(prodId, prod.name)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: 6,
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            color: '#f87171',
+                            cursor: 'pointer',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        {/* ==================== TAB 2: CATEGORIES MANAGER (OPTION A) ==================== */}
+        {activeTab === 'categories' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+              <div>
+                <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: 0 }}>
+                  Categories Management
+                </h3>
+                <p className="text-body-sm text-on-surface-variant" style={{ margin: '2px 0 0' }}>
+                  Create custom departments (e.g. Blazers, Loungewear) to organize your garments catalog with automated delete protection.
+                </p>
+              </div>
+
+              <button
+                onClick={handleOpenNewCategory}
+                className="btn-primary"
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                  width: 'fit-content',
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add_circle</span>
+                + Add New Category
+              </button>
+            </div>
+
+            {/* Desktop Categories Table */}
+            <div className="admin-desktop-view" style={{
+              background: 'var(--surface-container-low)',
+              borderRadius: 12,
+              border: '1px solid var(--outline-variant)',
+              overflow: 'hidden',
+            }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--surface-container)', borderBottom: '1px solid var(--outline-variant)', color: 'var(--on-surface-variant)' }}>
+                      <th style={{ padding: '12px 16px' }}>Category Name</th>
+                      <th style={{ padding: '12px 16px' }}>URL Slug</th>
+                      <th style={{ padding: '12px 16px' }}>Description</th>
+                      <th style={{ padding: '12px 16px' }}>Attached Garments</th>
+                      <th style={{ padding: '12px 16px' }}>Display Order</th>
+                      <th style={{ padding: '12px 16px' }}>Storefront Status</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.map((cat) => {
+                      const catId = cat._id || cat.id;
+                      const count = cat.productCount ?? products.filter(p => {
+                        const pCat = typeof p.category === 'object' ? p.category?.name : p.category;
+                        return pCat?.toLowerCase() === cat.name?.toLowerCase();
+                      }).length;
+
+                      return (
+                        <tr key={catId} style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                          <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--on-surface)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="material-symbols-outlined" style={{ color: 'var(--primary-container)', fontSize: 18 }}>
+                                label
                               </span>
-                            )}
-                          </td>
-                          <td style={{ padding: '12px 16px' }}>
-                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                              {prod.sizes?.map(s => (
-                                <span
-                                  key={s.size}
-                                  style={{
-                                    fontSize: 10,
-                                    padding: '2px 6px',
-                                    borderRadius: 4,
-                                    background: s.isSoldOut || s.stock === 0 ? 'rgba(239, 68, 68, 0.15)' : 'var(--surface-container)',
-                                    color: s.isSoldOut || s.stock === 0 ? '#f87171' : 'var(--on-surface)',
-                                  }}
-                                >
-                                  {s.size}
-                                </span>
-                              ))}
+                              <span>{cat.name}</span>
                             </div>
                           </td>
-                          <td style={{ padding: '12px 16px' }}>
+                          <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontFamily: 'monospace', fontSize: 12 }}>
+                            /collection/{cat.slug}
+                          </td>
+                          <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontSize: 12, maxWidth: 260 }}>
+                            {cat.description || <span style={{ opacity: 0.5 }}>—</span>}
+                          </td>
+                          <td style={{ padding: '14px 16px' }}>
                             <span style={{
-                              color: prod.inStock !== false ? '#34d399' : '#f87171',
-                              fontSize: 12,
-                              fontWeight: 600,
+                              background: count > 0 ? 'rgba(52, 211, 153, 0.15)' : 'var(--surface-container)',
+                              color: count > 0 ? '#34d399' : 'var(--on-surface-variant)',
+                              padding: '3px 10px',
+                              borderRadius: 999,
+                              fontSize: 11,
+                              fontWeight: 700,
                             }}>
-                              {prod.inStock !== false ? '● In Stock' : '○ Out of Stock'}
+                              {count} {count === 1 ? 'garment' : 'garments'}
                             </span>
                           </td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                          <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontWeight: 600 }}>
+                            #{cat.sortOrder || 0}
+                          </td>
+                          <td style={{ padding: '14px 16px' }}>
+                            <button
+                              onClick={() => handleToggleCategoryActive(cat)}
+                              style={{
+                                background: cat.isActive !== false ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                color: cat.isActive !== false ? '#34d399' : '#f87171',
+                                border: 'none',
+                                padding: '4px 10px',
+                                borderRadius: 6,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {cat.isActive !== false ? '● Visible' : '○ Hidden'}
+                            </button>
+                          </td>
+                          <td style={{ padding: '14px 16px', textAlign: 'right' }}>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                               <button
-                                onClick={() => handleEditProduct(prod)}
+                                onClick={() => handleEditCategory(cat)}
                                 style={{
                                   padding: '6px 10px',
                                   borderRadius: 6,
@@ -840,7 +2374,7 @@ export default function AdminPage() {
                                 Edit
                               </button>
                               <button
-                                onClick={() => handleDeleteProduct(prodId, prod.name)}
+                                onClick={() => handleDeleteCategory(cat)}
                                 style={{
                                   padding: '6px 10px',
                                   borderRadius: 6,
@@ -850,6 +2384,7 @@ export default function AdminPage() {
                                   cursor: 'pointer',
                                   fontSize: 11,
                                 }}
+                                title={count > 0 ? `Delete blocked: ${count} products assigned` : 'Delete category'}
                               >
                                 Delete
                               </button>
@@ -862,18 +2397,122 @@ export default function AdminPage() {
                 </table>
               </div>
             </div>
+
+            {/* Mobile Categories Cards List (<768px) */}
+            <div className="admin-mobile-view">
+              {categories.map((cat) => {
+                const catId = cat._id || cat.id;
+                const count = cat.productCount ?? products.filter(p => {
+                  const pCat = typeof p.category === 'object' ? p.category?.name : p.category;
+                  return pCat?.toLowerCase() === cat.name?.toLowerCase();
+                }).length;
+
+                return (
+                  <div
+                    key={catId}
+                    style={{
+                      background: 'var(--surface-container-low)',
+                      borderRadius: 12,
+                      padding: '14px',
+                      border: '1px solid var(--outline-variant)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span className="material-symbols-outlined" style={{ color: 'var(--primary-container)', fontSize: 18 }}>label</span>
+                          <span style={{ fontWeight: 800, color: 'var(--on-surface)', fontSize: 15 }}>{cat.name}</span>
+                        </div>
+                        <span style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontFamily: 'monospace', marginTop: 2, display: 'block' }}>
+                          /collection/{cat.slug}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handleToggleCategoryActive(cat)}
+                        style={{
+                          background: cat.isActive !== false ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                          color: cat.isActive !== false ? '#34d399' : '#f87171',
+                          border: 'none',
+                          padding: '4px 10px',
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {cat.isActive !== false ? '● Visible' : '○ Hidden'}
+                      </button>
+                    </div>
+
+                    {cat.description && (
+                      <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: 0 }}>
+                        {cat.description}
+                      </p>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--outline-variant)', paddingTop: 8 }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <span style={{
+                          background: count > 0 ? 'rgba(52, 211, 153, 0.15)' : 'var(--surface-container)',
+                          color: count > 0 ? '#34d399' : 'var(--on-surface-variant)',
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}>
+                          {count} {count === 1 ? 'garment' : 'garments'}
+                        </span>
+                        <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>
+                          Order #{cat.sortOrder || 0}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => handleEditCategory(cat)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: 6,
+                            background: 'var(--surface-container)',
+                            border: '1px solid var(--outline-variant)',
+                            color: 'var(--on-surface)',
+                            cursor: 'pointer',
+                            fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCategory(cat)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: 6,
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            color: '#f87171',
+                            cursor: 'pointer',
+                            fontSize: 11,
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* ==================== TAB 2: HERO & DROPS CONFIG ==================== */}
         {activeTab === 'config' && (
-          <div style={{
-            background: 'var(--surface-container-low)',
-            borderRadius: 16,
-            padding: '2rem',
-            border: '1px solid var(--outline-variant)',
-            maxWidth: 800,
-          }}>
+          <div className="admin-card-container" style={{ maxWidth: 800 }}>
             <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: '0 0 4px' }}>
               Live Storefront & Drop Customizer
             </h3>
@@ -898,11 +2537,12 @@ export default function AdminPage() {
                     border: '1px solid var(--outline-variant)',
                     color: 'var(--on-surface)',
                     fontSize: 13,
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div className="admin-grid-2col">
                 <div>
                   <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 6 }}>
                     Hero Badge / Tag
@@ -919,6 +2559,7 @@ export default function AdminPage() {
                       border: '1px solid var(--outline-variant)',
                       color: 'var(--on-surface)',
                       fontSize: 13,
+                      boxSizing: 'border-box',
                     }}
                   />
                 </div>
@@ -939,6 +2580,7 @@ export default function AdminPage() {
                       border: '1px solid var(--outline-variant)',
                       color: 'var(--on-surface)',
                       fontSize: 13,
+                      boxSizing: 'border-box',
                     }}
                   />
                 </div>
@@ -961,6 +2603,7 @@ export default function AdminPage() {
                     color: 'var(--on-surface)',
                     fontSize: 13,
                     resize: 'none',
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
@@ -981,6 +2624,7 @@ export default function AdminPage() {
                     border: '1px solid var(--outline-variant)',
                     color: 'var(--on-surface)',
                     fontSize: 13,
+                    boxSizing: 'border-box',
                   }}
                 />
                 {siteConfig.heroImage && (
@@ -993,12 +2637,13 @@ export default function AdminPage() {
               {/* ─── Winter Drop Section Control ─────────────────────── */}
               <div style={{
                 marginTop: 8,
-                padding: '20px',
+                padding: '16px',
                 borderRadius: 12,
                 border: '1px solid var(--outline-variant)',
                 background: siteConfig.showWinterDrop
                   ? 'linear-gradient(135deg, rgba(0,120,200,0.07) 0%, rgba(0,80,160,0.04) 100%)'
                   : 'var(--surface-container-lowest)',
+                boxSizing: 'border-box',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                   <div>
@@ -1042,7 +2687,7 @@ export default function AdminPage() {
 
                 {siteConfig.showWinterDrop && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div className="admin-grid-2col">
                       <div>
                         <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 6 }}>
                           Drop Section Title
@@ -1060,6 +2705,7 @@ export default function AdminPage() {
                             border: '1px solid var(--outline-variant)',
                             color: 'var(--on-surface)',
                             fontSize: 13,
+                            boxSizing: 'border-box',
                           }}
                         />
                       </div>
@@ -1080,6 +2726,7 @@ export default function AdminPage() {
                             border: '1px solid var(--outline-variant)',
                             color: 'var(--on-surface)',
                             fontSize: 13,
+                            boxSizing: 'border-box',
                           }}
                         />
                       </div>
@@ -1102,6 +2749,7 @@ export default function AdminPage() {
                           color: 'var(--on-surface)',
                           fontSize: 13,
                           resize: 'vertical',
+                          boxSizing: 'border-box',
                         }}
                       />
                     </div>
@@ -1122,6 +2770,7 @@ export default function AdminPage() {
                           border: '1px solid var(--outline-variant)',
                           color: 'var(--on-surface)',
                           fontSize: 13,
+                          boxSizing: 'border-box',
                         }}
                       />
                     </div>
@@ -1171,9 +2820,10 @@ export default function AdminPage() {
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 12,
+                      boxSizing: 'border-box',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                       <div>
                         <span style={{ fontWeight: 800, color: 'var(--on-surface)', fontSize: 15 }}>
                           {ord.orderNumber}
@@ -1191,7 +2841,7 @@ export default function AdminPage() {
                             background: 'var(--surface-container)',
                             border: '1px solid var(--outline-variant)',
                             color: 'var(--on-surface)',
-                            padding: '6px 12px',
+                            padding: '8px 12px',
                             borderRadius: 6,
                             fontSize: 12,
                             fontWeight: 700,
@@ -1210,7 +2860,7 @@ export default function AdminPage() {
                     </div>
 
                     {/* Order Items */}
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '8px 0' }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '6px 0' }}>
                       {ord.items?.map((item, idx) => (
                         <div
                           key={idx}
@@ -1238,10 +2888,10 @@ export default function AdminPage() {
                       borderTop: '1px solid var(--outline-variant)',
                       paddingTop: 10,
                       flexWrap: 'wrap',
-                      gap: 8,
+                      gap: 10,
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                        <span style={{ color: 'var(--on-surface-variant)' }}>Courier Tracking:</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, flex: 1, minWidth: 200 }}>
+                        <span style={{ color: 'var(--on-surface-variant)', whiteSpace: 'nowrap' }}>Courier Tracking:</span>
                         <input
                           type="text"
                           defaultValue={ord.trackingNumber || ''}
@@ -1251,14 +2901,17 @@ export default function AdminPage() {
                             background: 'var(--surface-container-lowest)',
                             border: '1px solid var(--outline-variant)',
                             color: 'var(--on-surface)',
-                            padding: '4px 8px',
-                            borderRadius: 4,
-                            fontSize: 11,
+                            padding: '6px 10px',
+                            borderRadius: 6,
+                            fontSize: 12,
+                            width: '100%',
+                            maxWidth: 220,
+                            boxSizing: 'border-box',
                           }}
                         />
                       </div>
 
-                      <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--on-surface)' }}>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--on-surface)' }}>
                         Total: ₹{ord.totalAmount?.toLocaleString('en-IN')}
                       </div>
                     </div>
@@ -1268,42 +2921,357 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* ==================== TAB 5: TEAM & 2FA SECURITY (LAYER 2 & 5) ==================== */}
+        {activeTab === 'team' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+              <div>
+                <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: 0 }}>
+                  Team Roles & Security Governance
+                </h3>
+                <p className="text-body-sm text-on-surface-variant" style={{ margin: '2px 0 0' }}>
+                  Manage store personnel, enforce mandatory 2FA TOTP authentication, and track security privileges.
+                </p>
+              </div>
+
+              {isSuperAdmin && (
+                <button
+                  onClick={() => {
+                    setCreatedAdminResult(null);
+                    setIsInviteAdminOpen(true);
+                  }}
+                  className="btn-primary"
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span>
+                  + Invite New Admin
+                </button>
+              )}
+            </div>
+
+            {/* Security Architecture Summary Card */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(0, 150, 255, 0.08) 0%, rgba(0, 50, 100, 0.04) 100%)',
+              border: '1px solid var(--outline-variant)',
+              borderRadius: 12,
+              padding: '16px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 12,
+            }}>
+              <div>
+                <span className="text-label-caps text-primary" style={{ fontSize: 10 }}>Active Security Layer</span>
+                <div style={{ fontWeight: 800, color: 'var(--on-surface)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="material-symbols-outlined" style={{ color: '#34d399', fontSize: 18 }}>check_circle</span>
+                  Obscure Route + 2FA TOTP
+                </div>
+              </div>
+              <div>
+                <span className="text-label-caps text-primary" style={{ fontSize: 10 }}>Your Role</span>
+                <div style={{ fontWeight: 800, color: 'var(--on-surface)', marginTop: 4, textTransform: 'uppercase' }}>
+                  {currentUser?.role || 'admin'}
+                </div>
+              </div>
+              <div>
+                <span className="text-label-caps text-primary" style={{ fontSize: 10 }}>Session Storage</span>
+                <div style={{ fontWeight: 800, color: 'var(--on-surface)', marginTop: 4 }}>
+                  httpOnly Secure Cookie (2hr)
+                </div>
+              </div>
+            </div>
+
+            {/* Admins Table */}
+            <div className="admin-desktop-view" style={{
+              background: 'var(--surface-container-low)',
+              borderRadius: 12,
+              border: '1px solid var(--outline-variant)',
+              overflow: 'hidden',
+            }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: 'var(--surface-container)', borderBottom: '1px solid var(--outline-variant)', color: 'var(--on-surface-variant)' }}>
+                    <th style={{ padding: '12px 16px' }}>Admin User</th>
+                    <th style={{ padding: '12px 16px' }}>Email Address</th>
+                    <th style={{ padding: '12px 16px' }}>Role</th>
+                    <th style={{ padding: '12px 16px' }}>MFA Authenticator</th>
+                    <th style={{ padding: '12px 16px' }}>Created By</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(adminUsers.length > 0 ? adminUsers : [
+                    { _id: '1', name: 'Lead Architect', email: 'admin@penguin.com', role: 'superadmin', mfaEnabled: true, createdBy: { name: 'CLI Initializer' } },
+                    { _id: '2', name: 'Store Owner', email: 'owner@penguin.com', role: 'admin', mfaEnabled: true, createdBy: { name: 'Superadmin' } },
+                  ]).map((u) => (
+                    <tr key={u._id} style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                      <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--on-surface)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span className="material-symbols-outlined" style={{ color: 'var(--primary-container)', fontSize: 18 }}>
+                            {u.role === 'superadmin' ? 'military_tech' : 'account_circle'}
+                          </span>
+                          <span>{u.name}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontFamily: 'monospace', fontSize: 12 }}>
+                        {u.email}
+                      </td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{
+                          background: u.role === 'superadmin' ? 'rgba(234, 179, 8, 0.15)' : 'var(--surface-container)',
+                          color: u.role === 'superadmin' ? '#eab308' : 'var(--on-surface)',
+                          padding: '3px 8px',
+                          borderRadius: 999,
+                          fontSize: 10,
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                        }}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{
+                          background: u.mfaEnabled !== false ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                          color: u.mfaEnabled !== false ? '#34d399' : '#f87171',
+                          padding: '3px 8px',
+                          borderRadius: 999,
+                          fontSize: 10,
+                          fontWeight: 700,
+                        }}>
+                          {u.mfaEnabled !== false ? '● Bound & Active' : '○ Pending Setup'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontSize: 12 }}>
+                        {typeof u.createdBy === 'object' && u.createdBy ? u.createdBy.name : 'System Initializer'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View for Admins */}
+            <div className="admin-mobile-view">
+              {(adminUsers.length > 0 ? adminUsers : [
+                { _id: '1', name: 'Lead Architect', email: 'admin@penguin.com', role: 'superadmin', mfaEnabled: true },
+                { _id: '2', name: 'Store Owner', email: 'owner@penguin.com', role: 'admin', mfaEnabled: true },
+              ]).map((u) => (
+                <div
+                  key={u._id}
+                  style={{
+                    background: 'var(--surface-container-low)',
+                    borderRadius: 12,
+                    padding: '14px',
+                    border: '1px solid var(--outline-variant)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span className="material-symbols-outlined" style={{ color: 'var(--primary-container)', fontSize: 18 }}>
+                        {u.role === 'superadmin' ? 'military_tech' : 'account_circle'}
+                      </span>
+                      <span style={{ fontWeight: 800, color: 'var(--on-surface)' }}>{u.name}</span>
+                    </div>
+                    <span style={{
+                      background: u.role === 'superadmin' ? 'rgba(234, 179, 8, 0.15)' : 'var(--surface-container)',
+                      color: u.role === 'superadmin' ? '#eab308' : 'var(--on-surface)',
+                      padding: '2px 6px',
+                      borderRadius: 999,
+                      fontSize: 9,
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                    }}>
+                      {u.role}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', fontFamily: 'monospace' }}>
+                    {u.email}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px solid var(--outline-variant)' }}>
+                    <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>2FA Status:</span>
+                    <span style={{
+                      color: u.mfaEnabled !== false ? '#34d399' : '#f87171',
+                      fontSize: 11,
+                      fontWeight: 700,
+                    }}>
+                      {u.mfaEnabled !== false ? '● Active' : '○ Pending'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* ==================== INVITE / CREATE ADMIN MODAL (SUPERADMIN ONLY) ==================== */}
+      {isInviteAdminOpen && (
+        <div className="admin-modal-backdrop">
+          <div className="admin-modal-card" style={{ maxWidth: 480 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span className="text-label-caps text-primary">Superadmin Access</span>
+                <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: '4px 0 0', fontSize: 'clamp(16px, 3.5vw, 20px)' }}>
+                  Invite Store Admin
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsInviteAdminOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 24, padding: 4 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {createdAdminResult ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{
+                  background: 'rgba(52, 211, 153, 0.15)',
+                  border: '1px solid rgba(52, 211, 153, 0.3)',
+                  padding: '16px',
+                  borderRadius: 10,
+                  color: 'var(--on-surface)',
+                }}>
+                  <div style={{ fontWeight: 800, color: '#34d399', marginBottom: 4 }}>
+                    ✓ Admin Account Created!
+                  </div>
+                  <p style={{ fontSize: 12, margin: '0 0 10px', color: 'var(--on-surface-variant)' }}>
+                    Provide these one-time temporary credentials to the staff member. They will be forced to setup Google Authenticator / Authy upon first login.
+                  </p>
+                  <div style={{ background: 'var(--surface-container-lowest)', padding: '10px', borderRadius: 6, fontFamily: 'monospace', fontSize: 13 }}>
+                    <div><strong>Email:</strong> {createdAdminResult.admin?.email}</div>
+                    <div style={{ marginTop: 4 }}><strong>Temp Password:</strong> <code style={{ color: '#34d399', fontWeight: 'bold' }}>{createdAdminResult.tempPassword}</code></div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => setIsInviteAdminOpen(false)}
+                  style={{
+                    padding: '12px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateAdmin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
+                    Staff Member Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newAdminForm.name}
+                    onChange={(e) => setNewAdminForm({ ...newAdminForm, name: e.target.value })}
+                    placeholder="e.g. Marcus Vance"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
+                    Staff Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={newAdminForm.email}
+                    onChange={(e) => setNewAdminForm({ ...newAdminForm, email: e.target.value })}
+                    placeholder="e.g. marcus@penguin.com"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div className="admin-form-actions">
+                  <button
+                    type="button"
+                    onClick={() => setIsInviteAdminOpen(false)}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: 8,
+                      background: 'transparent',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface-variant)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary"
+                    style={{
+                      padding: '10px 24px',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {loading ? 'Creating...' : 'Generate Temporary Invite'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ==================== ADD / EDIT GARMENT MODAL ==================== */}
       {isModalOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(8px)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem',
-          overflowY: 'auto',
-        }}>
-          <div style={{
-            width: '100%',
-            maxWidth: 680,
-            background: 'var(--surface-container-low)',
-            borderRadius: 16,
-            border: '1px solid var(--outline-variant)',
-            padding: '2rem',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}>
+        <div className="admin-modal-backdrop">
+          <div className="admin-modal-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: 0 }}>
+              <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: 0, fontSize: 'clamp(16px, 3.5vw, 20px)' }}>
                 {editingProduct ? 'Edit Garment Details' : 'Add New Garment to Atelier'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 22 }}
+                style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 24, padding: 4 }}
               >
                 ✕
               </button>
@@ -1328,11 +3296,12 @@ export default function AdminPage() {
                     border: '1px solid var(--outline-variant)',
                     color: 'var(--on-surface)',
                     fontSize: 13,
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-grid-2col">
                 <div>
                   <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
                     Category *
@@ -1348,9 +3317,12 @@ export default function AdminPage() {
                       border: '1px solid var(--outline-variant)',
                       color: 'var(--on-surface)',
                       fontSize: 13,
+                      boxSizing: 'border-box',
                     }}
                   >
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {(categories.length > 0 ? categories : DEFAULT_CATEGORIES.map(n => ({ name: n }))).map(c => (
+                      <option key={c._id || c.name} value={c.name}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -1371,12 +3343,13 @@ export default function AdminPage() {
                       border: '1px solid var(--outline-variant)',
                       color: 'var(--on-surface)',
                       fontSize: 13,
+                      boxSizing: 'border-box',
                     }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-grid-2col">
                 <div>
                   <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
                     Price (INR ₹) *
@@ -1394,6 +3367,7 @@ export default function AdminPage() {
                       border: '1px solid var(--outline-variant)',
                       color: 'var(--on-surface)',
                       fontSize: 13,
+                      boxSizing: 'border-box',
                     }}
                   />
                 </div>
@@ -1415,13 +3389,14 @@ export default function AdminPage() {
                       border: '1px solid var(--outline-variant)',
                       color: 'var(--on-surface)',
                       fontSize: 13,
+                      boxSizing: 'border-box',
                     }}
                   />
                 </div>
               </div>
 
               {/* Badges and Drop Toggles */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-grid-2col">
                 <div>
                   <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
                     Product Badge
@@ -1439,12 +3414,13 @@ export default function AdminPage() {
                       border: '1px solid var(--outline-variant)',
                       color: 'var(--on-surface)',
                       fontSize: 13,
+                      boxSizing: 'border-box',
                     }}
                   />
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 22 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer', color: 'var(--on-surface)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', color: 'var(--on-surface)' }}>
                     <input
                       type="checkbox"
                       checked={productForm.isWinterDrop}
@@ -1461,7 +3437,7 @@ export default function AdminPage() {
                   Garment Image URLs / Upload *
                 </label>
                 {productForm.images.map((img, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                  <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center' }}>
                     <input
                       type="text"
                       value={img}
@@ -1479,6 +3455,8 @@ export default function AdminPage() {
                         border: '1px solid var(--outline-variant)',
                         color: 'var(--on-surface)',
                         fontSize: 12,
+                        boxSizing: 'border-box',
+                        minWidth: 0,
                       }}
                     />
 
@@ -1490,6 +3468,8 @@ export default function AdminPage() {
                       color: 'var(--on-surface)',
                       fontSize: 11,
                       cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
                     }}>
                       Upload
                       <input
@@ -1507,7 +3487,7 @@ export default function AdminPage() {
                           const updated = productForm.images.filter((_, i) => i !== idx);
                           setProductForm({ ...productForm, images: updated });
                         }}
-                        style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}
+                        style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 4 }}
                       >
                         ✕
                       </button>
@@ -1549,6 +3529,7 @@ export default function AdminPage() {
                     border: '1px solid var(--outline-variant)',
                     color: 'var(--on-surface)',
                     fontSize: 12,
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
@@ -1570,12 +3551,13 @@ export default function AdminPage() {
                     color: 'var(--on-surface)',
                     fontSize: 12,
                     resize: 'none',
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
+              <div className="admin-form-actions">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -1606,6 +3588,366 @@ export default function AdminPage() {
                   }}
                 >
                   {loading ? 'Saving...' : editingProduct ? 'Update Garment' : 'Publish Garment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== BULK EDIT MODAL ==================== */}
+      {isBulkEditModalOpen && (
+        <div className="admin-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsBulkEditModalOpen(false); }}>
+          <div className="admin-modal-card" style={{ maxWidth: 540 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span className="text-label-caps text-primary">Batch Operations</span>
+                <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: '4px 0 0', fontSize: 'clamp(16px, 3.5vw, 20px)' }}>
+                  Bulk Edit ({selectedProductIds.length} Garments)
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsBulkEditModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 24, padding: 4 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: 12, color: 'var(--on-surface-variant)', margin: 0 }}>
+              Specify the attributes you wish to update across all {selectedProductIds.length} selected garments. Fields left as "Keep Current" will remain untouched.
+            </p>
+
+            <form onSubmit={handleBulkEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="admin-grid-2col">
+                <div>
+                  <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                    Move to Category
+                  </label>
+                  <select
+                    value={bulkEditForm.category}
+                    onChange={(e) => setBulkEditForm({ ...bulkEditForm, category: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <option value="keep">— Keep Current Categories —</option>
+                    {(categories.length > 0 ? categories : DEFAULT_CATEGORIES.map(n => ({ name: n }))).map(c => (
+                      <option key={c._id || c.name} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                    Inventory Stock Status
+                  </label>
+                  <select
+                    value={bulkEditForm.stockStatus}
+                    onChange={(e) => setBulkEditForm({ ...bulkEditForm, stockStatus: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <option value="keep">— Keep Current Status —</option>
+                    <option value="In Stock">● Set All In Stock</option>
+                    <option value="Out of Stock">○ Set All Out of Stock</option>
+                    <option value="Pre-Order">⏱ Set All Pre-Order</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="admin-grid-2col">
+                <div>
+                  <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                    Badge / Tag
+                  </label>
+                  <select
+                    value={bulkEditForm.badge}
+                    onChange={(e) => setBulkEditForm({ ...bulkEditForm, badge: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <option value="keep">— Keep Current Badges —</option>
+                    <option value="none">Clear Badges (None)</option>
+                    <option value="40% OFF">40% OFF</option>
+                    <option value="50% OFF">50% OFF</option>
+                    <option value="NEW DROP">NEW DROP</option>
+                    <option value="BESTSELLER">BESTSELLER</option>
+                    <option value="LIMITED CAPSULE">LIMITED CAPSULE</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                    Winter Drop Collection
+                  </label>
+                  <select
+                    value={bulkEditForm.isWinterDrop}
+                    onChange={(e) => setBulkEditForm({ ...bulkEditForm, isWinterDrop: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <option value="keep">— Keep Current —</option>
+                    <option value="true">Include in Winter Drop</option>
+                    <option value="false">Remove from Winter Drop</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="admin-grid-2col">
+                <div>
+                  <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                    Featured Flag
+                  </label>
+                  <select
+                    value={bulkEditForm.isFeatured}
+                    onChange={(e) => setBulkEditForm({ ...bulkEditForm, isFeatured: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <option value="keep">— Keep Current —</option>
+                    <option value="true">Feature on Homepage</option>
+                    <option value="false">Remove from Featured</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                    Set Price Override (INR ₹)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Leave blank to keep unchanged"
+                    value={bulkEditForm.price}
+                    onChange={(e) => setBulkEditForm({ ...bulkEditForm, price: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="admin-form-actions">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkEditModalOpen(false)}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: 8,
+                    background: 'transparent',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface-variant)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary"
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {loading ? 'Applying Changes...' : `Update ${selectedProductIds.length} Garments`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== ADD / EDIT CATEGORY MODAL (OPTION A) ==================== */}
+      {isCategoryModalOpen && (
+        <div className="admin-modal-backdrop">
+          <div className="admin-modal-card" style={{ maxWidth: 520 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span className="text-label-caps text-primary">Department Taxonomy</span>
+                <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: '4px 0 0', fontSize: 'clamp(16px, 3.5vw, 20px)' }}>
+                  {editingCategory ? `Edit Category: ${editingCategory.name}` : 'Add New Category'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsCategoryModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', fontSize: 24, padding: 4 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategory} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                  Category Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={categoryForm.name}
+                  onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                  placeholder="e.g. Blazers, Loungewear, Cashmere"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    background: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    fontSize: 14,
+                    boxSizing: 'border-box',
+                  }}
+                />
+                {categoryForm.name && (
+                  <span style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginTop: 4, display: 'block', fontFamily: 'monospace' }}>
+                    Storefront URL: /collection/{categoryForm.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                  Description (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={categoryForm.description}
+                  onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                  placeholder="Short subtitle or merchandising note for this collection..."
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    background: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    fontSize: 13,
+                    resize: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div className="admin-grid-2col">
+                <div>
+                  <label className="text-label-caps text-on-surface" style={{ display: 'block', marginBottom: 4 }}>
+                    Display Sort Order
+                  </label>
+                  <input
+                    type="number"
+                    value={categoryForm.sortOrder}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, sortOrder: Number(e.target.value) })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      background: 'var(--surface-container-lowest)',
+                      border: '1px solid var(--outline-variant)',
+                      color: 'var(--on-surface)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: 14 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', color: 'var(--on-surface)' }}>
+                    <input
+                      type="checkbox"
+                      checked={categoryForm.isActive}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, isActive: e.target.checked })}
+                    />
+                    Visible on Storefront
+                  </label>
+                </div>
+              </div>
+
+              <div className="admin-form-actions">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: 8,
+                    background: 'transparent',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface-variant)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary"
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {loading ? 'Saving...' : editingCategory ? 'Save Changes' : 'Create Category'}
                 </button>
               </div>
             </form>

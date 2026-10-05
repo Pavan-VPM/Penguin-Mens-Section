@@ -13,6 +13,7 @@ import WishlistPage from './pages/Wishlist'
 import AccountPage from './pages/Account'
 import SearchPage from './pages/Search'
 import AdminPage from './pages/Admin'
+import SuperAdminPage from './pages/SuperAdmin'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -24,8 +25,14 @@ function ScrollToTop() {
 
 export default function App() {
   const location = useLocation()
+  const adminPath = import.meta.env.VITE_ADMIN_PANEL_PATH || 'penguin-ctrl-x7k2'
+  const superAdminPath = import.meta.env.VITE_SUPERADMIN_PATH || 'penguin-super-ctrl'
   const isCheckout = location.pathname === '/checkout'
-  const isAdmin = location.pathname === '/admin'
+  const isAdmin =
+    location.pathname.startsWith(`/${adminPath}`) ||
+    location.pathname.startsWith(`/${superAdminPath}`) ||
+    location.pathname === '/admin' ||
+    location.pathname === '/superadmin'
 
   return (
     <CartProvider>
@@ -49,8 +56,8 @@ export default function App() {
           flexDirection: 'column',
           position: 'relative'
         }}>
-          {/* Global Header */}
-          <Header />
+          {/* Global Header (hidden on admin portal and checkout) */}
+          {!isCheckout && !isAdmin && <Header />}
 
           {/* Main Route Content */}
           <main className="main-content">
@@ -60,12 +67,25 @@ export default function App() {
               <Route path="/collection" element={<CollectionPage />} />
               <Route path="/collection/:category" element={<CollectionPage />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/products/:id" element={<ProductDetailPage />} />
+              <Route path="/product/:slug" element={<ProductDetailPage />} />
+              <Route path="/products/:slug" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/search" element={<SearchPage />} />
-              <Route path="/admin" element={<AdminPage />} />
+              
+              {/* Layer 1: Dedicated Store Admin Route (Merchandising & Orders) */}
+              <Route path={`/${adminPath}`} element={<AdminPage />} />
+              <Route path={`/${adminPath}/*`} element={<AdminPage />} />
+              <Route path="/admin" element={<Navigate to={`/${adminPath}`} replace />} />
+
+              {/* Dedicated Superadmin Route (Admin Provisioning & Security Governance) */}
+              <Route path={`/${superAdminPath}`} element={<SuperAdminPage />} />
+              <Route path={`/${superAdminPath}/*`} element={<SuperAdminPage />} />
+              <Route path="/superadmin" element={<Navigate to={`/${superAdminPath}`} replace />} />
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>

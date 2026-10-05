@@ -1,4 +1,4 @@
-import Product from '../models/Product.js';
+import prisma from '../config/prisma.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PENGUIN MENSWEAR — 40-Product Curated Catalog
@@ -894,8 +894,6 @@ export const INITIAL_PRODUCTS = [
   }
 ];
 
-import mongoose from 'mongoose';
-
 // In-Memory store fallback for offline database environments
 let inMemoryProducts = INITIAL_PRODUCTS.map((prod, index) => ({
   ...prod,
@@ -905,65 +903,114 @@ let inMemoryProducts = INITIAL_PRODUCTS.map((prod, index) => ({
 }));
 
 /**
- * @desc Get all products with filtering, searching, and sorting
+ * @desc Get all products with filtering, searching, sorting & pagination
  * @route GET /api/products
  */
 export const getProducts = async (req, res) => {
   try {
-    const { category, isWinterDrop, isFeatured, search, sort } = req.query;
+    const {
+      category,
+      color,
+      size,
+      minPrice,
+      maxPrice,
+      isWinterDrop,
+      isFeatured,
+      search,
+      sort = 'newest',
+      page = 1,
+      limit = 50,
+    } = req.query;
 
-    if (mongoose.connection.readyState === 1) {
-      let query = {};
-      if (category && category !== 'All') query.category = new RegExp('^' + category + '$', 'i');
-      if (isWinterDrop === 'true') query.isWinterDrop = true;
-      if (isFeatured === 'true') query.isFeatured = true;
-      if (search) {
-        query['$or'] = [
-          { name: { $regex: search, $options: 'i' } },
-          { category: { $regex: search, $options: 'i' } },
-          { color: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } },
-        ];
-      }
-      let sortOptions = { createdAt: -1 };
-      if (sort === 'price_asc') sortOptions = { price: 1 };
-      if (sort === 'price_desc') sortOptions = { price: -1 };
-      if (sort === 'name_asc') sortOptions = { name: 1 };
-      
-      let products = await Product.find(query).sort(sortOptions);
-      if (products.length === 0 && Object.keys(query).length === 0) {
-        await Product.insertMany(INITIAL_PRODUCTS);
-        products = await Product.find().sort(sortOptions);
-      }
-      return res.status(200).json({ success: true, count: products.length, data: products });
-    }
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+    const skip = (pageNum - 1) * limitNum;
 
-    // In-memory fallback
-    let filtered = [...inMemoryProducts];
+    const where = {};
+
     if (category && category !== 'All') {
-      filtered = filtered.filter(p => p.category && p.category.toLowerCase() === category.toLowerCase());
+      where.OR = [
+        { category: { equals: category.trim(), mode: 'insensitive' } },
+        { category: { contains: category.trim(), mode: 'insensitive' } },
+        { categoryRel: { slug: category.toLowerCase().trim() } },
+        { categoryRel: { name: { equals: category.trim(), mode: 'insensitive' } } },
+      ];
     }
+
+    if (color) {
+      where.color = { contains: color.trim(), mode: 'insensitive' };
+    }
+
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) where.price.gte = Number(minPrice);
+      if (maxPrice) where.price.lte = Number(maxPrice);
+    }
+
     if (isWinterDrop === 'true') {
-      filtered = filtered.filter(p => p.isWinterDrop === true);
+      where.isWinterDrop = true;
     }
+
     if (isFeatured === 'true') {
-      filtered = filtered.filter(p => p.isFeatured === true);
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter(p =>
-        (p.name && p.name.toLowerCase().includes(q)) ||
-        (p.category && p.category.toLowerCase().includes(q)) ||
-        (p.color && p.color.toLowerCase().includes(q)) ||
-        (p.description && p.description.toLowerCase().includes(q))
-      );
+      where.isFeatured = true;
     }
 
-    if (sort === 'price_asc') filtered.sort((a, b) => a.price - b.price);
-    else if (sort === 'price_desc') filtered.sort((a, b) => b.price - a.price);
-    else if (sort === 'name_asc') filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    if (search && search.trim()) {
+      const q = search.trim();
+      const searchOR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { color: { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } },
+        { category: { contains: q, mode: 'insensitive' } },
+      ];
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: searchOR }];
+        delete where.OR;
+      } else {
+        where.OR = searchOR;
+      }
+    }
 
-    return res.status(200).json({ success: true, count: filtered.length, data: filtered });
+    const sortMap = {
+      newest: { createdAt: 'desc' },
+      price_asc: { price: 'asc' },
+      price_desc: { price: 'desc' },
+      name_asc: { name: 'asc' },
+      popular: { createdAt: 'desc' },
+      rating: { createdAt: 'desc' },
+    };
+    const orderBy = sortMap[sort] || sortMap.newest;
+
+    let total = await prisma.product.count({ where });
+
+    if (total === 0 && Object.keys(req.query).length === 0) {
+      for (const p of INITIAL_PRODUCTS) {
+        await prisma.product.upsert({
+          where: { slug: p.slug },
+          update: p,
+          create: p,
+        });
+      }
+      total = await prisma.product.count();
+    }
+
+    const products = await prisma.product.findMany({
+      where,
+      orderBy,
+      skip,
+      take: limitNum,
+    });
+
+    const formattedProducts = products.map(p => ({ ...p, _id: p.id }));
+
+    return res.status(200).json({
+      success: true,
+      count: formattedProducts.length,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+      data: formattedProducts,
+    });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -978,42 +1025,35 @@ export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (mongoose.connection.readyState === 1) {
-      let product = null;
-      if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
-        product = await Product.findById(id);
-      }
-      if (!product) {
-        product = await Product.findOne({ slug: id });
-      }
-      if (!product && !isNaN(Number(id))) {
-        const idx = parseInt(id, 10) - 1;
-        const all = await Product.find().sort({ createdAt: 1 });
-        if (idx >= 0 && idx < all.length) {
-          product = all[idx];
-        }
-      }
-      if (!product) {
-        product = INITIAL_PRODUCTS.find(p => p.slug === id || String(p.id) === String(id));
-      }
-      if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-      return res.status(200).json({ success: true, data: product });
+    let product = await prisma.product.findFirst({
+      where: {
+        OR: [{ id }, { slug: id }],
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // In-memory fallback
-    let product = inMemoryProducts.find(
-      p => p._id === id || p.slug === id || String(p.id) === String(id)
-    );
-    if (!product && !isNaN(Number(id))) {
-      const idx = parseInt(id, 10) - 1;
-      if (idx >= 0 && idx < inMemoryProducts.length) {
-        product = inMemoryProducts[idx];
-      }
-    }
-    if (!product) product = inMemoryProducts[0];
+    const formattedProduct = { ...product, _id: product.id };
 
-    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-    return res.status(200).json({ success: true, data: product });
+    // Fetch related products in the same category
+    const related = await prisma.product.findMany({
+      where: {
+        category: product.category,
+        NOT: { id: product.id },
+      },
+      take: 4,
+    });
+
+    const formattedRelated = related.map(r => ({ ...r, _id: r.id }));
+
+    return res.status(200).json({
+      success: true,
+      data: formattedProduct,
+      product: formattedProduct,
+      related: formattedRelated,
+    });
   } catch (error) {
     console.error('Error fetching product:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -1031,21 +1071,32 @@ export const createProduct = async (req, res) => {
     if (typeof productData.originalPrice === 'string' && productData.originalPrice) productData.originalPrice = Number(productData.originalPrice.replace(/[^\d.]/g, ''));
     if (!productData.images || productData.images.length === 0) productData.images = ['https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600'];
 
-    if (mongoose.connection.readyState === 1) {
-      const product = new Product(productData);
-      const createdProduct = await product.save();
-      return res.status(201).json({ success: true, message: 'Product created successfully', data: createdProduct });
-    }
+    const cleanSlug = productData.slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : `item-${Date.now()}`);
 
-    const createdProduct = {
-      ...productData,
-      _id: `mock_prod_${Date.now()}`,
-      slug: productData.slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : `item-${Date.now()}`),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    inMemoryProducts.unshift(createdProduct);
-    return res.status(201).json({ success: true, message: 'Product created successfully (In-Memory)', data: createdProduct });
+    const createdProduct = await prisma.product.create({
+      data: {
+        slug: cleanSlug,
+        name: productData.name,
+        category: productData.category || 'Shirts',
+        color: productData.color || '',
+        price: Number(productData.price) || 0,
+        originalPrice: productData.originalPrice ? Number(productData.originalPrice) : null,
+        badge: productData.badge || null,
+        images: productData.images || [],
+        sizes: productData.sizes || [],
+        colorVariants: productData.colorVariants || [],
+        isFeatured: Boolean(productData.isFeatured),
+        isWinterDrop: Boolean(productData.isWinterDrop),
+        inStock: productData.inStock !== undefined ? Boolean(productData.inStock) : true,
+        stockStatus: productData.stockStatus || 'In Stock',
+        fabricDetails: productData.fabricDetails || '',
+        careInstructions: productData.careInstructions || '',
+        description: productData.description || '',
+      },
+    });
+
+    const formatted = { ...createdProduct, _id: createdProduct.id };
+    return res.status(201).json({ success: true, message: 'Product created successfully', data: formatted });
   } catch (error) {
     console.error('Error creating product:', error);
     res.status(400).json({ success: false, message: error.message });
@@ -1061,19 +1112,41 @@ export const updateProduct = async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     if (typeof updates.price === 'string') updates.price = Number(updates.price.replace(/[^\d.]/g, ''));
+    if (typeof updates.originalPrice === 'string' && updates.originalPrice) updates.originalPrice = Number(updates.originalPrice.replace(/[^\d.]/g, ''));
 
-    if (mongoose.connection.readyState === 1) {
-      const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
-      if (!updatedProduct) return res.status(404).json({ success: false, message: 'Product not found' });
-      return res.status(200).json({ success: true, message: 'Product updated successfully', data: updatedProduct });
-    }
+    const existing = await prisma.product.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
+    });
 
-    const index = inMemoryProducts.findIndex(p => p._id === id || p.slug === id);
-    if (index === -1) {
+    if (!existing) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
-    inMemoryProducts[index] = { ...inMemoryProducts[index], ...updates, updatedAt: new Date().toISOString() };
-    return res.status(200).json({ success: true, message: 'Product updated successfully', data: inMemoryProducts[index] });
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: existing.id },
+      data: {
+        name: updates.name !== undefined ? updates.name : undefined,
+        slug: updates.slug !== undefined ? updates.slug : undefined,
+        category: updates.category !== undefined ? updates.category : undefined,
+        color: updates.color !== undefined ? updates.color : undefined,
+        price: updates.price !== undefined ? Number(updates.price) : undefined,
+        originalPrice: updates.originalPrice !== undefined ? Number(updates.originalPrice) : undefined,
+        badge: updates.badge !== undefined ? updates.badge : undefined,
+        images: updates.images !== undefined ? updates.images : undefined,
+        sizes: updates.sizes !== undefined ? updates.sizes : undefined,
+        colorVariants: updates.colorVariants !== undefined ? updates.colorVariants : undefined,
+        isFeatured: updates.isFeatured !== undefined ? Boolean(updates.isFeatured) : undefined,
+        isWinterDrop: updates.isWinterDrop !== undefined ? Boolean(updates.isWinterDrop) : undefined,
+        inStock: updates.inStock !== undefined ? Boolean(updates.inStock) : undefined,
+        stockStatus: updates.stockStatus !== undefined ? updates.stockStatus : undefined,
+        fabricDetails: updates.fabricDetails !== undefined ? updates.fabricDetails : undefined,
+        careInstructions: updates.careInstructions !== undefined ? updates.careInstructions : undefined,
+        description: updates.description !== undefined ? updates.description : undefined,
+      },
+    });
+
+    const formatted = { ...updatedProduct, _id: updatedProduct.id };
+    return res.status(200).json({ success: true, message: 'Product updated successfully', data: formatted });
   } catch (error) {
     console.error('Error updating product:', error);
     res.status(400).json({ success: false, message: error.message });
@@ -1088,17 +1161,15 @@ export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (mongoose.connection.readyState === 1) {
-      const product = await Product.findByIdAndDelete(id);
-      if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-      return res.status(200).json({ success: true, message: 'Product deleted from catalog' });
-    }
+    const existing = await prisma.product.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
+    });
 
-    const initialLength = inMemoryProducts.length;
-    inMemoryProducts = inMemoryProducts.filter(p => p._id !== id && p.slug !== id);
-    if (inMemoryProducts.length === initialLength) {
+    if (!existing) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
+
+    await prisma.product.delete({ where: { id: existing.id } });
     return res.status(200).json({ success: true, message: 'Product deleted from catalog' });
   } catch (error) {
     console.error('Error deleting product:', error);
@@ -1112,29 +1183,116 @@ export const deleteProduct = async (req, res) => {
  */
 export const seedProducts = async (req, res) => {
   try {
-    if (mongoose.connection.readyState === 1) {
-      await Product.deleteMany({});
-      const seeded = await Product.insertMany(INITIAL_PRODUCTS);
-      return res.status(200).json({
-        success: true,
-        message: 'Seeded ' + seeded.length + ' items in MongoDB',
-        data: seeded,
-      });
+    await prisma.product.deleteMany({});
+    for (const p of INITIAL_PRODUCTS) {
+      await prisma.product.create({ data: p });
     }
+    const products = await prisma.product.findMany();
+    const formatted = products.map(p => ({ ...p, _id: p.id }));
 
-    inMemoryProducts = INITIAL_PRODUCTS.map((prod, index) => ({
-      ...prod,
-      _id: `mock_prod_${index + 1}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
     return res.status(200).json({
       success: true,
-      message: 'Seeded ' + inMemoryProducts.length + ' items (In-Memory Store)',
-      data: inMemoryProducts,
+      message: `Seeded ${formatted.length} items in PostgreSQL`,
+      data: formatted,
     });
   } catch (error) {
     console.error('Error seeding products:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc Bulk Delete Products (Admin)
+ * @route POST /api/products/bulk-delete
+ */
+export const bulkDeleteProducts = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Array of product IDs is required.' });
+    }
+
+    const result = await prisma.product.deleteMany({
+      where: {
+        OR: [
+          { id: { in: ids } },
+          { slug: { in: ids } }
+        ]
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Successfully deleted ${result.count} products.`,
+      count: result.count
+    });
+  } catch (error) {
+    console.error('Error in bulk delete:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc Bulk Update Products (Admin)
+ * @route POST /api/products/bulk-update
+ */
+export const bulkUpdateProducts = async (req, res) => {
+  try {
+    const { ids, updates } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Array of product IDs is required.' });
+    }
+    if (!updates || typeof updates !== 'object') {
+      return res.status(400).json({ success: false, message: 'Updates payload is required.' });
+    }
+
+    const dataToUpdate = {};
+    if (updates.category !== undefined && updates.category !== '') {
+      dataToUpdate.category = updates.category;
+    }
+    if (updates.stockStatus !== undefined && updates.stockStatus !== '') {
+      dataToUpdate.stockStatus = updates.stockStatus;
+      dataToUpdate.inStock = updates.stockStatus !== 'Sold Out' && updates.stockStatus !== 'Out of Stock';
+    }
+    if (updates.inStock !== undefined) {
+      dataToUpdate.inStock = Boolean(updates.inStock);
+      if (!updates.inStock && !dataToUpdate.stockStatus) {
+        dataToUpdate.stockStatus = 'Out of Stock';
+      }
+    }
+    if (updates.badge !== undefined) {
+      dataToUpdate.badge = updates.badge || null;
+    }
+    if (updates.isFeatured !== undefined) {
+      dataToUpdate.isFeatured = Boolean(updates.isFeatured);
+    }
+    if (updates.isWinterDrop !== undefined) {
+      dataToUpdate.isWinterDrop = Boolean(updates.isWinterDrop);
+    }
+    if (updates.price !== undefined && updates.price !== '') {
+      dataToUpdate.price = Number(updates.price);
+    }
+    if (updates.originalPrice !== undefined && updates.originalPrice !== '') {
+      dataToUpdate.originalPrice = Number(updates.originalPrice);
+    }
+
+    const result = await prisma.product.updateMany({
+      where: {
+        OR: [
+          { id: { in: ids } },
+          { slug: { in: ids } }
+        ]
+      },
+      data: dataToUpdate
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Successfully updated ${result.count} products.`,
+      count: result.count
+    });
+  } catch (error) {
+    console.error('Error in bulk update:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

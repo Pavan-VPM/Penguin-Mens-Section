@@ -72,7 +72,6 @@ export default function Footer() {
               <li><button onClick={() => navigate('/account')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Returns & Exchanges</button></li>
               <li><button onClick={() => navigate('/cart')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Shipping Policy</button></li>
               <li><button onClick={() => navigate('/wishlist')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Wishlist</button></li>
-              <li><button onClick={() => navigate('/admin')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Admin Management</button></li>
             </ul>
           </div>
 

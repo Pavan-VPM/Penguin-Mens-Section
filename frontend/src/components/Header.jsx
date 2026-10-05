@@ -222,25 +222,6 @@ export default function Header() {
                 <span className="material-symbols-outlined" style={{ fontSize: 20 }}>person</span>
                 <span>My Profile & Orders</span>
               </button>
-              <button
-                onClick={() => navigate('/admin')}
-                style={{
-                  width: '100%',
-                  padding: '12px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  background: 'none',
-                  border: 'none',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                  cursor: 'pointer'
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>admin_panel_settings</span>
-                <span>Admin Portal</span>
-              </button>
             </div>
 
             {/* Mobile Footer Note */}

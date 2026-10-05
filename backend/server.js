@@ -1,8 +1,11 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import cookieParser from 'cookie-parser';
+
+// Prisma PostgreSQL Client
+import prisma from './config/prisma.js';
 
 // Import Routes
 import productRoutes from './routes/productRoutes.js';
@@ -10,6 +13,7 @@ import orderRoutes from './routes/orderRoutes.js';
 import configRoutes from './routes/configRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 
 dotenv.config();
 
@@ -24,31 +28,30 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// Database Connection with graceful fallback
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/penguin_mens_store';
-
-mongoose
-  .connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 2000,
-    connectTimeoutMS: 2000,
-  })
-  .then(() => console.log('🍃 MongoDB connected successfully!'))
-  .catch((err) => {
-    console.warn('⚠️ MongoDB connection unavailable. Backend will operate seamlessly in resilient In-Memory Mode.');
-  });
+// Test PostgreSQL connection
+prisma.$connect()
+  .then(() => console.log('🐘 PostgreSQL connected successfully via Prisma!'))
+  .catch((err) => console.error('⚠️ PostgreSQL connection error:', err.message));
 
 // API Health Check
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    dbStatus = 'connected (PostgreSQL)';
+  } catch (_) {}
+
   res.json({
     status: 'online',
     uptime: process.uptime(),
-    dbState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected/mock',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
   });
 });
@@ -56,14 +59,15 @@ app.get('/health', (req, res) => {
 // Root route
 app.get('/', (req, res) => {
   res.json({
-    message: "Penguin Men's Section REST API",
-    version: '1.0.0',
+    message: "Penguin Men's Section REST API (PostgreSQL + Prisma)",
+    version: '2.0.0',
     endpoints: {
       products: '/api/products',
       orders: '/api/orders',
       config: '/api/config',
       auth: '/api/auth/admin/login',
       upload: '/api/upload',
+      categories: '/api/categories',
     },
   });
 });
@@ -74,6 +78,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -85,7 +90,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Penguin Menswear Backend Server active on http://localhost:${PORT}`);
+  console.log(`🚀 Penguin Menswear Backend active on http://localhost:${PORT}`);
   console.log(`🛍 Products API: http://localhost:${PORT}/api/products`);
   console.log(`📦 Orders API:   http://localhost:${PORT}/api/orders`);
   console.log(`⚙️ Config API:   http://localhost:${PORT}/api/config`);

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { getProducts } from '../services/api'
+import { getProducts, getCategories } from '../services/api'
 import ProductCard from '../components/ProductCard'
 
-const CATEGORIES = ['All', 'Shirts', 'Tees', 'Jackets', 'Formals', 'Tailoring', 'Jeans', 'Footwear', 'Accessories']
+const DEFAULT_CATEGORIES = ['All', 'Shirts', 'Tees', 'Jackets', 'Formals', 'Tailoring', 'Jeans', 'Footwear', 'Accessories']
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL']
 const SORT_OPTIONS = [
   { label: 'Popularity', value: 'popular' },
@@ -139,19 +139,38 @@ const FALLBACK_COLLECTION = [
 export default function CollectionPage() {
   const navigate = useNavigate()
   const { category: urlCategory } = useParams()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const urlCat = urlCategory || searchParams.get('category')
+  const initialCat = urlCat ? (DEFAULT_CATEGORIES.find(c => c.toLowerCase() === urlCat.toLowerCase()) || 'All') : 'All'
+  const initialSort = searchParams.get('sort') || 'popular'
+
+  const [categoriesList, setCategoriesList] = useState(DEFAULT_CATEGORIES)
+  const [selectedCategory, setSelectedCategory] = useState(initialCat)
   const [selectedSize, setSelectedSize] = useState('All')
-  const [sortBy, setSortBy] = useState('popular')
+  const [sortBy, setSortBy] = useState(initialSort)
   const [products, setProducts] = useState(FALLBACK_COLLECTION)
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Sync category from route parameter (e.g., /collection/shirts, /collection/jackets, /collection/formals)
+  // Fetch dynamic categories
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const res = await getCategories()
+        if (res?.data && res.data.length > 0) {
+          const names = ['All', ...res.data.map(c => c.name)]
+          setCategoriesList(names)
+        }
+      } catch (_) {}
+    }
+    loadCategories()
+  }, [])
+
+  // Sync category from route parameter or query params
   useEffect(() => {
     const rawCat = urlCategory || searchParams.get('category')
     if (rawCat) {
-      const found = CATEGORIES.find(c => c.toLowerCase() === rawCat.toLowerCase())
+      const found = categoriesList.find(c => c.toLowerCase() === rawCat.toLowerCase())
       if (found) {
         setSelectedCategory(found)
       } else if (rawCat.toLowerCase().includes('shirt')) {
@@ -166,12 +185,23 @@ export default function CollectionPage() {
     } else {
       setSelectedCategory('All')
     }
-  }, [urlCategory, searchParams])
 
+    const sortFromUrl = searchParams.get('sort')
+    if (sortFromUrl && SORT_OPTIONS.some(o => o.value === sortFromUrl)) {
+      setSortBy(sortFromUrl)
+    }
+  }, [urlCategory, searchParams, categoriesList])
+
+  // Load products with query params passed to API
   useEffect(() => {
     async function loadProducts() {
+      setIsLoading(true)
       try {
-        const res = await getProducts()
+        const queryParams = {
+          category: selectedCategory !== 'All' ? selectedCategory : undefined,
+          sort: sortBy,
+        }
+        const res = await getProducts(queryParams)
         if (res?.data && res.data.length > 0) {
           const formatted = res.data.map(p => ({
             id: p._id || p.id,
@@ -189,12 +219,32 @@ export default function CollectionPage() {
         }
       } catch (err) {
         console.warn('Using fallback collection')
+      } finally {
+        setIsLoading(false)
       }
     }
     loadProducts()
-  }, [])
+  }, [selectedCategory, sortBy])
 
-  // Filter & Sort Logic
+  const handleCategorySelect = (cat) => {
+    setSelectedCategory(cat)
+    const nextParams = new URLSearchParams(searchParams)
+    if (cat === 'All') {
+      nextParams.delete('category')
+    } else {
+      nextParams.set('category', cat)
+    }
+    setSearchParams(nextParams, { replace: true })
+  }
+
+  const handleSortSelect = (newSort) => {
+    setSortBy(newSort)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('sort', newSort)
+    setSearchParams(nextParams, { replace: true })
+  }
+
+  // Filter & Sort Logic (Client & In-Memory safeguard)
   const filteredAndSorted = useMemo(() => {
     let list = [...products]
 
@@ -206,7 +256,7 @@ export default function CollectionPage() {
       list.sort((a, b) => a.price - b.price)
     } else if (sortBy === 'price_desc') {
       list.sort((a, b) => b.price - a.price)
-    } else if (sortBy === 'rating') {
+    } else if (sortBy === 'rating' || sortBy === 'popular') {
       list.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))
     }
 
@@ -249,10 +299,10 @@ export default function CollectionPage() {
         <div className="content-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           {/* Category Chips Desktop */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto' }} className="no-scrollbar">
-            {CATEGORIES.map(cat => (
+            {categoriesList.map(cat => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => handleCategorySelect(cat)}
                 style={{
                   padding: '6px 14px',
                   borderRadius: 999,
@@ -277,7 +327,7 @@ export default function CollectionPage() {
             </span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => handleSortSelect(e.target.value)}
               style={{
                 height: 36,
                 padding: '0 12px',
@@ -307,7 +357,7 @@ export default function CollectionPage() {
             <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 12 }}>No Garments Found</h3>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>Try clearing active filters to see our full catalog.</p>
             <button
-              onClick={() => { setSelectedCategory('All'); setSelectedSize('All'); }}
+              onClick={() => { handleCategorySelect('All'); setSelectedSize('All'); }}
               className="btn-solid-primary"
               style={{ marginTop: 16, height: 40, fontSize: 12 }}
             >

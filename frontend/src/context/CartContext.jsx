@@ -69,33 +69,59 @@ export function CartProvider({ children }) {
     }, 2200)
   }
 
-  const addToCart = (product, size = 'M') => {
+  const addToCart = (product, size = 'M', color = null, quantity = 1) => {
+    if (!product) return
+    const prodId = product._id || product.id || product.productId
+    const selectedColor = color || product.color || 'Nocturne Black'
+    const selectedSize = size || 'M'
+    const imgUrl = (product.images && product.images[0]) || product.img || ''
+
+    let parsedPrice = product.price
+    if (typeof parsedPrice === 'string') {
+      parsedPrice = parseFloat(parsedPrice.replace(/[₹$,]/g, ''))
+    }
+
     setCartItems(prev => {
-      const existing = prev.find(i => i.id === product.id && i.size === size)
-      if (existing) {
-        return prev.map(i => i.id === product.id && i.size === size ? { ...i, qty: i.qty + 1 } : i)
+      const existingIndex = prev.findIndex(
+        i => (i.id === prodId || i.productId === prodId) &&
+             i.size === selectedSize &&
+             i.color === selectedColor
+      )
+
+      if (existingIndex > -1) {
+        const updated = [...prev]
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          qty: updated[existingIndex].qty + (Number(quantity) || 1),
+        }
+        return updated
       }
-      let parsedPrice = product.price
-      if (typeof parsedPrice === 'string') {
-        parsedPrice = parseFloat(parsedPrice.replace(/[₹$,]/g, ''))
-      }
+
       return [...prev, {
-        id: product.id,
+        id: prodId,
+        productId: prodId,
+        slug: product.slug || '',
         name: product.name,
-        color: product.color || 'Nocturne Black',
-        size: size,
-        price: parsedPrice,
+        color: selectedColor,
+        size: selectedSize,
+        price: parsedPrice || 1999,
+        originalPrice: product.originalPrice,
         badge: product.badge || 'FW25',
-        img: product.img,
-        qty: 1
+        img: imgUrl,
+        images: product.images || [imgUrl],
+        qty: Number(quantity) || 1,
       }]
     })
-    showToast(`Added "${product.name}" to Bag`)
+    showToast(`Added "${product.name}" (${selectedSize} / ${selectedColor}) to Bag`)
   }
 
-  const updateQty = (id, delta, size) => {
+  const updateQty = (id, delta, size, color) => {
     setCartItems(prev => prev.map(i => {
-      if (i.id === id && (!size || i.size === size)) {
+      const matchId = i.id === id || i.productId === id
+      const matchSize = !size || i.size === size
+      const matchColor = !color || i.color === color
+
+      if (matchId && matchSize && matchColor) {
         const newQty = i.qty + delta
         return newQty > 0 ? { ...i, qty: newQty } : null
       }
@@ -103,8 +129,13 @@ export function CartProvider({ children }) {
     }).filter(Boolean))
   }
 
-  const removeItem = (id, size) => {
-    setCartItems(prev => prev.filter(i => !(i.id === id && (!size || i.size === size))))
+  const removeItem = (id, size, color) => {
+    setCartItems(prev => prev.filter(i => {
+      const matchId = i.id === id || i.productId === id
+      const matchSize = !size || i.size === size
+      const matchColor = !color || i.color === color
+      return !(matchId && matchSize && matchColor)
+    }))
     showToast('Item removed from Bag')
   }
 

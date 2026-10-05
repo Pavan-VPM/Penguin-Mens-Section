@@ -106,7 +106,7 @@ export default function CartPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {cartItems.map(item => (
                   <div
-                    key={`${item.id}-${item.size}`}
+                    key={`${item.id}-${item.size}-${item.color || ''}`}
                     style={{
                       display: 'flex',
                       gap: 16,
@@ -125,7 +125,7 @@ export default function CartPage() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <h3 style={{ fontSize: 15, fontWeight: 800, textTransform: 'uppercase' }}>{item.name}</h3>
                           <button
-                            onClick={() => removeItem(item.id, item.size)}
+                            onClick={() => removeItem(item.id, item.size, item.color)}
                             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                             title="Remove"
                           >
@@ -141,14 +141,14 @@ export default function CartPage() {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-light)', borderRadius: 4 }}>
                           <button
-                            onClick={() => updateQty(item.id, -1, item.size)}
+                            onClick={() => updateQty(item.id, -1, item.size, item.color)}
                             style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <span className="material-symbols-outlined" style={{ fontSize: 14 }}>remove</span>
                           </button>
                           <span style={{ fontSize: 12, fontWeight: 800, width: 24, textAlign: 'center' }}>{item.qty}</span>
                           <button
-                            onClick={() => updateQty(item.id, 1, item.size)}
+                            onClick={() => updateQty(item.id, 1, item.size, item.color)}
                             style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>

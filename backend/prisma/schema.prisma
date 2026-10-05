@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String    @id @default(uuid())
+  name                String    @default("Atelier Administrator")
+  email               String    @unique
+  password            String
+  role                String    @default("customer") // customer | admin | superadmin
+  mfaSecret           String?
+  mfaEnabled          Boolean   @default(false)
+  backupCodes         Json?     // Array of hashed recovery strings
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  createdById         String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  image       String?
+  sortOrder   Int       @default(1)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id               String    @id @default(uuid())
+  slug             String    @unique
+  name             String
+  category         String
+  categoryId       String?
+  color            String?
+  price            Float
+  originalPrice    Float?
+  badge            String?
+  images           Json      @default("[]")
+  sizes            Json      @default("[]")
+  colorVariants    Json?     @default("[]")
+  isFeatured       Boolean   @default(false)
+  isWinterDrop     Boolean   @default(false)
+  inStock          Boolean   @default(true)
+  stockStatus      String    @default("In Stock")
+  fabricDetails    String?
+  careInstructions String?
+  description      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  categoryRel      Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@map("products")
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  orderNumber     String   @unique
+  customerName    String
+  email           String
+  phone           String?
+  shippingAddress Json
+  items           Json
+  subtotal        Float
+  shippingFee     Float    @default(0)
+  discount        Float    @default(0)
+  total           Float
+  paymentMethod   String   @default("cod")
+  paymentStatus   String   @default("pending")
+  orderStatus     String   @default("Processing")
+  trackingNumber  String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("orders")
+}
+
+model SiteConfig {
+  id                 String   @id @default(uuid())
+  marqueeText        String?
+  archiveText        String?
+  heroHeadline       String?
+  heroSubheadline    String?
+  heroImage          String?
+  heroDropTag        String?
+  showWinterDrop     Boolean  @default(true)
+  winterDropTitle    String?
+  winterDropSubtitle String?
+  winterDropCta      String?
+  winterDropImage    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("site_configs")
+}

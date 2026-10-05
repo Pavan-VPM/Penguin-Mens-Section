@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /penguin-ctrl-x7k2
+Disallow: /admin
+Disallow: /api/
