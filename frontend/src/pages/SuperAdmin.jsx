@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   adminLogin,
+  adminChangeTempPassword,
   adminMfaSetup,
   adminMfaVerifySetup,
   adminLoginVerifyMfa,
   adminLogout,
-  isLocalAdminAuthenticated,
-  getStoredAdminUser,
+  getAdminProfile,
   createAdminUser,
   listAdminUsers,
   updateAdminUser,
@@ -21,16 +21,16 @@ export default function SuperAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Auth States: 'credentials' | 'mfa_setup' | 'mfa'
+  // Auth States: 'credentials' | 'change_password' | 'mfa_setup' | 'mfa'
   const [authStep, setAuthStep] = useState('credentials');
-  const [loginMode, setLoginMode] = useState('email'); // 'email' | 'pin'
   const [emailInput, setEmailInput] = useState('admin@penguin.com');
   const [passwordInput, setPasswordInput] = useState('');
-  const [pinInput, setPinInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
   // MFA Flow
+  const [changeToken, setChangeToken] = useState('');
   const [setupToken, setSetupToken] = useState('');
   const [tempToken, setTempToken] = useState('');
   const [qrCodeImage, setQrCodeImage] = useState('');
@@ -58,18 +58,20 @@ export default function SuperAdminPage() {
     name: '',
     email: '',
     password: '',
-    mfaEnabled: true,
   });
 
   useEffect(() => {
-    if (isLocalAdminAuthenticated()) {
-      const user = getStoredAdminUser();
-      if (user?.role === 'superadmin') {
-        setIsAuthenticated(true);
-        setCurrentUser(user);
-        loadAdminUsers();
-      }
-    }
+    getAdminProfile()
+      .then((res) => {
+        if (res?.user?.role === 'superadmin') {
+          setIsAuthenticated(true);
+          setCurrentUser(res.user);
+          loadAdminUsers();
+        }
+      })
+      .catch(() => {
+        // Not logged in — default login screen
+      });
   }, []);
 
   const loadAdminUsers = async () => {
@@ -91,19 +93,56 @@ export default function SuperAdminPage() {
     setTimeout(() => setStatusMsg({ text: '', type: 'success' }), 4000);
   };
 
-  // ── Step 1: Login ──
+  // ── Step 1: Login Credentials ──
   const handleLogin = async (e) => {
     e.preventDefault();
     setAuthLoading(true);
     setAuthError('');
 
     try {
-      const payload = loginMode === 'pin'
-        ? { pin: pinInput, password: pinInput }
-        : { email: emailInput, password: passwordInput };
+      const res = await adminLogin({ email: emailInput, password: passwordInput });
 
-      const res = await adminLogin(payload);
+      if (res?.success) {
+        if (res.requiresPasswordChange) {
+          setChangeToken(res.changeToken);
+          setAuthStep('change_password');
+        } else if (res.requiresMfaSetup) {
+          setSetupToken(res.setupToken);
+          const setupRes = await adminMfaSetup(res.setupToken);
+          if (setupRes?.success) {
+            setQrCodeImage(setupRes.qrCodeImage);
+            setManualEntryKey(setupRes.manualEntryKey);
+            setAuthStep('mfa_setup');
+          } else {
+            setAuthError(setupRes?.message || 'Failed to initialize MFA QR code.');
+          }
+        } else if (res.requiresMfaCode) {
+          setTempToken(res.tempToken);
+          setAuthStep('mfa');
+        }
+      } else {
+        setAuthError(res?.message || 'Invalid email or password.');
+      }
+    } catch (err) {
+      setAuthError('Authentication server unavailable.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
+  // ── Force Password Change ──
+  const handleChangeTempPassword = async (e) => {
+    e.preventDefault();
+    if (!newPasswordInput || newPasswordInput.length < 8) {
+      setAuthError('New password must be at least 8 characters long.');
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthError('');
+
+    try {
+      const res = await adminChangeTempPassword(changeToken, newPasswordInput);
       if (res?.success) {
         if (res.requiresMfaSetup) {
           setSetupToken(res.setupToken);
@@ -118,20 +157,12 @@ export default function SuperAdminPage() {
         } else if (res.requiresMfaCode) {
           setTempToken(res.tempToken);
           setAuthStep('mfa');
-        } else if (res.token) {
-          if (res.role !== 'superadmin') {
-            setAuthError('Access restricted: Only Superadmin can enter this portal.');
-            return;
-          }
-          setIsAuthenticated(true);
-          setCurrentUser(res.user || { role: 'superadmin', name: 'Lead Architect' });
-          loadAdminUsers();
         }
       } else {
-        setAuthError(res?.message || 'Invalid credentials.');
+        setAuthError(res?.message || 'Failed to update temporary password.');
       }
     } catch (err) {
-      setAuthError('Authentication server unavailable.');
+      setAuthError('Password update error.');
     } finally {
       setAuthLoading(false);
     }
@@ -170,17 +201,7 @@ export default function SuperAdminPage() {
     setAuthError('');
 
     try {
-      const codeToSend = totpCode.trim();
-      const tokenToSend = tempToken || (codeToSend === '8842' || codeToSend === 'admin123' ? '8842' : '');
-
-      if (!tokenToSend && codeToSend !== '8842' && codeToSend !== 'admin123') {
-        setAuthError('Login session expired. Please enter your email and password or use Master PIN.');
-        setAuthStep('credentials');
-        setAuthLoading(false);
-        return;
-      }
-
-      const res = await adminLoginVerifyMfa(tokenToSend, codeToSend, useBackupCodeLogin);
+      const res = await adminLoginVerifyMfa(tempToken, totpCode.trim(), useBackupCodeLogin);
       if (res?.success) {
         if (res.role !== 'superadmin') {
           setAuthError('Access restricted: Only Superadmin accounts can enter this portal.');
@@ -190,30 +211,10 @@ export default function SuperAdminPage() {
         setCurrentUser(res.user || { role: 'superadmin', name: 'Lead Architect' });
         loadAdminUsers();
       } else {
-        setAuthError(res?.message || 'Invalid 2FA code.');
+        setAuthError(res?.message || 'Invalid code.');
       }
     } catch (err) {
       setAuthError('MFA verification failure.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  // ── Master Developer PIN 1-Click Login ──
-  const handleMasterPinDirect = async () => {
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      const res = await adminLogin({ pin: '8842', password: 'admin123' });
-      if (res?.success && res.token) {
-        setIsAuthenticated(true);
-        setCurrentUser(res.user || { role: 'superadmin', name: 'Lead Architect' });
-        loadAdminUsers();
-      } else {
-        setAuthError(res?.message || 'Master PIN authorization failed.');
-      }
-    } catch (err) {
-      setAuthError('Authentication service unreachable.');
     } finally {
       setAuthLoading(false);
     }
@@ -239,6 +240,7 @@ export default function SuperAdminPage() {
       setLoading(false);
     }
   };
+
 
   // ── Reset Admin MFA ──
   const handleResetMfa = async (admin) => {
@@ -591,7 +593,13 @@ export default function SuperAdminPage() {
                 </span>
               </div>
               <h2 style={{ fontSize: 20, textTransform: 'uppercase', margin: 0, fontWeight: 900, color: '#fff' }}>
-                {authStep === 'mfa_setup' ? 'Setup Root Authenticator' : authStep === 'mfa' ? 'Root 2FA Challenge' : 'Superadmin Access'}
+                {authStep === 'change_password'
+                  ? 'Set New Master Password'
+                  : authStep === 'mfa_setup'
+                  ? 'Setup Root Authenticator'
+                  : authStep === 'mfa'
+                  ? 'Root 2FA Challenge'
+                  : 'Superadmin Access'}
               </h2>
               <p style={{ marginTop: 6, fontSize: 12, color: '#a1a1aa' }}>
                 Dedicated platform governance, store staff provisioning, and hardware TOTP management.
@@ -618,89 +626,33 @@ export default function SuperAdminPage() {
 
             {authStep === 'credentials' && (
               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' }}>
-                <div style={{ display: 'flex', background: '#09090b', padding: 3, borderRadius: 8, gap: 4 }}>
-                  <button
-                    type="button"
-                    onClick={() => setLoginMode('email')}
-                    style={{
-                      flex: 1,
-                      padding: '6px',
-                      borderRadius: 6,
-                      border: 'none',
-                      background: loginMode === 'email' ? '#27272a' : 'transparent',
-                      color: loginMode === 'email' ? '#fff' : '#a1a1aa',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
+                <div>
+                  <label style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#a1a1aa', display: 'block', marginBottom: 4, fontWeight: 700 }}>
                     Superadmin Email
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLoginMode('pin')}
-                    style={{
-                      flex: 1,
-                      padding: '6px',
-                      borderRadius: 6,
-                      border: 'none',
-                      background: loginMode === 'pin' ? '#27272a' : 'transparent',
-                      color: loginMode === 'pin' ? '#fff' : '#a1a1aa',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Master PIN Mode
-                  </button>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="admin@penguin.com"
+                    className="super-input"
+                  />
                 </div>
 
-                {loginMode === 'email' ? (
-                  <>
-                    <div>
-                      <label style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#a1a1aa', display: 'block', marginBottom: 4, fontWeight: 700 }}>
-                        Superadmin Email
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={emailInput}
-                        onChange={(e) => setEmailInput(e.target.value)}
-                        placeholder="admin@penguin.com"
-                        className="super-input"
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#a1a1aa', display: 'block', marginBottom: 4, fontWeight: 700 }}>
-                        Master Password
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        value={passwordInput}
-                        onChange={(e) => setPasswordInput(e.target.value)}
-                        placeholder="••••••••••••"
-                        className="super-input"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div>
-                    <label style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#a1a1aa', display: 'block', marginBottom: 4, fontWeight: 700 }}>
-                      Developer Master PIN
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="8842"
-                      value={pinInput}
-                      onChange={(e) => setPinInput(e.target.value)}
-                      autoFocus
-                      className="super-input"
-                      style={{ fontSize: 18, letterSpacing: '0.25em', textAlign: 'center' }}
-                    />
-                  </div>
-                )}
+                <div>
+                  <label style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#a1a1aa', display: 'block', marginBottom: 4, fontWeight: 700 }}>
+                    Master Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="super-input"
+                  />
+                </div>
 
                 <button
                   type="submit"
@@ -709,6 +661,39 @@ export default function SuperAdminPage() {
                   style={{ width: '100%', marginTop: 6 }}
                 >
                   {authLoading ? 'Verifying...' : 'Access Superadmin Console →'}
+                </button>
+              </form>
+            )}
+
+            {authStep === 'change_password' && (
+              <form onSubmit={handleChangeTempPassword} style={{ display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left' }}>
+                <p style={{ fontSize: 12, color: '#eab308', margin: 0 }}>
+                  ⚠️ You must set a permanent secure password (min 8 chars) to complete onboarding.
+                </p>
+
+                <div>
+                  <label style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#a1a1aa', display: 'block', marginBottom: 6, fontWeight: 700 }}>
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    autoFocus
+                    value={newPasswordInput}
+                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="super-input"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="super-btn-gold"
+                  style={{ width: '100%' }}
+                >
+                  {authLoading ? 'Saving...' : 'Set Password & Continue →'}
                 </button>
               </form>
             )}
@@ -850,23 +835,6 @@ export default function SuperAdminPage() {
                 </div>
               </form>
             )}
-
-            <div
-              onClick={handleMasterPinDirect}
-              title="Click to instantly bypass with Developer PIN"
-              style={{
-                background: '#09090b',
-                border: '1px solid rgba(234, 179, 8, 0.2)',
-                padding: '8px 10px',
-                borderRadius: 8,
-                fontSize: 11,
-                color: '#a1a1aa',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              💡 Quick Login: <code style={{ color: '#eab308', fontWeight: 'bold' }}>Click here to Enter with PIN (8842)</code>
-            </div>
           </div>
         </div>
       ) : (

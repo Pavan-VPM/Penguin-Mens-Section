@@ -11,15 +11,6 @@ const api = axios.create({
   },
 });
 
-// Attach JWT token to requests if available
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('penguin_admin_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 // ==================== PRODUCTS API ====================
 export const getProducts = async (params = {}) => {
   try {
@@ -234,161 +225,46 @@ export const updateOrderStatus = async (id, updateData) => {
   return res.data;
 };
 
-// ==================== AUTH & MFA API (LAYERS 2, 3 & 4) ====================
-export const adminLogin = async (credentials) => {
-  try {
-    const res = await api.post('/auth/admin/login', credentials);
-    if (res?.data?.token && !res?.data?.requiresMfaSetup && !res?.data?.requiresMfaCode) {
-      localStorage.setItem('penguin_admin_token', res.data.token);
-      localStorage.setItem('penguin_admin_user', JSON.stringify(res.data.user || {}));
-    }
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
+// ==================== AUTHENTICATION & SUPERADMIN API ====================
+export const adminLogin = (creds) =>
+  api.post('/auth/admin/login', creds).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Authentication error' });
 
-    // Resilient fallback for offline quick testing
-    const pin = credentials?.pin || credentials?.password || '';
-    if (pin === '8842' || pin === 'admin123' || pin === 'admin') {
-      const mockToken = 'penguin_master_token_' + Date.now();
-      const mockUser = { name: 'Penguin Atelier Owner', email: 'admin@penguin.com', role: 'superadmin' };
-      localStorage.setItem('penguin_admin_token', mockToken);
-      localStorage.setItem('penguin_admin_user', JSON.stringify(mockUser));
-      return {
-        success: true,
-        message: 'Master Admin Access Granted',
-        token: mockToken,
-        user: mockUser,
-      };
-    }
-    return { success: false, message: err.message || 'Authentication error' };
-  }
-};
+export const adminChangeTempPassword = (changeToken, newPassword) =>
+  api.post('/auth/admin/change-temp-password', { changeToken, newPassword }).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Failed to update password' });
 
-export const adminMfaSetup = async (setupToken) => {
-  try {
-    const res = await api.post('/auth/admin/mfa/setup', { setupToken });
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
-    return { success: false, message: 'Failed to generate MFA setup QR code.' };
-  }
-};
+export const adminMfaSetup = (setupToken) =>
+  api.post('/auth/admin/mfa/setup', { setupToken }).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Failed to initialize MFA' });
 
-export const adminMfaVerifySetup = async (arg1, arg2) => {
-  try {
-    const payload = typeof arg1 === 'object' && arg1 !== null
-      ? arg1
-      : { setupToken: arg1, token: arg2 };
+export const adminMfaVerifySetup = (setupToken, token) =>
+  api.post('/auth/admin/mfa/verify-setup', { setupToken, token }).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Failed to verify MFA' });
 
-    const res = await api.post('/auth/admin/mfa/verify-setup', payload);
-    if (res?.data?.token) {
-      localStorage.setItem('penguin_admin_token', res.data.token);
-      localStorage.setItem('penguin_admin_user', JSON.stringify(res.data.user || {}));
-    }
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
-    return { success: false, message: 'Failed to verify MFA code.' };
-  }
-};
+export const adminLoginVerifyMfa = (tempToken, token, isBackupCode) =>
+  api.post('/auth/admin/mfa/verify-code', { tempToken, token, isBackupCode }).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Verification failed' });
 
-export const adminLoginVerifyMfa = async (arg1, arg2) => {
-  try {
-    const payload = typeof arg1 === 'object' && arg1 !== null
-      ? arg1
-      : { tempToken: arg1, code: arg2 };
+export const adminLogout = () =>
+  api.post('/auth/admin/logout').then((r) => r.data).catch(() => ({ success: true }));
 
-    const res = await api.post('/auth/admin/login/verify-mfa', payload);
-    if (res?.data?.token) {
-      localStorage.setItem('penguin_admin_token', res.data.token);
-      localStorage.setItem('penguin_admin_user', JSON.stringify(res.data.user || {}));
-    }
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
-    return { success: false, message: 'Invalid 6-digit or backup code.' };
-  }
-};
+export const getAdminProfile = () =>
+  api.get('/auth/admin/me').then((r) => r.data);
 
-export const adminLogout = async () => {
-  try {
-    await api.post('/auth/admin/logout');
-  } catch (_) {}
-  localStorage.removeItem('penguin_admin_token');
-  localStorage.removeItem('penguin_admin_user');
-};
+export const listAdminUsers = () =>
+  api.get('/auth/superadmin/users').then((r) => r.data).catch(() => ({ success: false, data: [] }));
 
-export const isLocalAdminAuthenticated = () => {
-  return !!localStorage.getItem('penguin_admin_token');
-};
+export const createAdminUser = (data) =>
+  api.post('/auth/superadmin/users', data).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Failed to create admin' });
 
-export const getStoredAdminUser = () => {
-  try {
-    const raw = localStorage.getItem('penguin_admin_user');
-    return raw ? JSON.parse(raw) : null;
-  } catch (_) {
-    return null;
-  }
-};
+export const updateAdminUser = (id, data) =>
+  api.put(`/auth/superadmin/users/${id}`, data).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Failed to update admin' });
 
-export const createAdminUser = async (userData) => {
-  try {
-    const res = await api.post('/auth/admin/users/create', userData);
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
-    return { success: false, message: err.message || 'Failed to create admin user.' };
-  }
-};
+export const deleteAdminUser = (id) =>
+  api.delete(`/auth/superadmin/users/${id}`).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Failed to delete admin' });
 
-export const listAdminUsers = async () => {
-  try {
-    const res = await api.get('/auth/admin/users');
-    return res.data;
-  } catch (err) {
-    return { success: false, data: [] };
-  }
-};
+export const resetAdminMfa = (id) =>
+  api.post(`/auth/superadmin/users/${id}/reset-mfa`).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Failed to reset MFA' });
 
-export const updateAdminUser = async (id, updateData) => {
-  try {
-    const res = await api.put(`/auth/admin/users/${id}`, updateData);
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
-    return { success: false, message: err.message || 'Failed to update admin credentials.' };
-  }
-};
+export const resetAdminPassword = (id) =>
+  api.post(`/auth/superadmin/users/${id}/reset-password`).then((r) => r.data).catch((err) => err.response?.data || { success: false, message: 'Failed to reset password' });
 
-export const resetAdminMfa = async (id) => {
-  try {
-    const res = await api.post(`/auth/admin/users/${id}/reset-mfa`);
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
-    return { success: false, message: err.message || 'Failed to reset MFA.' };
-  }
-};
-
-export const resetAdminPassword = async (id) => {
-  try {
-    const res = await api.post(`/auth/admin/users/${id}/reset-password`);
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
-    return { success: false, message: err.message || 'Failed to reset password.' };
-  }
-};
-
-export const deleteAdminUser = async (id) => {
-  try {
-    const res = await api.delete(`/auth/admin/users/${id}`);
-    return res.data;
-  } catch (err) {
-    if (err.response?.data) return err.response.data;
-    return { success: false, message: err.message || 'Failed to delete admin.' };
-  }
-};
 
 // ==================== IMAGE UPLOAD API ====================
 export const uploadProductImage = async (file) => {

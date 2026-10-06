@@ -5,154 +5,141 @@ import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import prisma from '../config/prisma.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'penguin_mens_atelier_jwt_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET must be set in environment variables.');
+}
 
-/**
- * @desc Step 1: Admin Credentials Verification (Password + Lockout Check)
- * @route POST /api/auth/admin/login
- */
+const COOKIE_OPTS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 2 * 60 * 60 * 1000,
+};
+
 export const adminLogin = async (req, res) => {
   try {
-    const { email, password, pin } = req.body;
-
-    // Master PIN Direct Bypass for Emergency Store Operations
-    if (pin === '8842' || pin === 'admin123' || (password === 'admin123' && !email)) {
-      const token = jwt.sign(
-        { id: 'admin_master_id', role: 'superadmin', step: 'authenticated', name: 'Master Atelier Owner' },
-        JWT_SECRET,
-        { expiresIn: '2h' }
-      );
-
-      res.cookie('admin_session', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 2 * 60 * 60 * 1000,
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Master Atelier Access Granted',
-        token,
-        role: 'superadmin',
-        user: { name: 'Penguin Atelier Owner', email: email || 'master@penguin.com', role: 'superadmin' },
-      });
-    }
-
+    const { email, password } = req.body;
     const cleanEmail = email ? email.toLowerCase().trim() : '';
 
     if (!cleanEmail || !password) {
       return res.status(400).json({ success: false, message: 'Please provide both email and password.' });
     }
 
-    let user = await prisma.user.findFirst({
-      where: {
-        email: cleanEmail,
-        role: { in: ['admin', 'superadmin'] },
-      },
+    const user = await prisma.user.findFirst({
+      where: { email: cleanEmail, role: { in: ['admin', 'superadmin'] } },
     });
-
-    // Auto-provision initial superadmin if table is completely fresh
-    if (!user && cleanEmail === (process.env.ADMIN_EMAIL || 'admin@penguin.com')) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user = await prisma.user.create({
-        data: {
-          name: 'Atelier Superadmin',
-          email: cleanEmail,
-          password: hashedPassword,
-          role: 'superadmin',
-          mfaEnabled: false,
-        },
-      });
-    }
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials or unauthorized account.' });
     }
 
-    // Check Account Lockout status
     if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
       const remainingMins = Math.ceil((new Date(user.lockedUntil) - new Date()) / 60000);
       return res.status(423).json({
         success: false,
-        message: `Account temporarily locked due to failed attempts. Try again in ${remainingMins} minute(s).`,
+        message: `Account temporarily locked. Try again in ${remainingMins} minute(s).`,
       });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       const attempts = (user.failedLoginAttempts || 0) + 1;
-      let lockoutDate = user.lockedUntil;
-
-      if (attempts >= 5) {
-        lockoutDate = new Date(Date.now() + 15 * 60 * 1000); // 15 min lock
-      }
+      const lockoutDate = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : user.lockedUntil;
 
       await prisma.user.update({
         where: { id: user.id },
         data: { failedLoginAttempts: attempts, lockedUntil: lockoutDate },
       });
 
-      const remaining = Math.max(0, 5 - attempts);
       const msg = attempts >= 5
         ? 'Account locked for 15 minutes due to multiple failed login attempts.'
-        : `Invalid password. ${remaining} attempt(s) remaining before temporary lockout.`;
-
+        : `Invalid password. ${Math.max(0, 5 - attempts)} attempt(s) remaining.`;
       return res.status(401).json({ success: false, message: msg });
     }
 
-    // Reset failed attempts on success
     await prisma.user.update({
       where: { id: user.id },
-      data: { failedLoginAttempts: 0, lockedUntil: null },
+      data: { failedLoginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
     });
 
-    // Route based on MFA enrollment status
-    if (!user.mfaEnabled) {
-      const setupToken = jwt.sign(
-        { id: user.id, email: user.email, role: user.role, step: 'mfa_setup' },
-        JWT_SECRET,
-        { expiresIn: '15m' }
+    if (user.tempPassword) {
+      // Force password change before anything else — don't let them skip this
+      const changeToken = jwt.sign(
+        { id: user.id, email: user.email, role: user.role, step: 'password_change_required' },
+        JWT_SECRET, { expiresIn: '15m' }
       );
-
       return res.status(200).json({
         success: true,
-        requiresMfaSetup: true,
-        setupToken,
-        message: 'Hardware 2FA configuration required before accessing administrative portals.',
+        requiresPasswordChange: true,
+        changeToken,
+        message: 'You must set a new password before continuing.',
       });
     }
 
-    // User has MFA enabled: Issue temporary token for TOTP Challenge
+    if (!user.mfaEnabled) {
+      const setupToken = jwt.sign(
+        { id: user.id, email: user.email, role: user.role, step: 'mfa_setup' },
+        JWT_SECRET, { expiresIn: '15m' }
+      );
+      return res.status(200).json({ success: true, requiresMfaSetup: true, setupToken });
+    }
+
     const tempToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role, step: 'mfa_pending' },
-      JWT_SECRET,
-      { expiresIn: '10m' }
+      JWT_SECRET, { expiresIn: '10m' }
     );
-
-    return res.status(200).json({
-      success: true,
-      requiresMfaCode: true,
-      tempToken,
-      message: 'Enter 6-digit authenticator code or 8-digit backup code to complete login.',
-    });
+    return res.status(200).json({ success: true, requiresMfaCode: true, tempToken });
   } catch (error) {
     console.error('Error during admin login:', error);
     return res.status(500).json({ success: false, message: 'Authentication service temporarily unavailable.' });
   }
 };
 
-/**
- * @desc Step 2A: Generate MFA TOTP Secret & QR Code
- * @route POST /api/auth/admin/mfa/setup
- */
+export const adminChangeTempPassword = async (req, res) => {
+  try {
+    const { changeToken, newPassword } = req.body;
+    if (!changeToken || !newPassword || newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 8 characters.' });
+    }
+
+    const decoded = jwt.verify(changeToken, JWT_SECRET);
+    if (decoded.step !== 'password_change_required') {
+      return res.status(403).json({ success: false, message: 'Invalid token step.' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: decoded.id },
+      data: { password: hashed, tempPassword: false },
+    });
+
+    // Re-run the normal post-password flow
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+
+    if (!user.mfaEnabled) {
+      const setupToken = jwt.sign(
+        { id: user.id, email: user.email, role: user.role, step: 'mfa_setup' },
+        JWT_SECRET, { expiresIn: '15m' }
+      );
+      return res.status(200).json({ success: true, requiresMfaSetup: true, setupToken });
+    }
+
+    const tempToken = jwt.sign(
+      { id: user.id, email: user.email, role: user.role, step: 'mfa_pending' },
+      JWT_SECRET, { expiresIn: '10m' }
+    );
+    return res.status(200).json({ success: true, requiresMfaCode: true, tempToken });
+  } catch (error) {
+    console.error('Error changing temp password:', error);
+    return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+  }
+};
+
 export const adminMfaSetup = async (req, res) => {
   try {
     const { setupToken } = req.body;
-    if (!setupToken) {
-      return res.status(401).json({ success: false, message: 'Setup token required.' });
-    }
+    if (!setupToken) return res.status(401).json({ success: false, message: 'Setup token required.' });
 
     const decoded = jwt.verify(setupToken, JWT_SECRET);
     if (decoded.step !== 'mfa_setup') {
@@ -166,12 +153,7 @@ export const adminMfaSetup = async (req, res) => {
     });
 
     const qrCodeDataUrl = await QRCode.toDataURL(secret.otpauth_url);
-
-    // Save temporary mfaSecret to user record
-    await prisma.user.update({
-      where: { id: decoded.id },
-      data: { mfaSecret: secret.base32 },
-    });
+    await prisma.user.update({ where: { id: decoded.id }, data: { mfaSecret: secret.base32 } });
 
     return res.status(200).json({
       success: true,
@@ -185,98 +167,55 @@ export const adminMfaSetup = async (req, res) => {
   }
 };
 
-/**
- * @desc Step 2B: Verify initial TOTP token, activate MFA, generate backup recovery codes
- * @route POST /api/auth/admin/mfa/verify-setup
- */
 export const adminMfaVerifySetup = async (req, res) => {
   try {
     const { setupToken, token: userCode } = req.body;
-
-    // Master PIN Emergency Override
-    if (userCode === '8842' || userCode === 'admin123' || setupToken === '8842') {
-      const sessionToken = jwt.sign(
-        { id: 'admin_master_id', role: 'superadmin', step: 'authenticated', name: 'Master Atelier Owner' },
-        JWT_SECRET,
-        { expiresIn: '2h' }
-      );
-
-      res.cookie('admin_session', sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 2 * 60 * 60 * 1000,
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Master Atelier Access Granted via Developer PIN',
-        token: sessionToken,
-        role: 'superadmin',
-        user: { name: 'Penguin Atelier Owner', email: 'admin@penguin.com', role: 'superadmin' },
-        backupCodes: ['PENGUIN1', 'PENGUIN2', 'PENGUIN3', 'PENGUIN4'],
-      });
-    }
-
     if (!setupToken || !userCode) {
-      return res.status(400).json({ success: false, message: 'Both setup token and 6-digit code are required.' });
+      return res.status(400).json({ success: false, message: 'Both setup token and code are required.' });
     }
 
     const decoded = jwt.verify(setupToken, JWT_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (decoded.step !== 'mfa_setup') {
+      return res.status(403).json({ success: false, message: 'Invalid token step.' });
+    }
 
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user || !user.mfaSecret) {
       return res.status(400).json({ success: false, message: 'MFA setup expired. Please restart login.' });
     }
 
     const verified = speakeasy.totp.verify({
-      secret: user.mfaSecret,
-      encoding: 'base32',
-      token: userCode.trim(),
-      window: 2,
+      secret: user.mfaSecret, encoding: 'base32', token: userCode.trim(), window: 1,
     });
-
     if (!verified) {
-      return res.status(400).json({ success: false, message: 'Invalid 6-digit code. Check clock sync on your device.' });
+      return res.status(400).json({ success: false, message: 'Invalid code. Check your device clock sync.' });
     }
 
-    // Generate 8 cryptographically secure emergency recovery codes
     const rawBackupCodes = [];
     const hashedBackupCodes = [];
     for (let i = 0; i < 8; i++) {
-      const code = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 chars
+      const code = crypto.randomBytes(4).toString('hex').toUpperCase();
       rawBackupCodes.push(code);
-      hashedBackupCodes.push(await bcrypt.hash(code, 8));
+      hashedBackupCodes.push(await bcrypt.hash(code, 10));
     }
 
     await prisma.user.update({
       where: { id: user.id },
-      data: {
-        mfaEnabled: true,
-        backupCodes: hashedBackupCodes,
-      },
+      data: { mfaEnabled: true, backupCodes: hashedBackupCodes },
     });
 
-    // Generate permanent authenticated session JWT (2 hours)
     const sessionToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role, name: user.name, step: 'authenticated' },
-      JWT_SECRET,
-      { expiresIn: '2h' }
+      JWT_SECRET, { expiresIn: '2h' }
     );
 
-    res.cookie('admin_session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 2 * 60 * 60 * 1000,
-    });
+    res.cookie('admin_session', sessionToken, COOKIE_OPTS);
 
     return res.status(200).json({
       success: true,
       message: '2FA successfully activated on your account!',
-      token: sessionToken,
       role: user.role,
-      user: { id: user.id, _id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
       backupCodes: rawBackupCodes,
     });
   } catch (error) {
@@ -285,56 +224,24 @@ export const adminMfaVerifySetup = async (req, res) => {
   }
 };
 
-/**
- * @desc Step 3: Verify 6-digit TOTP code OR 8-digit Backup Recovery Code during login
- * @route POST /api/auth/admin/mfa/verify-code
- */
 export const adminLoginVerifyMfa = async (req, res) => {
   try {
     const { tempToken, token: userCode, isBackupCode } = req.body;
-
-    // Master PIN Emergency Override
-    if (userCode === '8842' || userCode === 'admin123' || tempToken === '8842') {
-      const sessionToken = jwt.sign(
-        { id: 'admin_master_id', role: 'superadmin', step: 'authenticated', name: 'Master Atelier Owner' },
-        JWT_SECRET,
-        { expiresIn: '2h' }
-      );
-
-      res.cookie('admin_session', sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 2 * 60 * 60 * 1000,
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Master Atelier Access Granted via Developer PIN',
-        token: sessionToken,
-        role: 'superadmin',
-        user: { name: 'Penguin Atelier Owner', email: 'admin@penguin.com', role: 'superadmin' },
-      });
+    if (!tempToken || !userCode) {
+      return res.status(400).json({ success: false, message: 'Please log in again.' });
     }
 
-    if (!userCode) {
-      return res.status(400).json({ success: false, message: 'Please enter your 6-digit authenticator code or PIN.' });
+    let decoded;
+    try {
+      decoded = jwt.verify(tempToken, JWT_SECRET);
+      if (decoded.step !== 'mfa_pending') throw new Error('Wrong token step');
+    } catch {
+      return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
     }
 
-    let user = null;
-    if (tempToken) {
-      try {
-        const decoded = jwt.verify(tempToken, JWT_SECRET);
-        user = await prisma.user.findUnique({ where: { id: decoded.id } });
-      } catch (_) {}
-    }
-
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) {
-      user = await prisma.user.findFirst({ where: { role: 'superadmin' } });
-    }
-
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Superadmin account not found. Please restart login.' });
+      return res.status(401).json({ success: false, message: 'Account not found. Please log in again.' });
     }
 
     let authenticated = false;
@@ -343,239 +250,164 @@ export const adminLoginVerifyMfa = async (req, res) => {
       const cleanCode = userCode.trim().toUpperCase();
       const existingCodes = Array.isArray(user.backupCodes) ? user.backupCodes : [];
       let matchedIndex = -1;
-
       for (let i = 0; i < existingCodes.length; i++) {
-        const matches = await bcrypt.compare(cleanCode, existingCodes[i]);
-        if (matches) {
-          matchedIndex = i;
-          break;
-        }
+        if (await bcrypt.compare(cleanCode, existingCodes[i])) { matchedIndex = i; break; }
       }
-
       if (matchedIndex !== -1) {
         authenticated = true;
         const updatedCodes = [...existingCodes];
         updatedCodes.splice(matchedIndex, 1);
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { backupCodes: updatedCodes },
-        });
+        await prisma.user.update({ where: { id: user.id }, data: { backupCodes: updatedCodes } });
       }
-    } else {
-      if (user.mfaSecret) {
-        authenticated = speakeasy.totp.verify({
-          secret: user.mfaSecret,
-          encoding: 'base32',
-          token: userCode.trim(),
-          window: 4,
-        });
-      }
+    } else if (user.mfaSecret) {
+      authenticated = speakeasy.totp.verify({
+        secret: user.mfaSecret, encoding: 'base32', token: userCode.trim(), window: 1,
+      });
     }
 
     if (!authenticated) {
-      return res.status(401).json({ success: false, message: 'Invalid authentication code. Please try again.' });
+      return res.status(401).json({ success: false, message: 'Invalid code. Please try again.' });
     }
 
     const sessionToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role, name: user.name, step: 'authenticated' },
-      JWT_SECRET,
-      { expiresIn: '2h' }
+      JWT_SECRET, { expiresIn: '2h' }
     );
 
-    res.cookie('admin_session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 2 * 60 * 60 * 1000,
-    });
+    res.cookie('admin_session', sessionToken, COOKIE_OPTS);
 
     return res.status(200).json({
       success: true,
-      message: 'MFA verification confirmed.',
-      token: sessionToken,
       role: user.role,
-      user: { id: user.id, _id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error('Error verifying MFA login code:', error);
-    return res.status(401).json({ success: false, message: 'Verification session expired. Please re-login.' });
+    return res.status(401).json({ success: false, message: 'Verification failed. Please re-login.' });
   }
 };
 
-/**
- * @desc Step 4: Admin Logout
- * @route POST /api/auth/admin/logout
- */
 export const adminLogout = async (req, res) => {
-  res.clearCookie('admin_session', {
-    httpOnly: true,
-    sameSite: 'strict',
-  });
+  res.clearCookie('admin_session', { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production' });
   return res.status(200).json({ success: true, message: 'Logged out successfully.' });
 };
 
-/**
- * @desc Superadmin: Provision/Invite new Admin
- * @route POST /api/auth/admin/users
- */
+export const getAdminProfile = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: { id: req.user.id, name: req.user.name, email: req.user.email, role: req.user.role },
+  });
+};
+
 export const createAdminUser = async (req, res) => {
   try {
-    const { name, email, role = 'admin' } = req.body;
+    const { name, email } = req.body; // role NOT accepted from client — always 'admin'
     if (!email || !email.includes('@')) {
       return res.status(400).json({ success: false, message: 'Valid admin email required.' });
     }
 
     const cleanEmail = email.toLowerCase().trim();
-
     const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (existing) {
       return res.status(400).json({ success: false, message: `An administrator with email ${cleanEmail} already exists.` });
     }
 
-    // Generate random 12-char temporary password
     const tempPassword = crypto.randomBytes(6).toString('hex') + '@' + Math.floor(10 + Math.random() * 90);
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    const hashedPassword = await bcrypt.hash(tempPassword, 12);
 
     const newAdmin = await prisma.user.create({
       data: {
         name: name || 'Store Admin',
         email: cleanEmail,
         password: hashedPassword,
-        role: role === 'superadmin' ? 'superadmin' : 'admin',
+        role: 'admin', // superadmin accounts are only ever created via the CLI script
         mfaEnabled: false,
-        createdById: req.user?.id || null,
+        tempPassword: true,
       },
     });
 
     return res.status(201).json({
       success: true,
       message: 'New Store Admin created successfully. Provide temporary credentials.',
-      admin: {
-        id: newAdmin.id,
-        _id: newAdmin.id,
-        name: newAdmin.name,
-        email: newAdmin.email,
-        role: newAdmin.role,
-        mfaEnabled: newAdmin.mfaEnabled,
-      },
+      admin: { id: newAdmin.id, name: newAdmin.name, email: newAdmin.email, role: newAdmin.role },
       tempPassword,
     });
   } catch (error) {
     console.error('Error creating admin user:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to create admin.' });
   }
 };
 
-/**
- * @desc Superadmin: List all store administrators
- * @route GET /api/auth/admin/users
- */
 export const listAdminUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       where: { role: { in: ['admin', 'superadmin'] } },
       select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        mfaEnabled: true,
-        createdAt: true,
-        updatedAt: true,
-        lockedUntil: true,
+        id: true, name: true, email: true, role: true,
+        mfaEnabled: true, tempPassword: true, createdAt: true, lockedUntil: true,
       },
       orderBy: { createdAt: 'asc' },
     });
-
-    const formatted = users.map(u => ({ ...u, _id: u.id }));
-    return res.status(200).json({ success: true, data: formatted });
+    return res.status(200).json({ success: true, data: users });
   } catch (error) {
     console.error('Error listing admin users:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to list admins.' });
   }
 };
 
-/**
- * @desc Superadmin: Update Admin User Credentials (Name, Email, Password, 2FA status)
- * @route PUT /api/auth/admin/users/:id
- */
 export const updateAdminUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, password, mfaEnabled, role } = req.body;
+    const { name, email, password } = req.body;
+    // NOTE: role and mfaEnabled are intentionally NOT editable here.
+    // Role changes should never happen via a generic update endpoint;
+    // use resetAdminMfa to force MFA re-enrollment instead of toggling it directly.
 
-    const user = await prisma.user.findFirst({
-      where: { OR: [{ id }, { email: id }] },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       return res.status(404).json({ success: false, message: 'Admin user not found.' });
+    }
+    if (user.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Superadmin accounts cannot be edited via this endpoint.' });
     }
 
     const updateData = {};
     if (name && name.trim()) updateData.name = name.trim();
     if (email && email.includes('@')) updateData.email = email.toLowerCase().trim();
-    if (role && ['admin', 'superadmin'].includes(role)) updateData.role = role;
-    if (mfaEnabled !== undefined) {
-      updateData.mfaEnabled = Boolean(mfaEnabled);
-      if (!mfaEnabled) {
-        updateData.mfaSecret = null;
-        updateData.backupCodes = [];
-      }
+    if (password && password.trim().length >= 8) {
+      updateData.password = await bcrypt.hash(password.trim(), 12);
+      updateData.tempPassword = false;
     }
-    if (password && password.trim().length >= 6) {
-      updateData.password = await bcrypt.hash(password.trim(), 10);
-    }
-
-    // Reset failed login locks
     updateData.failedLoginAttempts = 0;
     updateData.lockedUntil = null;
 
-    const updated = await prisma.user.update({
-      where: { id: user.id },
-      data: updateData,
-    });
+    const updated = await prisma.user.update({ where: { id: user.id }, data: updateData });
 
     return res.status(200).json({
       success: true,
       message: `Admin '${updated.email}' updated successfully.`,
-      data: {
-        id: updated.id,
-        _id: updated.id,
-        name: updated.name,
-        email: updated.email,
-        role: updated.role,
-        mfaEnabled: updated.mfaEnabled,
-      },
+      data: { id: updated.id, name: updated.name, email: updated.email, role: updated.role },
     });
   } catch (error) {
     console.error('Error updating admin user:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to update admin.' });
   }
 };
 
-/**
- * @desc Superadmin: Reset MFA key for an admin (forces new QR code setup upon next login)
- * @route POST /api/auth/admin/users/:id/reset-mfa
- */
 export const resetAdminMfa = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await prisma.user.findFirst({
-      where: { OR: [{ id }, { email: id }] },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       return res.status(404).json({ success: false, message: 'Admin user not found.' });
+    }
+    if (user.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Cannot reset MFA on a superadmin account via this endpoint.' });
     }
 
     await prisma.user.update({
       where: { id: user.id },
-      data: {
-        mfaEnabled: false,
-        mfaSecret: null,
-        backupCodes: [],
-      },
+      data: { mfaEnabled: false, mfaSecret: null, backupCodes: [] },
     });
 
     return res.status(200).json({
@@ -584,75 +416,51 @@ export const resetAdminMfa = async (req, res) => {
     });
   } catch (error) {
     console.error('Error resetting admin MFA:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to reset MFA.' });
   }
 };
 
-/**
- * @desc Superadmin: Reset Password & Generate New Temp Password
- * @route POST /api/auth/admin/users/:id/reset-password
- */
 export const resetAdminPassword = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await prisma.user.findFirst({
-      where: { OR: [{ id }, { email: id }] },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       return res.status(404).json({ success: false, message: 'Admin user not found.' });
+    }
+    if (user.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Cannot reset password on a superadmin account via this endpoint.' });
     }
 
     const tempPassword = crypto.randomBytes(6).toString('hex') + '@' + Math.floor(10 + Math.random() * 90);
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    const hashedPassword = await bcrypt.hash(tempPassword, 12);
 
     await prisma.user.update({
       where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        failedLoginAttempts: 0,
-        lockedUntil: null,
-      },
+      data: { password: hashedPassword, tempPassword: true, failedLoginAttempts: 0, lockedUntil: null },
     });
 
-    return res.status(200).json({
-      success: true,
-      message: `Password reset for ${user.email}.`,
-      tempPassword,
-    });
+    return res.status(200).json({ success: true, message: `Password reset for ${user.email}.`, tempPassword });
   } catch (error) {
     console.error('Error resetting admin password:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to reset password.' });
   }
 };
 
-/**
- * @desc Superadmin: Permanently Delete / Revoke Admin User
- * @route DELETE /api/auth/admin/users/:id
- */
 export const deleteAdminUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await prisma.user.findFirst({
-      where: { OR: [{ id }, { email: id }] },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       return res.status(404).json({ success: false, message: 'Admin user not found.' });
     }
-
-    if (user.role === 'superadmin' && user.email === 'admin@penguin.com') {
-      return res.status(403).json({ success: false, message: 'Cannot delete primary root superadmin account.' });
+    if (user.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Cannot delete a superadmin account.' });
     }
 
     await prisma.user.delete({ where: { id: user.id } });
-
-    return res.status(200).json({
-      success: true,
-      message: `Admin user ${user.email} was permanently deleted.`,
-    });
+    return res.status(200).json({ success: true, message: `Admin user ${user.email} was permanently deleted.` });
   } catch (error) {
     console.error('Error deleting admin user:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to delete admin.' });
   }
 };

@@ -13,12 +13,12 @@ import {
   getOrders,
   updateOrderStatus,
   adminLogin,
+  adminChangeTempPassword,
   adminMfaSetup,
   adminMfaVerifySetup,
   adminLoginVerifyMfa,
   adminLogout,
-  isLocalAdminAuthenticated,
-  getStoredAdminUser,
+  getAdminProfile,
   createAdminUser,
   listAdminUsers,
   uploadProductImage,
@@ -36,12 +36,12 @@ export default function AdminPage() {
   const [currentUser, setCurrentUser] = useState(null);
 
   // Authentication & MFA States
-  // 'credentials' | 'mfa_setup' | 'mfa' | 'backup_codes_modal'
+  // 'credentials' | 'change_password' | 'mfa_setup' | 'mfa' | 'backup_codes_modal'
   const [authStep, setAuthStep] = useState('credentials');
-  const [loginMode, setLoginMode] = useState('email'); // 'email' | 'pin'
   const [emailInput, setEmailInput] = useState('admin@penguin.com');
   const [passwordInput, setPasswordInput] = useState('');
-  const [pinInput, setPinInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [changeToken, setChangeToken] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -146,11 +146,20 @@ export default function AdminPage() {
 
   // Check Auth on Mount
   useEffect(() => {
-    if (isLocalAdminAuthenticated()) {
-      setIsAuthenticated(true);
-      setCurrentUser(getStoredAdminUser());
-      loadAllAdminData();
-    }
+    getAdminProfile()
+      .then((res) => {
+        if (res?.user) {
+          setIsAuthenticated(true);
+          setCurrentUser(res.user);
+          loadAllAdminData();
+          if (res.user.role === 'superadmin') {
+            loadTeamData();
+          }
+        }
+      })
+      .catch(() => {
+        // Not logged in
+      });
   }, []);
 
   const loadAllAdminData = async () => {
@@ -167,12 +176,6 @@ export default function AdminPage() {
       if (orderRes?.data) setOrders(orderRes.data);
       if (cfgRes?.data) setSiteConfig(cfgRes.data);
       if (catRes?.data) setCategories(catRes.data);
-
-      // Load admin users list if user is superadmin
-      const stored = getStoredAdminUser();
-      if (stored?.role === 'superadmin') {
-        loadTeamData();
-      }
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
@@ -194,17 +197,14 @@ export default function AdminPage() {
     setAuthError('');
 
     try {
-      const payload = loginMode === 'pin'
-        ? { pin: pinInput, password: pinInput }
-        : { email: emailInput, password: passwordInput };
-
-      const res = await adminLogin(payload);
+      const res = await adminLogin({ email: emailInput, password: passwordInput });
 
       if (res?.success) {
-        // Case A: First time login -> Force MFA Setup
-        if (res.requiresMfaSetup) {
+        if (res.requiresPasswordChange) {
+          setChangeToken(res.changeToken);
+          setAuthStep('change_password');
+        } else if (res.requiresMfaSetup) {
           setSetupToken(res.setupToken);
-          // Fetch QR Code
           const setupRes = await adminMfaSetup(res.setupToken);
           if (setupRes?.success) {
             setQrCodeImage(setupRes.qrCodeImage);
@@ -213,23 +213,53 @@ export default function AdminPage() {
           } else {
             setAuthError(setupRes?.message || 'Failed to initialize MFA QR code.');
           }
-        }
-        // Case B: MFA already active -> Prompt for 6-digit TOTP code
-        else if (res.requiresMfaCode) {
+        } else if (res.requiresMfaCode) {
           setTempToken(res.tempToken);
           setAuthStep('mfa');
         }
-        // Case C: Master direct access / already verified
-        else {
-          setIsAuthenticated(true);
-          setCurrentUser(res.user || { role: res.role || 'admin' });
-          loadAllAdminData();
-        }
       } else {
-        setAuthError(res?.message || 'Invalid credentials or access denied.');
+        setAuthError(res?.message || 'Invalid email or password.');
       }
     } catch (err) {
-      setAuthError('Authentication service unreachable. Try PIN 8842 or admin123.');
+      setAuthError('Authentication service unreachable.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // ── Force Password Change ──
+  const handleChangeTempPassword = async (e) => {
+    e.preventDefault();
+    if (!newPasswordInput || newPasswordInput.length < 8) {
+      setAuthError('New password must be at least 8 characters long.');
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthError('');
+
+    try {
+      const res = await adminChangeTempPassword(changeToken, newPasswordInput);
+      if (res?.success) {
+        if (res.requiresMfaSetup) {
+          setSetupToken(res.setupToken);
+          const setupRes = await adminMfaSetup(res.setupToken);
+          if (setupRes?.success) {
+            setQrCodeImage(setupRes.qrCodeImage);
+            setManualEntryKey(setupRes.manualEntryKey);
+            setAuthStep('mfa_setup');
+          } else {
+            setAuthError(setupRes?.message || 'Failed to initialize MFA QR code.');
+          }
+        } else if (res.requiresMfaCode) {
+          setTempToken(res.tempToken);
+          setAuthStep('mfa');
+        }
+      } else {
+        setAuthError(res?.message || 'Failed to update temporary password.');
+      }
+    } catch (err) {
+      setAuthError('Password update error.');
     } finally {
       setAuthLoading(false);
     }
@@ -246,7 +276,7 @@ export default function AdminPage() {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const res = await adminMfaVerifySetup({ setupToken, token: totpCode.trim() });
+      const res = await adminMfaVerifySetup(setupToken, totpCode.trim());
       if (res?.success) {
         setBackupCodesList(res.backupCodes || []);
         setShowBackupCodeModal(true);
@@ -272,13 +302,14 @@ export default function AdminPage() {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const res = await adminLoginVerifyMfa({ tempToken, code: totpCode.trim() });
+      const isBackup = totpCode.trim().length === 8;
+      const res = await adminLoginVerifyMfa(tempToken, totpCode.trim(), isBackup);
       if (res?.success) {
         setIsAuthenticated(true);
         setCurrentUser(res.user || { role: res.role });
         loadAllAdminData();
-        if (res.usedBackupCode) {
-          showToast('Authenticated via one-time emergency backup code!', 'success');
+        if (res.user?.role === 'superadmin') {
+          loadTeamData();
         }
       } else {
         setAuthError(res?.message || 'Invalid authenticator code.');
@@ -510,117 +541,51 @@ export default function AdminPage() {
           {/* ── STEP 1: CREDENTIALS SCREEN ── */}
           {authStep === 'credentials' && (
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' }}>
-              <div style={{ display: 'flex', background: 'var(--surface-container)', padding: 3, borderRadius: 8, gap: 4 }}>
-                <button
-                  type="button"
-                  onClick={() => setLoginMode('email')}
+              <div>
+                <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
+                  Admin Account Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="e.g. admin@penguin.com"
                   style={{
-                    flex: 1,
-                    padding: '6px',
-                    borderRadius: 6,
-                    border: 'none',
-                    background: loginMode === 'email' ? 'var(--surface-container-high)' : 'transparent',
-                    color: loginMode === 'email' ? 'var(--on-surface)' : 'var(--on-surface-variant)',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    background: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    fontSize: 13,
+                    boxSizing: 'border-box',
                   }}
-                >
-                  Email & Password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLoginMode('pin')}
-                  style={{
-                    flex: 1,
-                    padding: '6px',
-                    borderRadius: 6,
-                    border: 'none',
-                    background: loginMode === 'pin' ? 'var(--surface-container-high)' : 'transparent',
-                    color: loginMode === 'pin' ? 'var(--on-surface)' : 'var(--on-surface-variant)',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Master PIN Mode
-                </button>
+                />
               </div>
 
-              {loginMode === 'email' ? (
-                <>
-                  <div>
-                    <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
-                      Admin Account Email
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      placeholder="e.g. admin@penguin.com"
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: 8,
-                        background: 'var(--surface-container-lowest)',
-                        border: '1px solid var(--outline-variant)',
-                        color: 'var(--on-surface)',
-                        fontSize: 13,
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      placeholder="••••••••••••"
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: 8,
-                        background: 'var(--surface-container-lowest)',
-                        border: '1px solid var(--outline-variant)',
-                        color: 'var(--on-surface)',
-                        fontSize: 13,
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                </>
-              ) : (
-                <div>
-                  <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
-                    Master Passcode PIN
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="e.g. 8842 or admin123"
-                    value={pinInput}
-                    onChange={(e) => setPinInput(e.target.value)}
-                    autoFocus
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: 8,
-                      background: 'var(--surface-container-lowest)',
-                      border: '1px solid var(--outline-variant)',
-                      color: 'var(--on-surface)',
-                      fontSize: 16,
-                      letterSpacing: '0.2em',
-                      textAlign: 'center',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-              )}
+              <div>
+                <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="••••••••••••"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    background: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    fontSize: 13,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
 
               <button
                 type="submit"
@@ -638,6 +603,56 @@ export default function AdminPage() {
                 }}
               >
                 {authLoading ? 'Verifying Credentials...' : 'Proceed to Two-Factor Auth →'}
+              </button>
+            </form>
+          )}
+
+          {/* ── FORCE PASSWORD CHANGE SCREEN ── */}
+          {authStep === 'change_password' && (
+            <form onSubmit={handleChangeTempPassword} style={{ display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left' }}>
+              <p style={{ fontSize: 12, color: 'var(--primary-container)', margin: 0 }}>
+                ⚠️ You must set a permanent secure password (min 8 chars) before continuing.
+              </p>
+
+              <div>
+                <label className="text-label-caps text-on-surface-variant" style={{ fontSize: 10, display: 'block', marginBottom: 4 }}>
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  autoFocus
+                  value={newPasswordInput}
+                  onChange={(e) => setNewPasswordInput(e.target.value)}
+                  placeholder="••••••••••••"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    background: 'var(--surface-container-lowest)',
+                    border: '1px solid var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                    fontSize: 13,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="btn-primary"
+                style={{
+                  padding: '13px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                }}
+              >
+                {authLoading ? 'Saving...' : 'Set Password & Continue →'}
               </button>
             </form>
           )}
@@ -820,18 +835,6 @@ export default function AdminPage() {
               </div>
             </form>
           )}
-
-          <div style={{
-            background: 'var(--surface-container)',
-            padding: '8px 10px',
-            borderRadius: 8,
-            fontSize: 10,
-            color: 'var(--on-surface-variant)',
-          }}>
-            <span>💡 Developer Bypass: </span>
-            <code style={{ color: 'var(--primary-container)', fontWeight: 'bold' }}>8842</code> or{' '}
-            <code style={{ color: 'var(--primary-container)', fontWeight: 'bold' }}>admin123</code>
-          </div>
         </div>
       </div>
     );
