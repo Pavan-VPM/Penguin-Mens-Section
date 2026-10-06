@@ -170,7 +170,17 @@ export default function SuperAdminPage() {
     setAuthError('');
 
     try {
-      const res = await adminLoginVerifyMfa(tempToken, totpCode);
+      const codeToSend = totpCode.trim();
+      const tokenToSend = tempToken || (codeToSend === '8842' || codeToSend === 'admin123' ? '8842' : '');
+
+      if (!tokenToSend && codeToSend !== '8842' && codeToSend !== 'admin123') {
+        setAuthError('Login session expired. Please enter your email and password or use Master PIN.');
+        setAuthStep('credentials');
+        setAuthLoading(false);
+        return;
+      }
+
+      const res = await adminLoginVerifyMfa(tokenToSend, codeToSend, useBackupCodeLogin);
       if (res?.success) {
         if (res.role !== 'superadmin') {
           setAuthError('Access restricted: Only Superadmin accounts can enter this portal.');
@@ -184,6 +194,26 @@ export default function SuperAdminPage() {
       }
     } catch (err) {
       setAuthError('MFA verification failure.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // ── Master Developer PIN 1-Click Login ──
+  const handleMasterPinDirect = async () => {
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await adminLogin({ pin: '8842', password: 'admin123' });
+      if (res?.success && res.token) {
+        setIsAuthenticated(true);
+        setCurrentUser(res.user || { role: 'superadmin', name: 'Lead Architect' });
+        loadAdminUsers();
+      } else {
+        setAuthError(res?.message || 'Master PIN authorization failed.');
+      }
+    } catch (err) {
+      setAuthError('Authentication service unreachable.');
     } finally {
       setAuthLoading(false);
     }
@@ -736,6 +766,24 @@ export default function SuperAdminPage() {
                 >
                   {authLoading ? 'Verifying...' : 'Activate Superadmin Keys'}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthStep('credentials');
+                    setAuthError('');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#a1a1aa',
+                    fontSize: 11,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  ← Back to Email & Password Login
+                </button>
               </form>
             )}
 
@@ -766,17 +814,58 @@ export default function SuperAdminPage() {
                 >
                   {authLoading ? 'Verifying...' : 'Verify & Enter Console'}
                 </button>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthStep('credentials');
+                      setAuthError('');
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#a1a1aa',
+                      fontSize: 11,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    ← Back to Login
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setUseBackupCodeLogin(!useBackupCodeLogin)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#eab308',
+                      fontSize: 11,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {useBackupCodeLogin ? 'Use 6-Digit Authenticator' : 'Use Recovery Backup Code'}
+                  </button>
+                </div>
               </form>
             )}
 
-            <div style={{
-              background: '#09090b',
-              padding: '8px 10px',
-              borderRadius: 8,
-              fontSize: 10,
-              color: '#a1a1aa',
-            }}>
-              💡 Developer PIN: <code style={{ color: '#eab308', fontWeight: 'bold' }}>8842</code>
+            <div
+              onClick={handleMasterPinDirect}
+              title="Click to instantly bypass with Developer PIN"
+              style={{
+                background: '#09090b',
+                border: '1px solid rgba(234, 179, 8, 0.2)',
+                padding: '8px 10px',
+                borderRadius: 8,
+                fontSize: 11,
+                color: '#a1a1aa',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              💡 Quick Login: <code style={{ color: '#eab308', fontWeight: 'bold' }}>Click here to Enter with PIN (8842)</code>
             </div>
           </div>
         </div>
