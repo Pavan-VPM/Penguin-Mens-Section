@@ -22,7 +22,6 @@ export default function ProductCard({ product, onQuickView }) {
   // Original MRP calculation (default ~40-50% higher for discount strike effect like Snitch / Souled Store)
   const originalPrice = product.originalPrice || Math.round(rawPrice * 1.65)
   const mainImg = product.images?.[0] || product.img || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB1bs-UKDZDm7hd3cHOIWB8fIAlq8YlxvU1hgjx3MmUyxGAk7KBbZ6UV-uGdR1LaVtONjR7nlEoRPDqOpo0yQQdSUtY0L3Z-dO_PVYHPpTRoqtx0jaTGEbef0-ESiFB8pB8rZYzvIdTC3r7BsbtKahxYIfR_3sd4CL8O-iVT_B3Rb9WxVSF_sUquSiW0fN9ja1NjMwXvFYHZEd8Ivn2RK_ue1E9b7PxXAEWslU7VJkTRjU99pzLh7Va'
-  const hoverImg = product.images?.[1] || product.hoverImg || product.images?.[0] || mainImg
 
   // Exclude any discount/percentage OFF badges for a minimal luxury look
   const badge = product.badge && !product.badge.includes('OFF') && !product.badge.includes('%') ? product.badge : null
@@ -54,7 +53,7 @@ export default function ProductCard({ product, onQuickView }) {
 
   return (
     <div className="product-card" onClick={handleCardClick}>
-      {/* Media Wrap with Hover Flip */}
+      {/* Media Wrap */}
       <div className="product-media-wrap">
         <img 
           src={mainImg} 
@@ -62,14 +61,6 @@ export default function ProductCard({ product, onQuickView }) {
           className="product-img-main" 
           loading="lazy" 
         />
-        {hoverImg && hoverImg !== mainImg && (
-          <img 
-            src={hoverImg} 
-            alt={`${name} alt`} 
-            className="product-img-hover" 
-            loading="lazy" 
-          />
-        )}
 
         {/* Badge Tag */}
         {badge && (

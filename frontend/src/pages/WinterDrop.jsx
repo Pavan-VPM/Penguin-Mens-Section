@@ -91,13 +91,13 @@ const FALLBACK_DROP_PRODUCTS = [
 export default function WinterDropPage() {
   const navigate = useNavigate()
   const countdown = useCountdown(Date.now() + 2 * 86400000 + 14 * 3600000 + 38 * 60000)
-  const [dropProducts, setDropProducts] = useState(FALLBACK_DROP_PRODUCTS)
+  const [dropProducts, setDropProducts] = useState([])
 
   useEffect(() => {
     async function loadData() {
       try {
         const res = await getProducts()
-        if (res?.data && res.data.length > 0) {
+        if (res?.data) {
           const formatted = res.data.map(p => ({
             id: p._id || p.id,
             name: p.name,
@@ -105,15 +105,18 @@ export default function WinterDropPage() {
             color: p.color || 'Nocturne Black',
             price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999,
             originalPrice: p.originalPrice || Math.round((typeof p.price === 'number' ? p.price : 1999) * 1.65),
-            badge: 'DROP 01',
+            badge: p.badge || 'DROP 01',
             rating: p.rating || '4.9',
             reviewsCount: 140,
-            images: p.images && p.images.length > 0 ? p.images : [p.img],
+            images: p.images && p.images.length > 0 ? p.images : (p.img ? [p.img] : []),
           }))
           setDropProducts(formatted)
+        } else {
+          setDropProducts([])
         }
       } catch (err) {
-        console.warn('Using fallback drop catalog')
+        console.warn('Could not load drop catalog')
+        setDropProducts([])
       }
     }
     loadData()

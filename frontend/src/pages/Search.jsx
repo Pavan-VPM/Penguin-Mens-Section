@@ -72,13 +72,13 @@ export default function SearchPage() {
   const [searchParams] = useSearchParams()
   const initialQuery = searchParams.get('q') || ''
   const [query, setQuery] = useState(initialQuery)
-  const [allProducts, setAllProducts] = useState(FALLBACK_SEARCH_ITEMS)
+  const [allProducts, setAllProducts] = useState([])
 
   useEffect(() => {
     async function loadData() {
       try {
         const res = await getProducts()
-        if (res?.data && res.data.length > 0) {
+        if (res?.data) {
           const formatted = res.data.map(p => ({
             id: p._id || p.id,
             name: p.name,
@@ -89,12 +89,15 @@ export default function SearchPage() {
             badge: p.badge || 'NEW',
             rating: p.rating || '4.9',
             reviewsCount: p.reviewsCount || 120,
-            images: p.images && p.images.length > 0 ? p.images : [p.img],
+            images: p.images && p.images.length > 0 ? p.images : (p.img ? [p.img] : []),
           }))
           setAllProducts(formatted)
+        } else {
+          setAllProducts([])
         }
       } catch (err) {
-        console.warn('Using fallback search catalog')
+        console.warn('Could not load search catalog')
+        setAllProducts([])
       }
     }
     loadData()

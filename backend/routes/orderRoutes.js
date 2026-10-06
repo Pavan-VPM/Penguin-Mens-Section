@@ -1,4 +1,5 @@
 import express from 'express';
+import { attachCustomerIfPresent } from '../middleware/customerAuth.js';
 import {
   createOrder,
   getAllOrders,
@@ -8,7 +9,7 @@ import {
 const router = express.Router();
 
 router.get('/', getAllOrders);
-router.post('/', createOrder);
+router.post('/', attachCustomerIfPresent, createOrder);
 router.put('/:id', updateOrderStatus);
 
 export default router;

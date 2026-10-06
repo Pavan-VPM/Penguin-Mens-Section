@@ -7,12 +7,6 @@ import SizeGuideModal from '../components/SizeGuideModal';
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
-const DEFAULT_IMAGES = [
-  'https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/842811/pexels-photo-842811.jpeg?auto=compress&cs=tinysrgb&w=600',
-];
-
 const DEFAULT_SUGGESTIONS = [];
 
 // Color name to hex helper
@@ -68,7 +62,7 @@ function resolveHex(colorName) {
 export default function ProductDetailPage() {
   const navigate = useNavigate()
   const { id, slug } = useParams()
-  const currentKey = slug || id || '1'
+  const currentKey = slug || id
   const { addToCart, isWishlisted, toggleWishlist } = useCart()
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -78,30 +72,10 @@ export default function ProductDetailPage() {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [openAccordion, setOpenAccordion] = useState('details')
-  const [relatedProducts, setRelatedProducts] = useState(DEFAULT_SUGGESTIONS)
+  const [relatedProducts, setRelatedProducts] = useState([])
   const [activeIdx, setActiveIdx] = useState(0)
   const [loading, setLoading] = useState(true)
-
-  const [product, setProduct] = useState({
-    id: currentKey,
-    slug: typeof currentKey === 'string' ? currentKey : `item-${currentKey}`,
-    name: 'Structured Poplin Overshirt',
-    category: 'Shirts',
-    color: 'Nocturne Black',
-    colors: ['Nocturne Black', 'Chalk White'],
-    colorVariants: [
-      { name: 'Nocturne Black', hex: '#111111' },
-      { name: 'Chalk White', hex: '#F5F5F0' }
-    ],
-    price: 1999,
-    originalPrice: 3499,
-    stock: 8,
-    stockStatus: 'In Stock',
-    images: DEFAULT_IMAGES,
-    description: 'A contemporary relaxed overshirt crafted from 100% Japanese high-density organic cotton poplin. Features an exaggerated camp collar, concealed matte buttons, and side split vents.',
-    fabricCare: '100% High-Density Organic Cotton (180 GSM). Cold machine wash delicate, iron on low reverse.',
-    deliveryInfo: 'Dispatched within 24 hours. 7-Day Doorstep Returns & Exchanges.'
-  })
+  const [product, setProduct] = useState(null)
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768)
@@ -111,6 +85,10 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     async function loadData() {
+      if (!currentKey) {
+        setLoading(false)
+        return
+      }
       setLoading(true)
       try {
         const [pRes, allRes] = await Promise.all([
@@ -123,7 +101,6 @@ export default function ProductDetailPage() {
           const rawP = typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999
           const pColor = p.color || (p.colorVariants?.[0]?.name) || (p.colors?.[0]) || 'Nocturne Black'
           
-          // Parse color variants from colorVariants or colors array
           let variants = []
           if (Array.isArray(p.colorVariants) && p.colorVariants.length > 0) {
             variants = p.colorVariants.map(cv => ({
@@ -141,12 +118,7 @@ export default function ProductDetailPage() {
             ]
           }
 
-          // Ensure images array has at least 1 image and fallback images if needed
-          let imgs = Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.img ? [p.img] : DEFAULT_IMAGES)
-          if (imgs.length === 1 && DEFAULT_IMAGES.length > 1) {
-            // Provide companion angle shots
-            imgs = [imgs[0], ...DEFAULT_IMAGES.slice(1)]
-          }
+          let imgs = Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.img ? [p.img] : [])
 
           setProduct({
             id: p._id || p.id,
@@ -167,6 +139,8 @@ export default function ProductDetailPage() {
           })
           setSelectedColor(pColor)
           setActiveIdx(0)
+        } else {
+          setProduct(null)
         }
 
         // Related items
@@ -250,8 +224,38 @@ export default function ProductDetailPage() {
   }
 
   // Mobile navigation
-  const goPrev = () => setActiveIdx(p => (p - 1 + product.images.length) % product.images.length)
-  const goNext = () => setActiveIdx(p => (p + 1) % product.images.length)
+  const goPrev = () => setActiveIdx(p => (p - 1 + (product?.images?.length || 1)) % (product?.images?.length || 1))
+  const goNext = () => setActiveIdx(p => (p + 1) % (product?.images?.length || 1))
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{
+          width: 44,
+          height: 44,
+          borderRadius: '50%',
+          border: '3px solid var(--border-light)',
+          borderTopColor: 'var(--brand-primary)',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+      </div>
+    )
+  }
+
+  if (!product) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 52, color: 'var(--text-muted)' }}>inventory_2</span>
+        <h2 style={{ fontSize: 20, fontWeight: 900, textTransform: 'uppercase', marginTop: 16 }}>Garment Not Found</h2>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 360, margin: '8px auto 24px' }}>
+          The requested item is not available in the active catalog.
+        </p>
+        <button onClick={() => navigate('/collection')} className="btn-solid-primary" style={{ height: 44, padding: '0 28px', fontSize: 12 }}>
+          Explore Collection
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingBottom: 80 }}>

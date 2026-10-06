@@ -39,14 +39,14 @@ const FALLBACK_PRODUCTS = [
 
 export default function WishlistPage() {
   const navigate = useNavigate()
-  const { wishlist, addToCart } = useCart()
-  const [allProducts, setAllProducts] = useState(FALLBACK_PRODUCTS)
+  const { wishlist, setWishlist, cleanWishlist, clearWishlist, addToCart } = useCart()
+  const [allProducts, setAllProducts] = useState([])
 
   useEffect(() => {
     async function loadData() {
       try {
         const res = await getProducts()
-        if (res?.data && res.data.length > 0) {
+        if (res?.data) {
           const formatted = res.data.map(p => ({
             id: p._id || p.id,
             name: p.name,
@@ -57,16 +57,36 @@ export default function WishlistPage() {
             badge: p.badge || 'NEW',
             rating: p.rating || '4.9',
             reviewsCount: p.reviewsCount || 120,
-            images: p.images && p.images.length > 0 ? p.images : [p.img],
+            images: p.images && p.images.length > 0 ? p.images : (p.img ? [p.img] : []),
           }))
           setAllProducts(formatted)
+          cleanWishlist(formatted)
+        } else {
+          setAllProducts([])
         }
       } catch (err) {
-        console.warn('Using fallback wishlist data')
+        console.warn('Could not load wishlist catalog')
+        setAllProducts([])
       }
     }
     loadData()
   }, [])
+
+  // Auto-prune stale IDs that do not exist in the loaded product catalog
+  useEffect(() => {
+    if (allProducts.length > 0 && wishlist.length > 0) {
+      const validSet = new Set(
+        allProducts
+          .flatMap(p => [p.id, p._id, p.slug])
+          .filter(Boolean)
+          .map(String)
+      )
+      const validWishlist = wishlist.filter(id => id && validSet.has(String(id)))
+      if (validWishlist.length !== wishlist.length) {
+        setWishlist(validWishlist)
+      }
+    }
+  }, [allProducts, wishlist, setWishlist])
 
   const wishlistedItems = allProducts.filter(p =>
     wishlist.some(wId =>
@@ -104,13 +124,22 @@ export default function WishlistPage() {
           </div>
 
           {wishlistedItems.length > 0 && (
-            <button
-              onClick={handleMoveAllToBag}
-              className="btn-solid-primary"
-              style={{ height: 42, fontSize: 12, padding: '0 20px' }}
-            >
-              Move All to Bag
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={clearWishlist}
+                className="btn-outline"
+                style={{ height: 42, fontSize: 12, padding: '0 16px' }}
+              >
+                Clear All
+              </button>
+              <button
+                onClick={handleMoveAllToBag}
+                className="btn-solid-primary"
+                style={{ height: 42, fontSize: 12, padding: '0 20px' }}
+              >
+                Move All to Bag
+              </button>
+            </div>
           )}
         </div>
 

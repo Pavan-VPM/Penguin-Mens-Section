@@ -1,50 +1,67 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
+import { getProducts } from '../services/api'
+
 const CartContext = createContext(null)
 
-const INITIAL_CART = [
-  {
-    id: 1,
-    name: 'Structured Poplin Overshirt',
-    color: 'NOCTURNE BLACK',
-    size: 'M',
-    price: 11900,
-    badge: 'DROP 04',
-    img: 'https://lh3.googleusercontent.com/aida/AEtjO1XIRlz0loYTFXvsLu1SXx_toDOydf4xCJ3g_vbEDs13LI3EDSuRo2Vy7NxI2NXKK_8Eld9kEZWD9aoH060racr_BNXnYOMoWi5IruZufRjWVVK1Fe4L_H4D1lDtl07zj53g2KseOGsG7aGk39u0pcY97ob0b6VJ1oOdt-JCAp1yZQM-Pq_y79ojnK-Kg07w_7KgAWxkVoK_Cu6ua8tTqJYq96yNQaTzdU0WJWPXCVJbe2zEjh2HnKGOLdY',
-    qty: 1
-  },
-  {
-    id: 2,
-    name: 'Monolith Lug Derby',
-    color: 'MATTE BLACK',
-    size: '42 EU / 9 US',
-    price: 21500,
-    badge: 'CORE',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAE1gnBz655IdvVc1kO3NYSAvFEtlpZ66Wu9-iyodD2SqX8lAO6XchzyrZ6KdjTiv0hZALzdKDErN0So9P4trw3X16PBFg2lpzRVlsEf0TafladgrnZ_xB_UuzBhHsVWH_-KgjTxZSKXjyWxQngmueCK6uMeTKdEkPCee_IAJqqJfgXD1SN9RUmxjJPavdVubh2wgZ3Ihsbe-IN8KyomS25QkT6EyJR0tIgYVwSPiDlNOZNJNbK2MfJ',
-    qty: 1
-  }
-]
+const INITIAL_CART = []
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem('penguin_cart_v2')
-      return saved ? JSON.parse(saved) : INITIAL_CART
-    } catch {
-      return INITIAL_CART
-    }
-  })
-
-  const [wishlist, setWishlist] = useState(() => {
-    try {
-      const saved = localStorage.getItem('penguin_wishlist')
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
     }
   })
 
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('penguin_wishlist')
+      if (!saved) return []
+      const parsed = JSON.parse(saved)
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : []
+    } catch {
+      return []
+    }
+  })
+
   const [toastMessage, setToastMessage] = useState(null)
+
+  const cleanWishlist = (validProductList) => {
+    if (!Array.isArray(validProductList) || validProductList.length === 0) return
+    const validSet = new Set(
+      validProductList
+        .flatMap(p => [p.id, p._id, p.productId, p.slug])
+        .filter(Boolean)
+        .map(String)
+    )
+    setWishlist(prev => prev.filter(id => id && validSet.has(String(id))))
+  }
+
+  const clearWishlist = () => {
+    setWishlist([])
+    try {
+      localStorage.removeItem('penguin_wishlist')
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  // Validate cart and wishlist on app load against live catalog to prune deleted or mock items
+  useEffect(() => {
+    getProducts()
+      .then(res => {
+        const liveProducts = res?.data || []
+        const validSet = new Set(
+          liveProducts.flatMap(p => [p.id, p._id, p.productId, p.slug]).filter(Boolean).map(String)
+        )
+        setWishlist(prev => prev.filter(id => id && validSet.has(String(id))))
+        setCartItems(prev => prev.filter(item => item && (validSet.has(String(item.id)) || validSet.has(String(item.productId)))))
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     try {
@@ -56,7 +73,7 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('penguin_wishlist', JSON.stringify(wishlist))
+      localStorage.setItem('penguin_wishlist', JSON.stringify(wishlist.filter(Boolean)))
     } catch (e) {
       console.error(e)
     }
@@ -172,6 +189,9 @@ export function CartProvider({ children }) {
       cartCount,
       subtotal,
       wishlist,
+      setWishlist,
+      clearWishlist,
+      cleanWishlist,
       toggleWishlist,
       isWishlisted,
       showToast

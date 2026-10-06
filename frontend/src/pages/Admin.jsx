@@ -26,6 +26,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  getAdminCustomers,
 } from '../services/api';
 
 const DEFAULT_CATEGORIES = ['Shirts', 'Jackets', 'Tees', 'Tailoring', 'Jeans', 'Footwear', 'Knitwear', 'Accessories', 'Formals'];
@@ -55,7 +56,7 @@ export default function AdminPage() {
   const [showBackupCodeModal, setShowBackupCodeModal] = useState(false);
   const [useBackupCodeLogin, setUseBackupCodeLogin] = useState(false);
 
-  // Active Tab: 'products' | 'categories' | 'config' | 'orders' | 'team'
+  // Active Tab: 'products' | 'categories' | 'config' | 'orders' | 'customers' | 'team'
   const [activeTab, setActiveTab] = useState('products');
 
   // Superadmin Team Management State
@@ -68,6 +69,10 @@ export default function AdminPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [customerStats, setCustomerStats] = useState({ totalCustomers: 0, verifiedCustomers: 0, unverifiedCustomers: 0 });
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerStatusFilter, setCustomerStatusFilter] = useState('all'); // all | verified | unverified
   const [siteConfig, setSiteConfig] = useState({
     marqueeText: '',
     archiveText: '',
@@ -162,20 +167,40 @@ export default function AdminPage() {
       });
   }, []);
 
+  const loadCustomerData = async (query = customerSearch, status = customerStatusFilter) => {
+    try {
+      const params = {};
+      if (query) params.search = query;
+      if (status !== 'all') params.status = status;
+      const res = await getAdminCustomers(params);
+      if (res?.success && res.data) {
+        setCustomers(res.data);
+        if (res.stats) setCustomerStats(res.stats);
+      }
+    } catch (err) {
+      console.warn('Could not load customers:', err.message);
+    }
+  };
+
   const loadAllAdminData = async () => {
     setLoading(true);
     try {
-      const [prodRes, orderRes, cfgRes, catRes] = await Promise.all([
+      const [prodRes, orderRes, cfgRes, catRes, custRes] = await Promise.all([
         getProducts(),
         getOrders(),
         getSiteConfig(),
         getAdminCategories(),
+        getAdminCustomers().catch(() => ({ success: false })),
       ]);
 
       if (prodRes?.data) setProducts(prodRes.data);
       if (orderRes?.data) setOrders(orderRes.data);
       if (cfgRes?.data) setSiteConfig(cfgRes.data);
       if (catRes?.data) setCategories(catRes.data);
+      if (custRes?.data) {
+        setCustomers(custRes.data);
+        if (custRes.stats) setCustomerStats(custRes.stats);
+      }
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
@@ -1614,7 +1639,9 @@ export default function AdminPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab('orders')}
+            onClick={() => {
+              setActiveTab('orders');
+            }}
             className="admin-tab-btn"
             style={{
               background: activeTab === 'orders' ? 'var(--primary-container)' : 'transparent',
@@ -1623,6 +1650,21 @@ export default function AdminPage() {
           >
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>local_shipping</span>
             Orders ({orders.length})
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('customers');
+              loadCustomerData();
+            }}
+            className="admin-tab-btn"
+            style={{
+              background: activeTab === 'customers' ? 'var(--primary-container)' : 'transparent',
+              color: activeTab === 'customers' ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>people</span>
+            Customers ({customers.length})
           </button>
 
           <button
@@ -2925,7 +2967,291 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ==================== TAB 5: TEAM & 2FA SECURITY (LAYER 2 & 5) ==================== */}
+        {/* ==================== TAB 5: CUSTOMER DIRECTORY & CRM ==================== */}
+        {activeTab === 'customers' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Header & Controls */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+              <div>
+                <h3 className="text-headline-sm text-on-surface" style={{ textTransform: 'uppercase', margin: 0 }}>
+                  Customer Directory & Client Intelligence
+                </h3>
+                <p className="text-body-sm text-on-surface-variant" style={{ margin: '3px 0 0' }}>
+                  Live tracking of registered shoppers, account verification states, lifetime value (LTV), and delivery destinations.
+                </p>
+              </div>
+
+              <button
+                onClick={() => loadCustomerData(customerSearch, customerStatusFilter)}
+                className="btn-outline"
+                style={{
+                  height: 38,
+                  padding: '0 16px',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>refresh</span>
+                Refresh Data
+              </button>
+            </div>
+
+            {/* Metrics Ribbon */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 14,
+            }}>
+              <div className="admin-metric-card" style={{ padding: '16px 20px', borderRadius: 8, background: 'var(--surface-container-low)', border: '1px solid var(--outline-variant)' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--on-surface-variant)', letterSpacing: '0.05em' }}>
+                  Total Registered Clients
+                </span>
+                <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--on-surface)', marginTop: 4 }}>
+                  {customerStats.totalCustomers || customers.length}
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>Store accounts created</span>
+              </div>
+
+              <div className="admin-metric-card" style={{ padding: '16px 20px', borderRadius: 8, background: 'var(--surface-container-low)', border: '1px solid var(--outline-variant)' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--on-surface-variant)', letterSpacing: '0.05em' }}>
+                  Verified Accounts
+                </span>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#34d399', marginTop: 4 }}>
+                  {customerStats.verifiedCustomers}
+                </div>
+                <span style={{ fontSize: 11, color: '#34d399' }}>Email authenticated</span>
+              </div>
+
+              <div className="admin-metric-card" style={{ padding: '16px 20px', borderRadius: 8, background: 'var(--surface-container-low)', border: '1px solid var(--outline-variant)' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--on-surface-variant)', letterSpacing: '0.05em' }}>
+                  Pending Verification
+                </span>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#fbbf24', marginTop: 4 }}>
+                  {customerStats.unverifiedCustomers}
+                </div>
+                <span style={{ fontSize: 11, color: '#fbbf24' }}>Awaiting email activation</span>
+              </div>
+
+              <div className="admin-metric-card" style={{ padding: '16px 20px', borderRadius: 8, background: 'var(--surface-container-low)', border: '1px solid var(--outline-variant)' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--on-surface-variant)', letterSpacing: '0.05em' }}>
+                  Client Lifetime Spend
+                </span>
+                <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--primary)', marginTop: 4 }}>
+                  ₹{customers.reduce((sum, c) => sum + (c.totalSpend || 0), 0).toLocaleString('en-IN')}
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>Cumulative fulfilled volume</span>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div style={{
+              display: 'flex',
+              gap: 12,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              backgroundColor: 'var(--surface-container-low)',
+              padding: '14px 18px',
+              borderRadius: 8,
+              border: '1px solid var(--outline-variant)',
+            }}>
+              <div style={{ flex: 1, minWidth: 240, position: 'relative' }}>
+                <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--on-surface-variant)', fontSize: 18 }}>
+                  search
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search by client name, email, or phone number..."
+                  value={customerSearch}
+                  onChange={(e) => {
+                    setCustomerSearch(e.target.value);
+                    loadCustomerData(e.target.value, customerStatusFilter);
+                  }}
+                  style={{
+                    width: '100%',
+                    height: 38,
+                    padding: '0 12px 0 36px',
+                    borderRadius: 6,
+                    border: '1px solid var(--outline-variant)',
+                    backgroundColor: 'var(--surface-container-lowest)',
+                    color: 'var(--on-surface)',
+                    fontSize: 13,
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 6 }}>
+                {['all', 'verified', 'unverified'].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => {
+                      setCustomerStatusFilter(st);
+                      loadCustomerData(customerSearch, st);
+                    }}
+                    style={{
+                      height: 36,
+                      padding: '0 14px',
+                      borderRadius: 6,
+                      border: customerStatusFilter === st ? '1.5px solid var(--primary)' : '1px solid var(--outline-variant)',
+                      backgroundColor: customerStatusFilter === st ? 'var(--primary-container)' : 'transparent',
+                      color: customerStatusFilter === st ? 'var(--on-primary-fixed)' : 'var(--on-surface-variant)',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {st === 'all' ? 'All Clients' : st === 'verified' ? 'Verified' : 'Unverified'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Customers Data Table */}
+            {customers.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '60px 20px',
+                backgroundColor: 'var(--surface-container-low)',
+                borderRadius: 8,
+                border: '1px solid var(--outline-variant)',
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 44, color: 'var(--on-surface-variant)', marginBottom: 10 }}>person_search</span>
+                <h4 style={{ fontSize: 16, fontWeight: 900, textTransform: 'uppercase', color: 'var(--on-surface)', margin: '0 0 6px 0' }}>No Customers Found</h4>
+                <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', margin: 0 }}>
+                  {customerSearch ? `No registered users match "${customerSearch}".` : 'No customer records available.'}
+                </p>
+              </div>
+            ) : (
+              <div style={{
+                backgroundColor: 'var(--surface-container-low)',
+                borderRadius: 8,
+                border: '1px solid var(--outline-variant)',
+                overflow: 'hidden',
+              }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--outline-variant)', backgroundColor: 'var(--surface-container)' }}>
+                        <th style={{ padding: '14px 18px', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--on-surface-variant)' }}>Customer</th>
+                        <th style={{ padding: '14px 18px', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--on-surface-variant)' }}>Contact Info</th>
+                        <th style={{ padding: '14px 18px', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--on-surface-variant)' }}>Verification</th>
+                        <th style={{ padding: '14px 18px', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--on-surface-variant)' }}>Orders / Spend</th>
+                        <th style={{ padding: '14px 18px', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--on-surface-variant)' }}>Joined Date</th>
+                        <th style={{ padding: '14px 18px', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--on-surface-variant)' }}>Saved Addresses</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customers.map((c) => {
+                        const initials = c.name ? c.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() : 'CU';
+                        const defaultAddr = c.addresses?.find((a) => a.isDefault) || c.addresses?.[0];
+
+                        return (
+                          <tr key={c.id} style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                            <td style={{ padding: '14px 18px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div style={{
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: '50%',
+                                  backgroundColor: 'var(--primary-container)',
+                                  color: 'var(--on-primary-fixed)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: 13,
+                                  fontWeight: 900,
+                                }}>
+                                  {initials}
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: 800, color: 'var(--on-surface)' }}>{c.name}</div>
+                                  <div style={{ fontSize: 10, color: 'var(--on-surface-variant)', fontFamily: 'monospace' }}>ID: {c.id.substring(0, 8)}...</div>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td style={{ padding: '14px 18px' }}>
+                              <div style={{ color: 'var(--on-surface)', fontWeight: 600 }}>{c.email}</div>
+                              <div style={{ fontSize: 12, color: 'var(--on-surface-variant)' }}>{c.phone}</div>
+                            </td>
+
+                            <td style={{ padding: '14px 18px' }}>
+                              {c.emailVerified ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                  padding: '3px 8px',
+                                  borderRadius: 4,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  textTransform: 'uppercase',
+                                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                                  color: '#22c55e',
+                                }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>verified</span>
+                                  Verified
+                                </span>
+                              ) : (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                  padding: '3px 8px',
+                                  borderRadius: 4,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  textTransform: 'uppercase',
+                                  backgroundColor: 'rgba(251, 191, 36, 0.15)',
+                                  color: '#fbbf24',
+                                }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>hourglass_top</span>
+                                  Unverified
+                                </span>
+                              )}
+                            </td>
+
+                            <td style={{ padding: '14px 18px' }}>
+                              <div style={{ fontWeight: 800, color: 'var(--on-surface)' }}>
+                                {c.totalOrders} {c.totalOrders === 1 ? 'Order' : 'Orders'}
+                              </div>
+                              <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 800 }}>
+                                ₹{c.totalSpend.toLocaleString('en-IN')}
+                              </div>
+                            </td>
+
+                            <td style={{ padding: '14px 18px', color: 'var(--on-surface-variant)', fontSize: 12 }}>
+                              {new Date(c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+
+                            <td style={{ padding: '14px 18px' }}>
+                              {defaultAddr ? (
+                                <div style={{ fontSize: 12 }}>
+                                  <span style={{ fontWeight: 700, color: 'var(--on-surface)' }}>{defaultAddr.city}, {defaultAddr.state}</span>
+                                  <span style={{ color: 'var(--on-surface-variant)', marginLeft: 4 }}>({defaultAddr.pincode})</span>
+                                </div>
+                              ) : (
+                                <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>No saved address</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ==================== TAB 6: TEAM & 2FA SECURITY (LAYER 2 & 5) ==================== */}
         {activeTab === 'team' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>

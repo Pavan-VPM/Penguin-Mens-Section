@@ -276,4 +276,49 @@ export const uploadProductImage = async (file) => {
   return res.data;
 };
 
+// ==================== CUSTOMER AUTHENTICATION API ====================
+export const customerSignup = (data) =>
+  api.post('/customer/signup', data).then((r) => r.data);
+
+export const customerLogin = (data) =>
+  api.post('/customer/login', data).then((r) => r.data);
+
+export const customerLogout = () =>
+  api.post('/customer/logout').then((r) => r.data).catch(() => ({ success: true }));
+
+export const getCustomerProfile = () =>
+  api.get('/customer/me').then((r) => r.data);
+
+export const getCustomerOrders = () =>
+  api.get('/customer/orders').then((r) => r.data);
+
+export const saveCustomerAddress = (data) =>
+  api.post('/customer/address', data).then((r) => r.data);
+
+export const deleteCustomerAddress = (id) =>
+  api.delete(`/customer/address/${id}`).then((r) => r.data);
+
+export const verifyCustomerEmail = (token) =>
+  api.get(`/customer/verify-email/${token}`).then((r) => r.data);
+
+export const resendCustomerVerification = (email) =>
+  api.post('/customer/resend-verification', { email }).then((r) => r.data);
+
+export const requestPasswordReset = (email) =>
+  api.post('/customer/forgot-password', { email }).then((r) => r.data);
+
+export const resetPassword = (token, newPassword) =>
+  api.post('/customer/reset-password', { token, newPassword }).then((r) => r.data);
+
+export const getAdminCustomers = (params = {}) =>
+  api.get('/customer/admin/list', { params }).then((r) => r.data);
+
+// ==================== PHONEPE / CHECKOUT API ====================
+export const initiatePhonePeCheckout = (payload) =>
+  api.post('/payments/checkout', payload).then((r) => r.data);
+
+export const checkOrderStatus = (merchantTxnId) =>
+  api.get(`/payments/status/${merchantTxnId}`).then((r) => r.data);
+
 export default api;
+

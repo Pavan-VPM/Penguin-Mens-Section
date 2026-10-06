@@ -35,90 +35,6 @@ const HERO_SLIDES = [
   }
 ]
 
-// Specific New Arrivals collection matching Souled Store style
-const CURATED_NEW_ARRIVALS = [
-  {
-    id: 'na-1',
-    name: 'TSS Originals: Varsity Vibe',
-    subtitle: 'Oversized Pullovers',
-    category: 'Jackets',
-    badge: 'OVERSIZED FIT',
-    price: 2399,
-    originalPrice: 3499,
-    img: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'na-2',
-    name: 'TSS Originals: Autumn Mosaic',
-    subtitle: 'Men Checks And Stripes Shirts',
-    category: 'Shirts',
-    badge: 'RELAXED FIT',
-    price: 1699,
-    originalPrice: 2499,
-    img: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=800&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'na-3',
-    name: 'Spider-Man: Red Spider',
-    subtitle: 'Men Swimwear Shorts',
-    category: 'Tailoring',
-    badge: 'RELAXED FIT',
-    price: 1299,
-    originalPrice: 1999,
-    img: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=800&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'na-4',
-    name: 'Solids: Apricot Pop',
-    subtitle: 'Oversized Pullovers',
-    category: 'Jackets',
-    badge: 'OVERSIZED FIT',
-    price: 2299,
-    originalPrice: 3299,
-    img: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'na-5',
-    name: 'Linen Camp Collar Shirt',
-    subtitle: 'Relaxed Pure Linen Shirts',
-    category: 'Shirts',
-    badge: 'RELAXED FIT',
-    price: 1799,
-    originalPrice: 3299,
-    img: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'na-6',
-    name: 'Technical Bomber Jacket',
-    subtitle: 'Structured Urban Outerwear',
-    category: 'Jackets',
-    badge: 'BOX FIT',
-    price: 3499,
-    originalPrice: 5999,
-    img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'na-7',
-    name: 'Heavyweight Boxy Supima Tee',
-    subtitle: '240 GSM Luxury Organic Cotton',
-    category: 'Tees',
-    badge: 'OVERSIZED FIT',
-    price: 1199,
-    originalPrice: 1999,
-    img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'na-8',
-    name: 'Pleated Wide-Leg Trousers',
-    subtitle: 'Contemporary Tailored Pants',
-    category: 'Tailoring',
-    badge: 'REGULAR FIT',
-    price: 2499,
-    originalPrice: 3999,
-    img: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&auto=format&fit=crop&q=80',
-  },
-]
-
 // Interactive Bento Categories (Represent / Fear of God Style)
 const BENTO_CATEGORIES = [
   {
@@ -126,30 +42,17 @@ const BENTO_CATEGORIES = [
     title: 'Luxe Linen & Poplin Shirts',
     subtitle: '100% Pure European linen and crisp Japanese poplin tailored with modern camp & resort collars.',
     tag: 'SIGNATURE ATELIER',
-    count: '10 Styles',
-    spanClass: 'bento-span-8',
+    spanClass: 'bento-span-6',
     path: '/collection/shirts',
     img: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=1200&auto=format&fit=crop&q=80',
     badge: 'POPULAR EDIT',
-  },
-  {
-    id: 'bento-2',
-    title: 'Heavyweight Box Tees',
-    subtitle: '240 GSM organic Supima cotton with architectural drop-shoulder fit.',
-    tag: 'STREETWEAR',
-    count: '10 Styles',
-    spanClass: 'bento-span-4',
-    path: '/collection/tees',
-    img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
-    badge: 'BESTSELLER',
   },
   {
     id: 'bento-3',
     title: 'Structured Outerwear',
     subtitle: 'Technical bombers, wool overshirts and varsity knits.',
     tag: 'OUTERWEAR',
-    count: '10 Styles',
-    spanClass: 'bento-span-4',
+    spanClass: 'bento-span-6',
     path: '/collection/jackets',
     img: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80',
     badge: 'NEW SEASON',
@@ -159,8 +62,7 @@ const BENTO_CATEGORIES = [
     title: 'Pleated Pants & Cargos',
     subtitle: 'Ergonomic pleated trousers & versatile stretch utility chinos.',
     tag: 'TAILORING',
-    count: '8 Styles',
-    spanClass: 'bento-span-4',
+    spanClass: 'bento-span-6',
     path: '/collection/tailoring',
     img: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&auto=format&fit=crop&q=80',
     badge: 'TAILORED FIT',
@@ -170,8 +72,7 @@ const BENTO_CATEGORIES = [
     title: 'Atelier Suiting & Blazers',
     subtitle: 'Contemporary bespoke formalwear crafted for modern occasions.',
     tag: 'FORMALWEAR',
-    count: '10 Styles',
-    spanClass: 'bento-span-4',
+    spanClass: 'bento-span-6',
     path: '/collection/formals',
     img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80',
     badge: 'BESPOKE',
@@ -181,7 +82,6 @@ const BENTO_CATEGORIES = [
     title: 'Relaxed Raw & Vintage Denim',
     subtitle: '14 oz selvedge cotton and loose-fit streetwear denim washes.',
     tag: 'DENIM CAPSULE',
-    count: '6 Styles',
     spanClass: 'bento-span-6',
     path: '/collection/jeans',
     img: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=800&auto=format&fit=crop&q=80',
@@ -192,7 +92,6 @@ const BENTO_CATEGORIES = [
     title: 'Monolith Footwear & Derbies',
     subtitle: 'Lug-sole chunky derbies, minimalist trainers and leather footwear.',
     tag: 'MONOLITH FOOTWEAR',
-    count: '5 Styles',
     spanClass: 'bento-span-6',
     path: '/collection/footwear',
     img: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800&auto=format&fit=crop&q=80',
@@ -213,160 +112,6 @@ const MOBILE_CATEGORIES = [
   { id: 'accessories', title: 'ACCESSORIES', path: '/collection',           img: '/categories/accessories.png' },
 ]
 
-// Fallback products catalog
-const FALLBACK_PRODUCTS = [
-  {
-    id: 1,
-    name: 'Oversized Premium Tee',
-    category: 'Tees',
-    color: 'Chalk White',
-    price: 1199,
-    originalPrice: 1999,
-    badge: 'BESTSELLER',
-    rating: '4.9',
-    reviewsCount: 514,
-    images: [
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 2,
-    name: 'Linen Camp Collar Shirt',
-    category: 'Shirts',
-    color: 'Ivory White',
-    price: 1799,
-    originalPrice: 3299,
-    badge: 'BESTSELLER',
-    rating: '4.8',
-    reviewsCount: 387,
-    images: [
-      'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 3,
-    name: 'Slim Raw Denim Jeans',
-    category: 'Jeans',
-    color: 'Deep Indigo',
-    price: 2299,
-    originalPrice: 3999,
-    badge: 'NEW',
-    rating: '4.7',
-    reviewsCount: 296,
-    images: [
-      'https://images.unsplash.com/photo-1542272604-780c96856592?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 4,
-    name: 'Technical Bomber Jacket',
-    category: 'Jackets',
-    color: 'Matte Olive',
-    price: 3499,
-    originalPrice: 5999,
-    badge: 'DROP 01',
-    rating: '5.0',
-    reviewsCount: 112,
-    images: [
-      'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1544441893-675973e31985?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 5,
-    name: 'Tailored Slim Chino Pants',
-    category: 'Tailoring',
-    color: 'Slate Grey',
-    price: 1999,
-    originalPrice: 3499,
-    badge: 'TAILORED',
-    rating: '4.8',
-    reviewsCount: 241,
-    images: [
-      'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 6,
-    name: 'Structured Formal Blazer',
-    category: 'Formals',
-    color: 'Charcoal Black',
-    price: 4999,
-    originalPrice: 8499,
-    badge: 'BESPOKE',
-    rating: '4.9',
-    reviewsCount: 178,
-    images: [
-      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 7,
-    name: 'Heavyweight Graphic Tee',
-    category: 'Tees',
-    color: 'Washed Black',
-    price: 999,
-    originalPrice: 1799,
-    badge: 'NEW',
-    rating: '4.7',
-    reviewsCount: 632,
-    images: [
-      'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 8,
-    name: 'Cargo Wide-Leg Pants',
-    category: 'Tailoring',
-    color: 'Military Khaki',
-    price: 2499,
-    originalPrice: 4199,
-    badge: 'STREETWEAR',
-    rating: '4.8',
-    reviewsCount: 203,
-    images: [
-      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 9,
-    name: 'Double-Breasted Wool Overcoat',
-    category: 'Jackets',
-    color: 'Camel Tan',
-    price: 5999,
-    originalPrice: 9999,
-    badge: 'LIMITED',
-    rating: '5.0',
-    reviewsCount: 89,
-    images: [
-      'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-  {
-    id: 10,
-    name: 'Oxford Button-Down Shirt',
-    category: 'Shirts',
-    color: 'Sky Blue',
-    price: 1599,
-    originalPrice: 2799,
-    badge: 'ESSENTIAL',
-    rating: '4.8',
-    reviewsCount: 319,
-    images: [
-      'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop&q=80',
-    ]
-  },
-]
-
 const CATALOG_TABS = ['All', 'Shirts', 'Tees', 'Jeans', 'Jackets', 'Tailoring', 'Formals']
 
 export default function HomePage() {
@@ -374,7 +119,8 @@ export default function HomePage() {
   const { isWishlisted, toggleWishlist } = useCart()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [activeTab, setActiveTab] = useState('All')
-  const [products, setProducts] = useState(FALLBACK_PRODUCTS)
+  const [products, setProducts] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const newArrivalsTrackRef = useRef(null)
 
@@ -400,33 +146,40 @@ export default function HomePage() {
   // Load products from backend API
   useEffect(() => {
     const fetchCatalog = async () => {
+      setIsLoading(true)
       try {
         const res = await getProducts()
-        if (res.success && res.data && res.data.length > 0) {
+        if (res?.data) {
           const formatted = res.data.map(p => ({
             id: p._id || p.id,
             name: p.name,
             category: p.category,
             color: p.color,
-            price: p.price,
+            price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 1999,
             originalPrice: p.originalPrice,
             badge: p.badge,
             isFeatured: p.isFeatured,
             isWinterDrop: p.isWinterDrop,
             rating: p.rating || '4.8',
             reviewsCount: p.reviewsCount || 120,
-            images: p.images && p.images.length > 0 ? p.images : [
-              'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80'
-            ]
+            images: p.images && p.images.length > 0 ? p.images : (p.img ? [p.img] : [])
           }))
           setProducts(formatted)
+        } else {
+          setProducts([])
         }
       } catch (err) {
-        console.warn('Using offline mock products on Home page')
+        console.warn('Could not load products on Home page')
+        setProducts([])
+      } finally {
+        setIsLoading(false)
       }
     }
     fetchCatalog()
   }, [])
+
+  const newArrivals = products.filter(p => p.badge?.toLowerCase().includes('new') || p.badge?.toLowerCase().includes('drop') || p.isFeatured)
+  const displayNewArrivals = newArrivals.length > 0 ? newArrivals : products.slice(0, 8)
 
   // Filter products for the bottom catalog section
   const filteredProducts = activeTab === 'All'
@@ -501,78 +254,80 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── 2. NEW ARRIVALS (Souled Store / Snitch Horizontal Slider) ──────── */}
-      <section className="content-container new-arrivals-section-wrap">
-        <h2 className="new-arrivals-heading-title">NEW ARRIVALS</h2>
+      {/* ─── 2. NEW ARRIVALS (Horizontal Slider) ──────── */}
+      {displayNewArrivals.length > 0 && (
+        <section className="content-container new-arrivals-section-wrap">
+          <h2 className="new-arrivals-heading-title">NEW ARRIVALS</h2>
 
-        <div className="new-arrivals-slider-wrapper">
-          {/* Left Arrow Button */}
-          <button
-            className="new-arrivals-slider-nav-btn prev-btn"
-            onClick={() => scrollNewArrivals('left')}
-            aria-label="Previous New Arrivals"
-            title="Scroll Left"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>chevron_left</span>
-          </button>
+          <div className="new-arrivals-slider-wrapper">
+            {/* Left Arrow Button */}
+            <button
+              className="new-arrivals-slider-nav-btn prev-btn"
+              onClick={() => scrollNewArrivals('left')}
+              aria-label="Previous New Arrivals"
+              title="Scroll Left"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 24 }}>chevron_left</span>
+            </button>
 
-          {/* Product Cards Track */}
-          <div className="new-arrivals-track no-scrollbar" ref={newArrivalsTrackRef}>
-            {CURATED_NEW_ARRIVALS.map((item) => (
-              <div
-                key={item.id}
-                className="new-arrivals-card"
-                onClick={() => navigate(`/collection`)}
-              >
-                <div className="new-arrivals-media-container">
-                  <img src={item.img} alt={item.name} className="new-arrivals-img" loading="lazy" />
-                  {item.badge && (
-                    <span className="new-arrivals-badge-tag">
-                      {item.badge}
-                    </span>
-                  )}
-                  <button
-                    className={`new-arrivals-wish-btn ${isWishlisted(item.id) ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      toggleWishlist(item.id)
-                    }}
-                    aria-label="Wishlist"
-                  >
-                    <span
-                      className="material-symbols-outlined"
-                      style={{
-                        fontSize: 18,
-                        fontVariationSettings: isWishlisted(item.id) ? "'FILL' 1" : "'FILL' 0",
-                        color: isWishlisted(item.id) ? 'var(--brand-accent)' : 'inherit'
+            {/* Product Cards Track */}
+            <div className="new-arrivals-track no-scrollbar" ref={newArrivalsTrackRef}>
+              {displayNewArrivals.map((item) => (
+                <div
+                  key={item.id}
+                  className="new-arrivals-card"
+                  onClick={() => navigate(`/product/${item.id}`)}
+                >
+                  <div className="new-arrivals-media-container">
+                    <img src={item.images?.[0] || item.img || ''} alt={item.name} className="new-arrivals-img" loading="lazy" />
+                    {item.badge && (
+                      <span className="new-arrivals-badge-tag">
+                        {item.badge}
+                      </span>
+                    )}
+                    <button
+                      className={`new-arrivals-wish-btn ${isWishlisted(item.id) ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleWishlist(item.id)
                       }}
+                      aria-label="Wishlist"
                     >
-                      favorite
-                    </span>
-                  </button>
-                </div>
-                <div className="new-arrivals-details">
-                  <h3 className="new-arrivals-title">{item.name}</h3>
-                  <p className="new-arrivals-subtitle">{item.subtitle}</p>
-                  <div className="new-arrivals-price-row">
-                    <span className="new-arrivals-price-main">₹ {item.price.toLocaleString('en-IN')}</span>
+                      <span
+                        className="material-symbols-outlined"
+                        style={{
+                          fontSize: 18,
+                          fontVariationSettings: isWishlisted(item.id) ? "'FILL' 1" : "'FILL' 0",
+                          color: isWishlisted(item.id) ? 'var(--brand-accent)' : 'inherit'
+                        }}
+                      >
+                        favorite
+                      </span>
+                    </button>
+                  </div>
+                  <div className="new-arrivals-details">
+                    <h3 className="new-arrivals-title">{item.name}</h3>
+                    <p className="new-arrivals-subtitle">{item.category || 'Atelier Garment'}</p>
+                    <div className="new-arrivals-price-row">
+                      <span className="new-arrivals-price-main">₹ {item.price ? Number(item.price).toLocaleString('en-IN') : '1,999'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Right Arrow Button */}
-          <button
-            className="new-arrivals-slider-nav-btn next-btn"
-            onClick={() => scrollNewArrivals('right')}
-            aria-label="Next New Arrivals"
-            title="Scroll Right"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>chevron_right</span>
-          </button>
-        </div>
-      </section>
+            {/* Right Arrow Button */}
+            <button
+              className="new-arrivals-slider-nav-btn next-btn"
+              onClick={() => scrollNewArrivals('right')}
+              aria-label="Next New Arrivals"
+              title="Scroll Right"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 24 }}>chevron_right</span>
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* ─── 3. CATEGORIES: DESKTOP BENTO & MOBILE CLEAN MINIMAL GRID ─ */}
       <section className="content-container bento-glass-section desktop-only">
@@ -688,24 +443,43 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Product Grid — responsive: 2 col mobile / 4 col desktop */}
-        <div className="product-grid-home">
-          {filteredProducts.map(prod => (
-            <ProductCard key={prod.id} product={prod} />
-          ))}
-        </div>
+        {/* Product Grid or Empty State */}
+        {filteredProducts.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            backgroundColor: 'var(--bg-secondary)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px dashed var(--border-light)',
+            margin: '20px 0'
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'var(--text-muted)' }}>inventory_2</span>
+            <h3 style={{ fontSize: 16, fontWeight: 900, textTransform: 'uppercase', marginTop: 12 }}>Catalog is Empty</h3>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4, maxWidth: 360, margin: '6px auto 16px' }}>
+              No items in this category yet. Add fresh collections from the Admin Panel.
+            </p>
+          </div>
+        ) : (
+          <div className="product-grid-home">
+            {filteredProducts.map(prod => (
+              <ProductCard key={prod.id} product={prod} />
+            ))}
+          </div>
+        )}
 
         {/* View All Button */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-          <button
-            onClick={() => navigate('/collection')}
-            className="btn-outline"
-            style={{ padding: '0 36px', height: 46 }}
-          >
-            <span>Explore Entire Catalog ({products.length} Items)</span>
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
-          </button>
-        </div>
+        {products.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+            <button
+              onClick={() => navigate('/collection')}
+              className="btn-outline"
+              style={{ padding: '0 36px', height: 46 }}
+            >
+              <span>Explore Entire Catalog ({products.length} Items)</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+            </button>
+          </div>
+        )}
       </section>
     </div>
   )

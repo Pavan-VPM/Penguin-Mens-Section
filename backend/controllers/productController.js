@@ -981,18 +981,7 @@ export const getProducts = async (req, res) => {
     };
     const orderBy = sortMap[sort] || sortMap.newest;
 
-    let total = await prisma.product.count({ where });
-
-    if (total === 0 && Object.keys(req.query).length === 0) {
-      for (const p of INITIAL_PRODUCTS) {
-        await prisma.product.upsert({
-          where: { slug: p.slug },
-          update: p,
-          create: p,
-        });
-      }
-      total = await prisma.product.count();
-    }
+    const total = await prisma.product.count({ where });
 
     const products = await prisma.product.findMany({
       where,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { useCustomerAuth } from '../context/CustomerAuthContext'
 
 import QuickCartDrawer from './QuickCartDrawer'
 import brandLogoDark from '../assets/logo-dark.png'
@@ -19,6 +20,7 @@ export default function Header() {
   const navigate = useNavigate()
   const location = useLocation()
   const { cartCount, wishlist } = useCart()
+  const { customer, isLoggedIn } = useCustomerAuth()
 
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -127,10 +129,23 @@ export default function Header() {
               {/* Profile — right corner */}
               <button
                 className="header-icon-btn"
-                onClick={() => navigate('/account')}
+                onClick={() => navigate(isLoggedIn ? '/account' : '/login')}
                 aria-label="Account"
+                title={isLoggedIn ? `Account (${customer?.name})` : 'Log In'}
+                style={{ position: 'relative' }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>person</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 22, color: isLoggedIn ? 'var(--brand-accent)' : 'inherit' }}>person</span>
+                {isLoggedIn && (
+                  <span style={{
+                    position: 'absolute',
+                    top: 6,
+                    right: 6,
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--brand-accent)',
+                  }} />
+                )}
               </button>
 
             </div>
