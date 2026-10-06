@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { getProductById, getProducts } from '../services/api';
+import ProductCard from '../components/ProductCard';
+import SizeGuideModal from '../components/SizeGuideModal';
+
+const DEFAULT_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
 const DEFAULT_IMAGES = [
   'https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600',
@@ -524,26 +528,39 @@ export default function ProductDetailPage() {
             </div>
             
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {DEFAULT_SIZES.map(sz => (
-                <button
-                  key={sz}
-                  onClick={() => { setSelectedSize(sz); setSizeError(false); }}
-                  style={{
-                    minWidth: 54,
-                    height: 44,
-                    borderRadius: 2,
-                    border: selectedSize === sz ? '1.5px solid var(--text-primary)' : '1px solid var(--border-light)',
-                    backgroundColor: selectedSize === sz ? 'var(--text-primary)' : 'transparent',
-                    color: selectedSize === sz ? 'var(--text-inverse)' : 'var(--text-primary)',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {sz}
-                </button>
-              ))}
+              {(Array.isArray(product.sizes) && product.sizes.length > 0 ? product.sizes : DEFAULT_SIZES).map(item => {
+                const sz = typeof item === 'string' ? item : (item.size || item.name || 'M');
+                const isOutOfStock = typeof item === 'object' && item.stock !== undefined && item.stock <= 0;
+                return (
+                  <button
+                    key={sz}
+                    onClick={() => {
+                      if (!isOutOfStock) {
+                        setSelectedSize(sz);
+                        setSizeError(false);
+                      }
+                    }}
+                    disabled={isOutOfStock}
+                    style={{
+                      minWidth: 54,
+                      height: 44,
+                      borderRadius: 2,
+                      border: selectedSize === sz ? '1.5px solid var(--text-primary)' : '1px solid var(--border-light)',
+                      backgroundColor: selectedSize === sz ? 'var(--text-primary)' : 'transparent',
+                      color: selectedSize === sz ? 'var(--text-inverse)' : (isOutOfStock ? 'var(--text-muted)' : 'var(--text-primary)'),
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                      opacity: isOutOfStock ? 0.4 : 1,
+                      textDecoration: isOutOfStock ? 'line-through' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title={isOutOfStock ? `${sz} - Out of Stock` : `Select Size ${sz}`}
+                  >
+                    {sz}
+                  </button>
+                );
+              })}
             </div>
 
             {sizeError && (
