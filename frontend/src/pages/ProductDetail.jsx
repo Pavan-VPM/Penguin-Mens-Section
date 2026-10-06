@@ -1,3 +1,16 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { getProductById, getProducts } from '../services/api';
+
+const DEFAULT_IMAGES = [
+  'https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600',
+  'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=600',
+  'https://images.pexels.com/photos/842811/pexels-photo-842811.jpeg?auto=compress&cs=tinysrgb&w=600',
+];
+
+const DEFAULT_SUGGESTIONS = [];
+
 // Color name to hex helper
 const COLOR_HEX_MAP = {
   'nocturne black': '#111111',
