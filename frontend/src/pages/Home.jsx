@@ -35,67 +35,93 @@ const HERO_SLIDES = [
   }
 ]
 
-// Interactive Bento Categories (Represent / Fear of God Style)
+// Interactive Bento Categories (Matching Mobile Categories exactly)
 const BENTO_CATEGORIES = [
   {
-    id: 'bento-1',
-    title: 'Luxe Linen & Poplin Shirts',
-    subtitle: '100% Pure European linen and crisp Japanese poplin tailored with modern camp & resort collars.',
-    tag: 'SIGNATURE ATELIER',
+    id: 'shirts',
+    title: 'Shirts',
+    subtitle: '100% Pure linen, formal crisp cuts & relaxed camp collars.',
+    tag: 'SIGNATURE EDIT',
     spanClass: 'bento-span-6',
     path: '/collection/shirts',
-    img: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=1200&auto=format&fit=crop&q=80',
+    img: '/categories/shirts.jpg',
     badge: 'POPULAR EDIT',
   },
   {
-    id: 'bento-3',
-    title: 'Structured Outerwear',
-    subtitle: 'Technical bombers, wool overshirts and varsity knits.',
-    tag: 'OUTERWEAR',
-    spanClass: 'bento-span-6',
-    path: '/collection/jackets',
-    img: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&auto=format&fit=crop&q=80',
-    badge: 'NEW SEASON',
-  },
-  {
-    id: 'bento-4',
-    title: 'Pleated Pants & Cargos',
-    subtitle: 'Ergonomic pleated trousers & versatile stretch utility chinos.',
+    id: 'trousers',
+    title: 'Trousers',
+    subtitle: 'Ergonomic pleated trousers, tailored chinos & smart formal pants.',
     tag: 'TAILORING',
     spanClass: 'bento-span-6',
     path: '/collection/tailoring',
-    img: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&auto=format&fit=crop&q=80',
+    img: '/categories/trousers.jpg',
     badge: 'TAILORED FIT',
   },
   {
-    id: 'bento-5',
-    title: 'Atelier Suiting & Blazers',
-    subtitle: 'Contemporary bespoke formalwear crafted for modern occasions.',
-    tag: 'FORMALWEAR',
-    spanClass: 'bento-span-6',
-    path: '/collection/formals',
-    img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80',
-    badge: 'BESPOKE',
+    id: 'tshirts',
+    title: 'T-Shirts',
+    subtitle: 'Heavyweight 240+ GSM oversized drops and architectural minimal tees.',
+    tag: 'STREETWEAR',
+    spanClass: 'bento-span-4',
+    path: '/collection/tees',
+    img: '/categories/tshirts.jpg',
+    badge: 'TRENDING',
   },
   {
-    id: 'bento-6',
-    title: 'Relaxed Raw & Vintage Denim',
-    subtitle: '14 oz selvedge cotton and loose-fit streetwear denim washes.',
+    id: 'jeans',
+    title: 'Jeans',
+    subtitle: 'Relaxed raw, vintage washes & premium selvedge cotton denim.',
     tag: 'DENIM CAPSULE',
-    spanClass: 'bento-span-6',
+    spanClass: 'bento-span-4',
     path: '/collection/jeans',
-    img: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=800&auto=format&fit=crop&q=80',
-    badge: '14 OZ SELVEDGE',
+    img: '/categories/jeans.jpg',
+    badge: '14 OZ DENIM',
   },
   {
-    id: 'bento-7',
-    title: 'Monolith Footwear & Derbies',
-    subtitle: 'Lug-sole chunky derbies, minimalist trainers and leather footwear.',
-    tag: 'MONOLITH FOOTWEAR',
-    spanClass: 'bento-span-6',
-    path: '/collection/footwear',
-    img: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800&auto=format&fit=crop&q=80',
-    badge: 'LUG SOLE',
+    id: 'cargos',
+    title: 'Cargos',
+    subtitle: 'Utility parachute pants, tactical pockets & stretch fit.',
+    tag: 'UTILITY',
+    spanClass: 'bento-span-4',
+    path: '/collection/tailoring',
+    img: '/categories/cargos.jpg',
+    badge: 'NEW ARRIVAL',
+  },
+  {
+    id: 'polos',
+    title: 'Polos',
+    subtitle: 'Textured knit polo shirts, resort zip & classic collars.',
+    tag: 'KNITWEAR',
+    spanClass: 'bento-span-3',
+    path: '/collection/shirts',
+    img: '/categories/polos.jpg',
+  },
+  {
+    id: 'outerwear',
+    title: 'Outerwear',
+    subtitle: 'Technical varsity jackets, bombers & structured coats.',
+    tag: 'OUTERWEAR',
+    spanClass: 'bento-span-3',
+    path: '/collection/jackets',
+    img: '/categories/outerwear.jpg',
+  },
+  {
+    id: 'plussize',
+    title: 'Plus Size',
+    subtitle: 'Relaxed fits engineered with precision in sizes 2XL to 5XL.',
+    tag: 'INCLUSIVE',
+    spanClass: 'bento-span-3',
+    path: '/collection',
+    img: '/categories/plussize.jpg',
+  },
+  {
+    id: 'accessories',
+    title: 'Accessories',
+    subtitle: 'Caps, belts, socks & curated everyday lifestyle essentials.',
+    tag: 'LIFESTYLE',
+    spanClass: 'bento-span-3',
+    path: '/collection',
+    img: '/categories/accessories.png',
   },
 ]
 
@@ -257,7 +283,20 @@ export default function HomePage() {
       {/* ─── 2. NEW ARRIVALS (Horizontal Slider) ──────── */}
       {displayNewArrivals.length > 0 && (
         <section className="content-container new-arrivals-section-wrap">
-          <h2 className="new-arrivals-heading-title">NEW ARRIVALS</h2>
+          <div className="new-arrivals-header-flex">
+            <div>
+              <span className="new-arrivals-pretitle">FRESH DROPS</span>
+              <h2 className="new-arrivals-heading-title">NEW ARRIVALS</h2>
+            </div>
+            <button
+              onClick={() => navigate('/collection?sort=newest')}
+              className="new-arrivals-view-all-link"
+              aria-label="View all new arrivals"
+            >
+              <span>VIEW ALL</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
+            </button>
+          </div>
 
           <div className="new-arrivals-slider-wrapper">
             {/* Left Arrow Button */}

@@ -58,7 +58,7 @@ export default function Header() {
 
       {/* Main Sticky Header */}
       <header className={`app-header ${isScrolled ? 'scrolled' : ''}`}>
-        <div className="content-container">
+        <div className="header-container">
           <div className="header-main-row" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
 
             {/* Left: Menu Toggle */}

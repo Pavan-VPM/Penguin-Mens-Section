@@ -19,13 +19,7 @@ export default function Footer() {
   }
 
   return (
-    <footer style={{
-      backgroundColor: 'var(--bg-secondary)',
-      borderTop: '1px solid var(--border-light)',
-      marginTop: 'auto',
-      padding: '48px 0 32px',
-      width: '100%'
-    }}>
+    <footer className="app-footer">
       <div className="content-container">
         {/* Main Grid: Brand & Newsletter + Links */}
         <div style={{

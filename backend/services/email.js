@@ -5,11 +5,20 @@ dotenv.config();
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-// Configure transporter
-const createTransporter = () => {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+// Configure transporter dynamically
+const getTransporter = () => {
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    if (process.env.SMTP_HOST === 'smtp.gmail.com' || (!process.env.SMTP_HOST && process.env.SMTP_USER.includes('@gmail.com'))) {
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+    }
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 587,
       secure: Number(process.env.SMTP_PORT) === 465,
       auth: {
@@ -20,8 +29,6 @@ const createTransporter = () => {
   }
   return null;
 };
-
-const transporter = createTransporter();
 
 /**
  * Send customer email verification link
@@ -59,15 +66,16 @@ export const sendVerificationEmail = async (toEmail, token) => {
     </html>
   `;
 
+  const transporter = getTransporter();
   if (transporter) {
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL_FROM || '"Penguin Atelier" <noreply@penguin-mens.com>',
+        from: process.env.EMAIL_FROM || '"Penguin Atelier" <penguinmensadmin@gmail.com>',
         to: toEmail,
         subject: 'Verify your Penguin account',
         html,
       });
-      console.log(`✉️ Verification email sent to ${toEmail}`);
+      console.log(`✉️ Verification email sent successfully to ${toEmail}`);
     } catch (err) {
       console.error('⚠️ Failed to send verification email via SMTP:', err.message);
     }
@@ -115,15 +123,16 @@ export const sendPasswordResetEmail = async (toEmail, token) => {
     </html>
   `;
 
+  const transporter = getTransporter();
   if (transporter) {
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL_FROM || '"Penguin Atelier" <noreply@penguin-mens.com>',
+        from: process.env.EMAIL_FROM || '"Penguin Atelier" <penguinmensadmin@gmail.com>',
         to: toEmail,
         subject: 'Reset your Penguin password',
         html,
       });
-      console.log(`✉️ Password reset email sent to ${toEmail}`);
+      console.log(`✉️ Password reset email sent successfully to ${toEmail}`);
     } catch (err) {
       console.error('⚠️ Failed to send reset email via SMTP:', err.message);
     }
