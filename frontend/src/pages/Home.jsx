@@ -31,7 +31,7 @@ const HERO_SLIDES = [
     subtitle: 'High-density organic cotton tees, relaxed camp collars, and pleated trousers crafted with meticulous atelier precision.',
     cta: 'DISCOVER BESTSELLERS',
     link: '/collection/shirts',
-    img: 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?q=80&w=1920&auto=format&fit=crop'
+    img: 'https://images.unsplash.com/photo-1618886614638-80e3c103d31a?q=80&w=1920&auto=format&fit=crop'
   }
 ]
 
@@ -127,15 +127,15 @@ const BENTO_CATEGORIES = [
 
 // Minimal Clean Mobile Categories (Snitch Style)
 const MOBILE_CATEGORIES = [
-  { id: 'shirts',      title: 'SHIRTS',      path: '/collection/shirts',    img: '/categories/shirts.png' },
-  { id: 'trousers',    title: 'TROUSERS',    path: '/collection/tailoring', img: '/categories/trousers.png' },
-  { id: 'tshirts',     title: 'T-SHIRTS',    path: '/collection/tees',      img: '/categories/tshirts.png' },
-  { id: 'jeans',       title: 'JEANS',       path: '/collection/jeans',     img: '/categories/jeans.png' },
-  { id: 'cargos',      title: 'CARGOS',      path: '/collection/tailoring', img: '/categories/cargos.png' },
-  { id: 'polos',       title: 'POLOS',       path: '/collection/shirts',    img: '/categories/polos.png' },
-  { id: 'outerwear',   title: 'OUTERWEAR',   path: '/collection/jackets',   img: '/categories/outerwear.png' },
-  { id: 'plussize',    title: 'PLUS SIZE',   path: '/collection',           img: '/categories/plussize.png' },
-  { id: 'accessories', title: 'ACCESSORIES', path: '/collection',           img: '/categories/accessories.png' },
+  { id: 'shirts',      title: 'SHIRTS',      path: '/collection/shirts',      img: '/categories/shirts.png' },
+  { id: 'trousers',    title: 'TROUSERS',    path: '/collection/tailoring',   img: '/categories/trousers.png' },
+  { id: 'tshirts',     title: 'T-SHIRTS',    path: '/collection/tees',        img: '/categories/tshirts.png' },
+  { id: 'jeans',       title: 'JEANS',       path: '/collection/jeans',       img: '/categories/jeans.png' },
+  { id: 'cargos',      title: 'CARGOS',      path: '/collection/tailoring',   img: '/categories/cargos.png' },
+  { id: 'polos',       title: 'POLOS',       path: '/collection/shirts',      img: '/categories/polos.png' },
+  { id: 'outerwear',   title: 'OUTERWEAR',   path: '/collection/jackets',     img: '/categories/outerwear.png' },
+  { id: 'plussize',    title: 'PLUS SIZE',   path: '/collection/shirts',      img: '/categories/plussize.png' },
+  { id: 'accessories', title: 'ACCESSORIES', path: '/collection/accessories', img: '/categories/accessories.png' },
 ]
 
 const CATALOG_TABS = ['All', 'Shirts', 'Tees', 'Jeans', 'Jackets', 'Tailoring', 'Formals']
@@ -436,7 +436,7 @@ export default function HomePage() {
             <div
               key={cat.id}
               className="mobile-category-cell"
-              onClick={() => navigate('/collection')}
+              onClick={() => navigate(cat.path)}
             >
               <div className="mobile-category-cell-top">
                 <span className="mobile-category-cell-title">{cat.title}</span>

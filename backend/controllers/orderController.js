@@ -114,6 +114,60 @@ export const getOrderById = async (req, res) => {
 };
 
 /**
+ * @desc Track order by Order Number, Tracking ID, Phone or Email
+ * @route GET /api/orders/track/:query
+ */
+export const trackOrder = async (req, res) => {
+  try {
+    const { query } = req.params;
+    const cleanQuery = query.trim();
+
+    // Check if query matches uuid format
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanQuery);
+
+    const orConditions = [
+      { orderNumber: { equals: cleanQuery, mode: 'insensitive' } },
+      { trackingNumber: { equals: cleanQuery, mode: 'insensitive' } },
+      { phone: { contains: cleanQuery } },
+      { email: { equals: cleanQuery, mode: 'insensitive' } },
+    ];
+
+    if (isUuid) {
+      orConditions.push({ id: cleanQuery });
+    }
+
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: orConditions,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'No order found matching your tracking details. Please verify your Order Number (e.g. PGN-XXXXX) or AWB Tracking ID.',
+      });
+    }
+
+    const formatted = {
+      ...order,
+      _id: order.id,
+      customer: order.shippingAddress,
+      totalAmount: order.total,
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: formatted,
+    });
+  } catch (error) {
+    console.error('Error tracking order:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
  * @desc Update order status (Admin)
  * @route PUT /api/orders/:id/status
  */

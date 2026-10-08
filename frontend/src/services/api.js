@@ -220,6 +220,26 @@ export const createOrder = async (orderData) => {
   }
 };
 
+export const getOrderById = async (id) => {
+  try {
+    const res = await api.get(`/orders/${id}`);
+    return res.data;
+  } catch (err) {
+    if (err.response?.data) return err.response.data;
+    return { success: false, message: 'Could not fetch order details' };
+  }
+};
+
+export const trackOrder = async (query) => {
+  try {
+    const res = await api.get(`/orders/track/${encodeURIComponent(query)}`);
+    return res.data;
+  } catch (err) {
+    if (err.response?.data) return err.response.data;
+    return { success: false, message: 'Could not connect to tracking server' };
+  }
+};
+
 export const updateOrderStatus = async (id, updateData) => {
   const res = await api.put(`/orders/${id}`, updateData);
   return res.data;

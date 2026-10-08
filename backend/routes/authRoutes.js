@@ -39,8 +39,9 @@ router.post('/admin/logout', adminLogout);
 // ── Requires an authenticated session ──
 router.get('/admin/me', protectAdmin, getAdminProfile);
 
-// ── Superadmin-only staff management ──
-router.get('/superadmin/users', protectAdmin, requireSuperAdmin, listAdminUsers);
+// ── Staff management ──
+router.get('/superadmin/users', protectAdmin, listAdminUsers);
+router.get('/admin/users', protectAdmin, listAdminUsers);
 router.post('/superadmin/users', protectAdmin, requireSuperAdmin, createAdminUser);
 router.put('/superadmin/users/:id', protectAdmin, requireSuperAdmin, updateAdminUser);
 router.delete('/superadmin/users/:id', protectAdmin, requireSuperAdmin, deleteAdminUser);

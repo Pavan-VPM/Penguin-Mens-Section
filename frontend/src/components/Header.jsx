@@ -237,12 +237,28 @@ export default function Header() {
                 <span className="material-symbols-outlined" style={{ fontSize: 20 }}>person</span>
                 <span>My Profile & Orders</span>
               </button>
+              <button
+                onClick={() => navigate('/track')}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>local_shipping</span>
+                <span>Track Your Order</span>
+              </button>
             </div>
 
-            {/* Mobile Footer Note */}
-            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-light)', backgroundColor: 'var(--bg-secondary)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
-              ⚡ Free Express Delivery on orders above ₹1,999
-            </div>
+
           </div>
         </>
       )}

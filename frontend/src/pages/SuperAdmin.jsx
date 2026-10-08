@@ -183,7 +183,7 @@ export default function SuperAdminPage() {
         }
         setBackupCodesList(res.backupCodes || []);
         setShowBackupCodeModal(true);
-        setCurrentUser(res.user || { role: 'superadmin', name: 'Lead Architect' });
+        setCurrentUser(res.user || { role: 'superadmin', name: res.user?.name || 'Superadmin' });
       } else {
         setAuthError(res?.message || 'Invalid TOTP code. Check your authenticator.');
       }
@@ -208,7 +208,7 @@ export default function SuperAdminPage() {
           return;
         }
         setIsAuthenticated(true);
-        setCurrentUser(res.user || { role: 'superadmin', name: 'Lead Architect' });
+        setCurrentUser(res.user || { role: 'superadmin', name: res.user?.name || 'Superadmin' });
         loadAdminUsers();
       } else {
         setAuthError(res?.message || 'Invalid code.');
@@ -1046,13 +1046,17 @@ export default function SuperAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(adminUsers.length > 0 ? adminUsers : [
-                    { _id: '1', name: 'Lead Architect', email: 'admin@penguin.com', role: 'superadmin', mfaEnabled: true },
-                    { _id: '2', name: 'Store Owner', email: 'owner@penguin.com', role: 'admin', mfaEnabled: true },
-                  ]).map((u) => {
-                    const isRoot = u.role === 'superadmin';
-                    return (
-                      <tr key={u._id} className="super-table-row" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  {adminUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ padding: '32px 16px', textAlign: 'center', color: '#71717a' }}>
+                        No admin records in database.
+                      </td>
+                    </tr>
+                  ) : (
+                    adminUsers.map((u) => {
+                      const isRoot = u.role === 'superadmin';
+                      return (
+                        <tr key={u.id || u._id} className="super-table-row" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                         <td style={{ padding: '14px 16px', fontWeight: 700, color: '#ffffff' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span className="material-symbols-outlined" style={{ color: isRoot ? '#eab308' : '#60a5fa', fontSize: 20 }}>
@@ -1163,7 +1167,8 @@ export default function SuperAdminPage() {
                         </td>
                       </tr>
                     );
-                  })}
+                  })
+                )}
                 </tbody>
               </table>
             </div>

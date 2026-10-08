@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { getProducts, getCategories } from '../services/api'
 import ProductCard from '../components/ProductCard'
 
@@ -15,12 +15,14 @@ const SORT_OPTIONS = [
 
 export default function CollectionPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { category: urlCategory } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
 
+  const isNewArrivals = location.pathname === '/new-arrivals' || searchParams.get('sort') === 'newest'
   const urlCat = urlCategory || searchParams.get('category')
   const initialCat = urlCat ? (DEFAULT_CATEGORIES.find(c => c.toLowerCase() === urlCat.toLowerCase()) || 'All') : 'All'
-  const initialSort = searchParams.get('sort') || 'popular'
+  const initialSort = searchParams.get('sort') || (location.pathname === '/new-arrivals' ? 'newest' : 'popular')
 
   const [categoriesList, setCategoriesList] = useState(DEFAULT_CATEGORIES)
   const [selectedCategory, setSelectedCategory] = useState(initialCat)
@@ -47,17 +49,26 @@ export default function CollectionPage() {
   useEffect(() => {
     const rawCat = urlCategory || searchParams.get('category')
     if (rawCat) {
-      const found = categoriesList.find(c => c.toLowerCase() === rawCat.toLowerCase())
+      const lower = rawCat.toLowerCase()
+      const found = categoriesList.find(c => c.toLowerCase() === lower)
       if (found) {
         setSelectedCategory(found)
-      } else if (rawCat.toLowerCase().includes('shirt')) {
-        setSelectedCategory('Shirts')
-      } else if (rawCat.toLowerCase().includes('tee')) {
+      } else if (lower.includes('tshirt') || lower.includes('t-shirt') || lower.includes('tee')) {
         setSelectedCategory('Tees')
-      } else if (rawCat.toLowerCase().includes('jacket')) {
+      } else if (lower.includes('trouser') || lower.includes('cargo') || lower.includes('tailor') || lower.includes('pant')) {
+        setSelectedCategory('Tailoring')
+      } else if (lower.includes('jean') || lower.includes('denim')) {
+        setSelectedCategory('Jeans')
+      } else if (lower.includes('jacket') || lower.includes('outerwear') || lower.includes('coat') || lower.includes('hoodie')) {
         setSelectedCategory('Jackets')
-      } else if (rawCat.toLowerCase().includes('formal')) {
+      } else if (lower.includes('polo') || lower.includes('shirt')) {
+        setSelectedCategory('Shirts')
+      } else if (lower.includes('formal') || lower.includes('suit') || lower.includes('tuxedo')) {
         setSelectedCategory('Formals')
+      } else if (lower.includes('access') || lower.includes('belt') || lower.includes('wallet') || lower.includes('sunglass')) {
+        setSelectedCategory('Accessories')
+      } else {
+        setSelectedCategory('All')
       }
     } else {
       setSelectedCategory('All')
@@ -151,18 +162,24 @@ export default function CollectionPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
             <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>Home</button>
             <span>/</span>
-            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Men's Collection</span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+              {isNewArrivals ? 'New Arrivals' : "Men's Collection"}
+            </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 900, textTransform: 'uppercase', color: 'var(--text-primary)' }}>
-                {selectedCategory === 'All' ? "All Men's Apparel" : `${selectedCategory} Collection`}
+                {isNewArrivals 
+                  ? (selectedCategory === 'All' ? 'NEW ARRIVALS' : `${selectedCategory} New Arrivals`)
+                  : (selectedCategory === 'All' ? "All Men's Apparel" : `${selectedCategory} Collection`)}
               </h1>
               <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
-                {filteredAndSorted.length > 0
-                  ? `Explore ${filteredAndSorted.length} premium ${filteredAndSorted.length === 1 ? 'garment' : 'garments'} designed for contemporary fit and effortless luxury.`
-                  : "Curated contemporary silhouettes and minimalist menswear."}
+                {isNewArrivals
+                  ? `Discover the latest drops, newest silhouettes, and seasonal additions.`
+                  : (filteredAndSorted.length > 0
+                      ? `Explore ${filteredAndSorted.length} premium ${filteredAndSorted.length === 1 ? 'garment' : 'garments'} designed for contemporary fit and effortless luxury.`
+                      : "Curated contemporary silhouettes and minimalist menswear.")}
               </p>
             </div>
           </div>
@@ -170,63 +187,55 @@ export default function CollectionPage() {
       </div>
 
       {/* ─── Sticky Filter & Sort Controls ─────────────────────────────────── */}
-      <div style={{
-        position: 'sticky',
-        top: 'var(--header-height-desktop)',
-        zIndex: 30,
-        backgroundColor: 'var(--bg-primary)',
-        borderBottom: '1px solid var(--border-light)',
-        padding: '12px 0'
-      }}>
-        <div className="content-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          {/* Category Chips Desktop */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto' }} className="no-scrollbar">
-            {categoriesList.map(cat => (
-              <button
-                key={cat}
-                onClick={() => handleCategorySelect(cat)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 999,
-                  border: selectedCategory === cat ? '1px solid var(--brand-primary)' : '1px solid var(--border-light)',
-                  backgroundColor: selectedCategory === cat ? 'var(--brand-primary)' : 'var(--bg-secondary)',
-                  color: selectedCategory === cat ? 'var(--text-inverse)' : 'var(--text-primary)',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Sort Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }} className="desktop-only">
-              Sort By:
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => handleSortSelect(e.target.value)}
-              style={{
-                height: 36,
-                padding: '0 12px',
-                borderRadius: 'var(--radius-xs)',
-                border: '1px solid var(--border-light)',
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                fontSize: 12,
-                fontWeight: 700,
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {SORT_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+      <div className="collection-controls-bar">
+        <div className="content-container">
+          <div className="collection-controls-inner">
+            {/* Category Chips Scroll */}
+            <div className="collection-tabs-scroll no-scrollbar">
+              {categoriesList.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => handleCategorySelect(cat)}
+                  className={`collection-tab-btn ${selectedCategory === cat ? 'active' : ''}`}
+                >
+                  {cat}
+                </button>
               ))}
-            </select>
+            </div>
+
+            {/* Desktop Sort Dropdown */}
+            <div className="collection-sort-wrap desktop-only">
+              <span className="collection-sort-label">
+                Sort:
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => handleSortSelect(e.target.value)}
+                className="collection-sort-select"
+                aria-label="Sort products"
+              >
+                {SORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Mobile Metadata & Sort Sub-row */}
+            <div className="collection-meta-row-mobile">
+              <span className="collection-meta-count">
+                {filteredAndSorted.length} {filteredAndSorted.length === 1 ? 'Product' : 'Products'}
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => handleSortSelect(e.target.value)}
+                className="collection-sort-select-mobile"
+                aria-label="Sort products mobile"
+              >
+                {SORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>

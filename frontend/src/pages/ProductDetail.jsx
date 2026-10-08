@@ -7,6 +7,8 @@ import SizeGuideModal from '../components/SizeGuideModal';
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=800&auto=format&fit=crop&q=80';
+
 const DEFAULT_SUGGESTIONS = [];
 
 // Color name to hex helper
@@ -154,7 +156,7 @@ export default function ProductDetailPage() {
             price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^\d.]/g, '')) || 1999,
             originalPrice: item.originalPrice,
             badge: item.badge,
-            images: item.images && item.images.length > 0 ? item.images : [item.img || DEFAULT_IMAGES[0]]
+            images: item.images && item.images.length > 0 ? item.images : [item.img || FALLBACK_IMG]
           }))
           setRelatedProducts(formattedRelated)
         } else if (allRes?.data && allRes.data.length > 0) {
@@ -169,7 +171,7 @@ export default function ProductDetailPage() {
               price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^\d.]/g, '')) || 1999,
               originalPrice: item.originalPrice,
               badge: item.badge,
-              images: item.images && item.images.length > 0 ? item.images : [item.img || DEFAULT_IMAGES[0]]
+              images: item.images && item.images.length > 0 ? item.images : [item.img || FALLBACK_IMG]
             }))
           
           if (fetchedFiltered.length > 0) {
@@ -187,10 +189,11 @@ export default function ProductDetailPage() {
     window.scrollTo(0, 0)
   }, [currentKey])
 
-  const isFav = isWishlisted(product.id)
-  const isOutOfStock = product.stockStatus === 'Sold Out' || product.stock === 0
+  const isFav = product?.id ? isWishlisted(product.id) : false
+  const isOutOfStock = Boolean(product?.stockStatus === 'Sold Out' || product?.stock === 0)
 
   const handleAddToCart = () => {
+    if (!product) return
     if (!selectedSize) {
       setSizeError(true)
       return
@@ -206,7 +209,7 @@ export default function ProductDetailPage() {
         originalPrice: product.originalPrice,
         color: selectedColor || product.color,
         images: product.images,
-        img: product.images[activeIdx] || product.images[0]
+        img: product.images?.[activeIdx] || product.images?.[0] || FALLBACK_IMG
       },
       selectedSize,
       selectedColor || product.color,
@@ -215,6 +218,7 @@ export default function ProductDetailPage() {
   }
 
   const handleBuyNow = () => {
+    if (!product) return
     if (!selectedSize) {
       setSizeError(true)
       return

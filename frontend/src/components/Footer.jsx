@@ -62,7 +62,7 @@ export default function Footer() {
               Customer Care
             </h4>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--text-secondary)' }}>
-              <li><button onClick={() => navigate('/account')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Track Your Order</button></li>
+              <li><button onClick={() => navigate('/track')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Track Your Order</button></li>
               <li><button onClick={() => navigate('/account')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Returns & Exchanges</button></li>
               <li><button onClick={() => navigate('/cart')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Shipping Policy</button></li>
               <li><button onClick={() => navigate('/wishlist')} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>Wishlist</button></li>

@@ -157,9 +157,7 @@ export default function AdminPage() {
           setIsAuthenticated(true);
           setCurrentUser(res.user);
           loadAllAdminData();
-          if (res.user.role === 'superadmin') {
-            loadTeamData();
-          }
+          loadTeamData();
         }
       })
       .catch(() => {
@@ -185,12 +183,13 @@ export default function AdminPage() {
   const loadAllAdminData = async () => {
     setLoading(true);
     try {
-      const [prodRes, orderRes, cfgRes, catRes, custRes] = await Promise.all([
+      const [prodRes, orderRes, cfgRes, catRes, custRes, teamRes] = await Promise.all([
         getProducts(),
         getOrders(),
         getSiteConfig(),
         getAdminCategories(),
         getAdminCustomers().catch(() => ({ success: false })),
+        listAdminUsers().catch(() => ({ success: false })),
       ]);
 
       if (prodRes?.data) setProducts(prodRes.data);
@@ -200,6 +199,9 @@ export default function AdminPage() {
       if (custRes?.data) {
         setCustomers(custRes.data);
         if (custRes.stats) setCustomerStats(custRes.stats);
+      }
+      if (teamRes?.data) {
+        setAdminUsers(teamRes.data);
       }
     } catch (err) {
       console.error('Failed to load admin data:', err);
@@ -333,9 +335,7 @@ export default function AdminPage() {
         setIsAuthenticated(true);
         setCurrentUser(res.user || { role: res.role });
         loadAllAdminData();
-        if (res.user?.role === 'superadmin') {
-          loadTeamData();
-        }
+        loadTeamData();
       } else {
         setAuthError(res?.message || 'Invalid authenticator code.');
       }
@@ -3339,110 +3339,118 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(adminUsers.length > 0 ? adminUsers : [
-                    { _id: '1', name: 'Lead Architect', email: 'admin@penguin.com', role: 'superadmin', mfaEnabled: true, createdBy: { name: 'CLI Initializer' } },
-                    { _id: '2', name: 'Store Owner', email: 'owner@penguin.com', role: 'admin', mfaEnabled: true, createdBy: { name: 'Superadmin' } },
-                  ]).map((u) => (
-                    <tr key={u._id} style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                      <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--on-surface)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span className="material-symbols-outlined" style={{ color: 'var(--primary-container)', fontSize: 18 }}>
-                            {u.role === 'superadmin' ? 'military_tech' : 'account_circle'}
-                          </span>
-                          <span>{u.name}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontFamily: 'monospace', fontSize: 12 }}>
-                        {u.email}
-                      </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{
-                          background: u.role === 'superadmin' ? 'rgba(234, 179, 8, 0.15)' : 'var(--surface-container)',
-                          color: u.role === 'superadmin' ? '#eab308' : 'var(--on-surface)',
-                          padding: '3px 8px',
-                          borderRadius: 999,
-                          fontSize: 10,
-                          fontWeight: 800,
-                          textTransform: 'uppercase',
-                        }}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{
-                          background: u.mfaEnabled !== false ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: u.mfaEnabled !== false ? '#34d399' : '#f87171',
-                          padding: '3px 8px',
-                          borderRadius: 999,
-                          fontSize: 10,
-                          fontWeight: 700,
-                        }}>
-                          {u.mfaEnabled !== false ? '● Bound & Active' : '○ Pending Setup'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontSize: 12 }}>
-                        {typeof u.createdBy === 'object' && u.createdBy ? u.createdBy.name : 'System Initializer'}
+                  {adminUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ padding: '28px 16px', textAlign: 'center', color: 'var(--on-surface-variant)' }}>
+                        No admin accounts found in database.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    adminUsers.map((u) => (
+                      <tr key={u.id || u._id} style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                        <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--on-surface)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span className="material-symbols-outlined" style={{ color: 'var(--primary-container)', fontSize: 18 }}>
+                              {u.role === 'superadmin' ? 'military_tech' : 'account_circle'}
+                            </span>
+                            <span>{u.name}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontFamily: 'monospace', fontSize: 12 }}>
+                          {u.email}
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <span style={{
+                            background: u.role === 'superadmin' ? 'rgba(234, 179, 8, 0.15)' : 'var(--surface-container)',
+                            color: u.role === 'superadmin' ? '#eab308' : 'var(--on-surface)',
+                            padding: '3px 8px',
+                            borderRadius: 999,
+                            fontSize: 10,
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                          }}>
+                            {u.role}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <span style={{
+                            background: u.mfaEnabled !== false ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                            color: u.mfaEnabled !== false ? '#34d399' : '#f87171',
+                            padding: '3px 8px',
+                            borderRadius: 999,
+                            fontSize: 10,
+                            fontWeight: 700,
+                          }}>
+                            {u.mfaEnabled !== false ? '● Bound & Active' : '○ Pending Setup'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px 16px', color: 'var(--on-surface-variant)', fontSize: 12 }}>
+                          {typeof u.createdBy === 'object' && u.createdBy ? u.createdBy.name : (u.createdByName || 'System Initializer')}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
 
             {/* Mobile View for Admins */}
             <div className="admin-mobile-view">
-              {(adminUsers.length > 0 ? adminUsers : [
-                { _id: '1', name: 'Lead Architect', email: 'admin@penguin.com', role: 'superadmin', mfaEnabled: true },
-                { _id: '2', name: 'Store Owner', email: 'owner@penguin.com', role: 'admin', mfaEnabled: true },
-              ]).map((u) => (
-                <div
-                  key={u._id}
-                  style={{
-                    background: 'var(--surface-container-low)',
-                    borderRadius: 12,
-                    padding: '14px',
-                    border: '1px solid var(--outline-variant)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span className="material-symbols-outlined" style={{ color: 'var(--primary-container)', fontSize: 18 }}>
-                        {u.role === 'superadmin' ? 'military_tech' : 'account_circle'}
-                      </span>
-                      <span style={{ fontWeight: 800, color: 'var(--on-surface)' }}>{u.name}</span>
-                    </div>
-                    <span style={{
-                      background: u.role === 'superadmin' ? 'rgba(234, 179, 8, 0.15)' : 'var(--surface-container)',
-                      color: u.role === 'superadmin' ? '#eab308' : 'var(--on-surface)',
-                      padding: '2px 6px',
-                      borderRadius: 999,
-                      fontSize: 9,
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                    }}>
-                      {u.role}
-                    </span>
-                  </div>
-
-                  <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', fontFamily: 'monospace' }}>
-                    {u.email}
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px solid var(--outline-variant)' }}>
-                    <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>2FA Status:</span>
-                    <span style={{
-                      color: u.mfaEnabled !== false ? '#34d399' : '#f87171',
-                      fontSize: 11,
-                      fontWeight: 700,
-                    }}>
-                      {u.mfaEnabled !== false ? '● Active' : '○ Pending'}
-                    </span>
-                  </div>
+              {adminUsers.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 12px', color: 'var(--on-surface-variant)' }}>
+                  No admin accounts found in database.
                 </div>
-              ))}
+              ) : (
+                adminUsers.map((u) => (
+                  <div
+                    key={u.id || u._id}
+                    style={{
+                      background: 'var(--surface-container-low)',
+                      borderRadius: 12,
+                      padding: '14px',
+                      border: '1px solid var(--outline-variant)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span className="material-symbols-outlined" style={{ color: 'var(--primary-container)', fontSize: 18 }}>
+                          {u.role === 'superadmin' ? 'military_tech' : 'account_circle'}
+                        </span>
+                        <span style={{ fontWeight: 800, color: 'var(--on-surface)' }}>{u.name}</span>
+                      </div>
+                      <span style={{
+                        background: u.role === 'superadmin' ? 'rgba(234, 179, 8, 0.15)' : 'var(--surface-container)',
+                        color: u.role === 'superadmin' ? '#eab308' : 'var(--on-surface)',
+                        padding: '2px 6px',
+                        borderRadius: 999,
+                        fontSize: 9,
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                      }}>
+                        {u.role}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', fontFamily: 'monospace' }}>
+                      {u.email}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px solid var(--outline-variant)' }}>
+                      <span style={{ fontSize: 11, color: 'var(--on-surface-variant)' }}>2FA Status:</span>
+                      <span style={{
+                        color: u.mfaEnabled !== false ? '#34d399' : '#f87171',
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}>
+                        {u.mfaEnabled !== false ? '● Active' : '○ Pending'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

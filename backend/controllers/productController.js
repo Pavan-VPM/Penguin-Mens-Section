@@ -1013,12 +1013,25 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
     let product = await prisma.product.findFirst({
-      where: {
-        OR: [{ id }, { slug: id }],
-      },
+      where: isUuid
+        ? { OR: [{ id }, { slug: id }] }
+        : { OR: [{ slug: id }, { slug: { equals: id, mode: 'insensitive' } }, { name: { equals: id, mode: 'insensitive' } }] },
     });
+
+    if (!product && !isUuid) {
+      // Try searching for slug without trailing numbers or partial
+      product = await prisma.product.findFirst({
+        where: {
+          OR: [
+            { slug: { contains: id, mode: 'insensitive' } },
+            { name: { contains: id, mode: 'insensitive' } },
+          ],
+        },
+      });
+    }
 
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });

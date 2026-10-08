@@ -19,6 +19,7 @@ import ForgotPasswordPage from './pages/ForgotPassword';
 import ResetPasswordPage from './pages/ResetPassword';
 import VerifyEmailPage from './pages/VerifyEmail';
 import OrderStatusPage from './pages/OrderStatus';
+import TrackOrderPage from './pages/TrackOrder';
 import AdminPage from './pages/Admin';
 import SuperAdminPage from './pages/SuperAdmin';
 
@@ -73,6 +74,7 @@ export default function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/winter-drop" element={<Navigate to="/collection" replace />} />
                 <Route path="/collection" element={<CollectionPage />} />
+                <Route path="/new-arrivals" element={<CollectionPage />} />
                 <Route path="/collection/:category" element={<CollectionPage />} />
                 <Route path="/product/:id" element={<ProductDetailPage />} />
                 <Route path="/products/:id" element={<ProductDetailPage />} />
@@ -90,6 +92,12 @@ export default function App() {
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
                 <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+
+                {/* Order Tracking Routes */}
+                <Route path="/track" element={<TrackOrderPage />} />
+                <Route path="/track/:orderNumber" element={<TrackOrderPage />} />
+                <Route path="/tracking" element={<TrackOrderPage />} />
+                <Route path="/order-tracking" element={<TrackOrderPage />} />
 
                 {/* PhonePe Order Status Callback Redirect */}
                 <Route path="/order/status" element={<OrderStatusPage />} />

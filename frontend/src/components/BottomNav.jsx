@@ -10,7 +10,7 @@ export default function BottomNav() {
   const NAV_ITEMS = [
     { id: 'home', icon: 'home', label: 'Home', path: '/' },
     { id: 'shop', icon: 'grid_view', label: 'Shop', path: '/collection' },
-    { id: 'new', icon: 'auto_awesome', label: 'New', path: '/collection?sort=newest' },
+    { id: 'new', icon: 'auto_awesome', label: 'New Arrivals', path: '/new-arrivals' },
     { id: 'wishlist', icon: 'favorite', label: 'Wishlist', path: '/wishlist', count: wishlist.length },
     { id: 'bag', icon: 'shopping_bag', label: 'Bag', path: '/cart', count: cartCount },
   ]
@@ -19,14 +19,15 @@ export default function BottomNav() {
     if (item.id === 'home') {
       return location.pathname === '/'
     }
+    if (item.id === 'new') {
+      return location.pathname === '/new-arrivals' || location.search.includes('newest')
+    }
     if (item.id === 'shop') {
       return (
         (location.pathname === '/collection' || location.pathname.startsWith('/collection/')) &&
-        !location.search.includes('newest')
+        !location.search.includes('newest') &&
+        location.pathname !== '/new-arrivals'
       )
-    }
-    if (item.id === 'new') {
-      return location.pathname.startsWith('/collection') && location.search.includes('newest')
     }
     return location.pathname.startsWith(item.path)
   }
